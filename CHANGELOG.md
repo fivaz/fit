@@ -1,3 +1,18 @@
+## [1.18.0](https://github.com/fivaz/fit-v2/compare/v1.17.1...v1.18.0) (2026-02-07)
+
+### ✨ Features
+
+* show ExerciseDetails also in Program page ([ff46857](https://github.com/fivaz/fit-v2/commit/ff468577f435b588a66facae66505db27a85737a))
+* show ExerciseDetails also in Workout page ([2e882a6](https://github.com/fivaz/fit-v2/commit/2e882a68f77dc9195a5dcc88748628f7537c8453))
+
+### 🐛 Bug Fixes
+
+* fix tailwind groups ([8e832ab](https://github.com/fivaz/fit-v2/commit/8e832ab3f2552621c3a21a1b3007c41e65d94bd2))
+
+### 🔨 Code Refactoring
+
+* remove replaceDomain ([c558a0c](https://github.com/fivaz/fit-v2/commit/c558a0c6528ba0e34ba3491c7abeda9a1ea5028d))
+
 ## [1.17.1](https://github.com/fivaz/fit-v2/compare/v1.17.0...v1.17.1) (2026-01-25)
 
 ### 🧹 Chores
