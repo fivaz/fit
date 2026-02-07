@@ -26,9 +26,6 @@ export function ExerciseSelectorItem({
 					"has-checked:border-orange-500",
 				)}
 			>
-				{/* The checkbox hidden input */}
-				<input type="checkbox" className="peer sr-only" checked={isSelected} onChange={onToggle} />
-
 				<div
 					onClick={(e) => {
 						e.preventDefault(); // It stops the label from toggling the checkbox
@@ -51,10 +48,16 @@ export function ExerciseSelectorItem({
 						<p className="text-muted-foreground text-xs">{exercise.muscles.join(", ")}</p>
 					</div>
 
+					<input
+						type="checkbox"
+						className="peer sr-only"
+						checked={isSelected}
+						onChange={onToggle}
+					/>
+
 					<div
 						className={cn(
 							"border-muted-foreground flex h-5 w-5 items-center justify-center rounded-full border transition-colors",
-							"peer-checked:border-orange-500 peer-checked:bg-orange-500",
 						)}
 					>
 						{isSelected && <div className="h-2 w-2 rounded-full bg-orange-500" />}

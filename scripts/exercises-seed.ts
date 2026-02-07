@@ -30,7 +30,10 @@ type ExerciseInput = z.infer<typeof exerciseSchema>;
  * 1. Fetch JSON data from CDN
  */
 async function fetchExercises(): Promise<unknown> {
-	const seedUrl = process.env.EXERCISE_SEED_URL!;
+	const seedUrl = process.env.EXERCISE_SEED_URL;
+	if (!seedUrl) {
+			throw new Error("EXERCISE_SEED_URL environment variable is not set");
+	}
 
 	console.log(`🌐 Fetching exercises from: ${seedUrl}...`);
 	const response = await fetch(seedUrl);
