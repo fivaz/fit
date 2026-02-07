@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { MuscleGroup } from "@/lib/muscle/type";
 import { prisma } from "@/lib/prisma";
-import { replaceDomain } from "@/lib/utils";
 
 import "dotenv/config";
 
@@ -31,7 +30,7 @@ type ExerciseInput = z.infer<typeof exerciseSchema>;
  * 1. Fetch JSON data from CDN
  */
 async function fetchExercises(): Promise<unknown> {
-	const seedUrl = replaceDomain(process.env.EXERCISE_SEED_URL);
+	const seedUrl = process.env.EXERCISE_SEED_URL!;
 
 	console.log(`🌐 Fetching exercises from: ${seedUrl}...`);
 	const response = await fetch(seedUrl);

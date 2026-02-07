@@ -6,7 +6,6 @@ import { Info, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SetRow } from "@/components/workout/set-row";
-import { replaceDomain } from "@/lib/utils";
 import { WorkoutWithMappedSets } from "@/lib/workout/actions";
 import { getEmptySet, SetUI, WorkoutSetMap } from "@/lib/workout/type";
 
@@ -25,7 +24,6 @@ export function ExerciseCard({
 	setExerciseSets,
 	isPending,
 }: ExerciseCardProps) {
-	const imageUrl = replaceDomain(exercise.exercise.imageUrl);
 
 	function addSet() {
 		setExerciseSets((map) => {
@@ -44,7 +42,7 @@ export function ExerciseCard({
 			{/* Exercise Banner */}
 			<div className="relative h-20 overflow-hidden">
 				<img
-					src={imageUrl || "/exercise.jpg"}
+					src={exercise.exercise.imageUrl || "/exercise.jpg"}
 					alt={exercise.exercise.name}
 					className="h-full w-full object-cover"
 				/>
