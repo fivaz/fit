@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 
 import { ROUTES } from "@/lib/consts";
+import { mapExerciseToUI } from "@/lib/exercise/utils";
 import { logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import {
@@ -45,13 +46,13 @@ export async function getProgramByIdAction(id: string): Promise<ProgramWithExerc
 
 	if (!program) return null;
 
+
 	// Mapping the nested 'exercise' objects into a flat array
 	return {
 		...program,
 		exercises: program.exercises.map(({ exercise, order }) => ({
-			...exercise,
+			...mapExerciseToUI(exercise),
 			order,
-			isPrivate: exercise.userId !== null,
 		})),
 	};
 }

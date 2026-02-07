@@ -8,7 +8,7 @@ import { ExerciseDetails } from "@/app/(dashboard)/exercises/_components/exercis
 import { ExerciseFormButton } from "@/components/exercise/exercise-form-button";
 import { Card } from "@/components/ui/card";
 import { ExerciseUI } from "@/lib/exercise/type";
-import { cn, replaceDomain } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 type ProgramExerciseRowProps = {
 	exercise: ExerciseUI;
@@ -21,7 +21,6 @@ export function ProgramExerciseRow({ exercise, index }: ProgramExerciseRowProps)
 		index,
 	});
 	const [showForm, setShowForm] = useState(false);
-	const imageUrl = replaceDomain(exercise.imageUrl);
 
 	return (
 		<Card
@@ -49,7 +48,7 @@ export function ProgramExerciseRow({ exercise, index }: ProgramExerciseRowProps)
 				>
 					<div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
 						<img
-							src={imageUrl || "/exercise.jpg"}
+							src={exercise.imageUrl || "/exercise.jpg"}
 							alt={exercise.name}
 							className="h-full w-full object-cover"
 						/>

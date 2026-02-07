@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { ExerciseFormButton } from "@/components/exercise/exercise-form-button";
 import { ExerciseUI } from "@/lib/exercise/type";
-import { replaceDomain } from "@/lib/utils";
 
 import { ExerciseDetails } from "./exercise-details";
 
@@ -12,7 +11,6 @@ type ExerciseRowProps = {
 
 export function ExerciseRow({ exercise }: ExerciseRowProps) {
 	const [showForm, setShowForm] = useState(false);
-	const imageUrl = replaceDomain(exercise.imageUrl);
 
 	return (
 		<>
@@ -21,7 +19,7 @@ export function ExerciseRow({ exercise }: ExerciseRowProps) {
 				className="group ring-chart-1 relative h-24 cursor-pointer overflow-hidden rounded-2xl text-left hover:ring-2 focus:ring-2 focus:outline-none"
 			>
 				<img
-					src={imageUrl || "/exercise.jpg"}
+					src={exercise.imageUrl || "/exercise.jpg"}
 					alt={exercise.name}
 					className="h-full w-full object-cover transition-transform group-hover:scale-105"
 				/>

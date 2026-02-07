@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { PAGE_SIZE, ROUTES } from "@/lib/consts";
 import { ExerciseUI, exerciseUIArgs } from "@/lib/exercise/type";
+import { mapExerciseToUI } from "@/lib/exercise/utils";
 import { MuscleGroup, Prisma } from "@/lib/generated/prisma/client";
 import { logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -69,10 +70,7 @@ export async function getExercisesAction(
 		take: pageSize,
 	});
 
-	return exercises.map((exercise) => ({
-		...exercise,
-		isPrivate: exercise.userId !== null,
-	}));
+	return exercises.map(mapExerciseToUI);
 }
 
 /**

@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ExerciseUI } from "@/lib/exercise/type";
-import { replaceDomain } from "@/lib/utils";
 
 interface ExerciseDrawerProps {
 	exercise: ExerciseUI;
@@ -23,7 +22,7 @@ interface ExerciseDrawerProps {
 }
 
 export function ExerciseDetails({ exercise, setOpen, open }: ExerciseDrawerProps) {
-	const imageUrl = replaceDomain(exercise.imageUrl);
+
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
 			<DrawerContent>
@@ -47,9 +46,13 @@ export function ExerciseDetails({ exercise, setOpen, open }: ExerciseDrawerProps
 					<ScrollArea className="h-[60vh] px-4">
 						<div className="space-y-6 pb-6">
 							{/* Image Section */}
-							{imageUrl && (
+							{exercise.imageUrl && (
 								<div className="bg-muted w-full overflow-hidden rounded-lg border">
-									<img src={imageUrl} alt={exercise.name} className="block h-auto w-full" />
+									<img
+										src={exercise.imageUrl}
+										alt={exercise.name}
+										className="block h-auto w-full"
+									/>
 								</div>
 							)}
 
