@@ -1,4 +1,6 @@
-import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
+
+import { ExerciseDetails } from "@/app/(dashboard)/exercises/_components/exercise-details";
 import { ExerciseUI } from "@/lib/exercise/type";
 import { cn } from "@/lib/utils";
 
@@ -13,51 +15,54 @@ export function ExerciseSelectorItem({
 	isSelected,
 	onToggle,
 }: ExerciseSelectorItemProps) {
+	const [showDetails, setShowDetails] = useState(false);
+
 	return (
-		<div
-			onClick={onToggle}
-			className={cn(
-				"group relative flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 transition-all active:scale-[0.98]",
-				isSelected
-					? "border-orange-500 bg-orange-50/50 shadow-sm"
-					: "bg-muted/40 hover:bg-muted border-transparent",
-			)}
-		>
-			<div className="flex items-center gap-3">
-				{/* Thumbnail: Smaller and rounded */}
-				<div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border">
+		<>
+			<label
+				className={cn(
+					"group bg-muted/40 relative flex cursor-pointer items-center gap-4 rounded-xl border border-transparent p-3",
+					"hover:bg-muted transition-all active:scale-[0.98]",
+					"has-checked:border-orange-500",
+				)}
+			>
+				{/* The checkbox hidden input */}
+				<input type="checkbox" className="peer sr-only" checked={isSelected} onChange={onToggle} />
+
+				<div
+					onClick={(e) => {
+						e.preventDefault(); // It stops the label from toggling the checkbox
+						setShowDetails(true);
+					}}
+					className="relative z-10 h-12 w-12 shrink-0 overflow-hidden rounded-lg border hover:opacity-80"
+				>
 					<img
 						src={exercise.imageUrl || "/exercise.jpg"}
-						alt={exercise.name}
+						alt="View details"
 						className="h-full w-full object-cover"
 					/>
 				</div>
 
-				{/* Text content: Stacked vertically */}
-				<div className="flex flex-col">
-					<h3
+				<div className="flex flex-1 items-center justify-between">
+					<div className="flex flex-col">
+						<h3 className="text-sm font-semibold capitalize group-has-checked:text-orange-500">
+							{exercise.name}
+						</h3>
+						<p className="text-muted-foreground text-xs">{exercise.muscles.join(", ")}</p>
+					</div>
+
+					<div
 						className={cn(
-							"mb-1 text-sm leading-none font-semibold capitalize",
-							isSelected ? "text-orange-900" : "text-foreground",
+							"border-muted-foreground flex h-5 w-5 items-center justify-center rounded-full border transition-colors",
+							"peer-checked:border-orange-500 peer-checked:bg-orange-500",
 						)}
 					>
-						{exercise.name}
-					</h3>
-					<p className="text-muted-foreground text-xs capitalize">{exercise.muscles.join(", ")}</p>
+						{isSelected && <div className="h-2 w-2 rounded-full bg-orange-500" />}
+					</div>
 				</div>
-			</div>
+			</label>
 
-			{/* Checkbox: Visual confirmation */}
-			<div className="flex items-center pr-1">
-				<Checkbox
-					checked={isSelected}
-					onCheckedChange={onToggle}
-					className={cn(
-						"border-muted-foreground h-5 w-5 rounded-full",
-						isSelected && "border-orange-500 bg-orange-500 text-white",
-					)}
-				/>
-			</div>
-		</div>
+			<ExerciseDetails exercise={exercise} open={showDetails} setOpen={setShowDetails} />
+		</>
 	);
 }
