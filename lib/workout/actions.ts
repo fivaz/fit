@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ROUTES } from "@/lib/consts";
+import { mapExerciseToUI } from "@/lib/exercise/utils";
 import { logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { devDelay } from "@/lib/utils";
@@ -58,13 +59,19 @@ export async function getWorkoutByIdAction(id: string) {
 
 	const exerciseSets: WorkoutSetMap = {};
 
-	workout.exercises.forEach((workoutExercise) => {
-		exerciseSets[workoutExercise.id] = workoutExercise.sets.map((set) => ({
-			...set,
-		}));
+	const exercisesUI = workout.exercises.map(({ id, sets, exercise, ...rest }) => {
+		exerciseSets[id] = sets;
+
+		return {
+			...rest,
+			id,
+			exercise: mapExerciseToUI(exercise),
+		};
 	});
+
 	return {
 		...workout,
+		exercises: exercisesUI,
 		exerciseSets,
 	};
 }

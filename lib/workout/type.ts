@@ -1,3 +1,4 @@
+import { exerciseUIArgs } from "@/lib/exercise/type";
 import { Prisma } from "@/lib/generated/prisma/client";
 
 export const setUIArgs = {
@@ -36,12 +37,7 @@ export const workoutWithExercisesAndSets = {
 				order: true,
 
 				exercise: {
-					select: {
-						id: true,
-						name: true,
-						imageUrl: true,
-						muscles: true,
-					},
+					...exerciseUIArgs,
 				},
 
 				sets: {
