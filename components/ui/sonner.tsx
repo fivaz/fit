@@ -1,5 +1,6 @@
 "use client";
 
+import { CSSProperties } from "react";
 import { useTheme } from "next-themes";
 
 import {
@@ -16,6 +17,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
 	return (
 		<Sonner
+			position="top-right"
 			theme={theme as ToasterProps["theme"]}
 			className="toaster group"
 			icons={{
@@ -31,7 +33,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 					"--normal-text": "var(--popover-foreground)",
 					"--normal-border": "var(--border)",
 					"--border-radius": "var(--radius)",
-				} as React.CSSProperties
+				} as CSSProperties
 			}
 			{...props}
 		/>
