@@ -65,6 +65,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 		const confirmed = await confirm({
 			title: "Finish Workout",
 			message: "Are you sure you want to finish this workout?",
+			confirmLabel: "Yes, finish",
 		});
 
 		if (!confirmed) return;
