@@ -19,9 +19,19 @@ interface ConfirmDialogProps {
 	message: string;
 	onConfirm: () => void;
 	onCancel: () => void;
+	confirmLabel?: string;
+	cancelLabel?: string;
 }
 
-export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({
+	isOpen,
+	title,
+	message,
+	onConfirm,
+	onCancel,
+	confirmLabel = "Delete",
+	cancelLabel = "Cancel",
+}: ConfirmDialogProps) {
 	return (
 		<Drawer open={isOpen} onOpenChange={(open) => !open && onCancel()}>
 			<DrawerContent>
@@ -29,7 +39,7 @@ export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }: C
 					<DrawerTitle>{title}</DrawerTitle>
 				</DrawerHeader>
 				<div className="px-4">
-					<div className="flex items-start gap-4 py-4">
+					<div className="flex items-center gap-4 py-4">
 						<div className="bg-destructive/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
 							<AlertTriangle className="text-destructive size-5" />
 						</div>
@@ -40,10 +50,10 @@ export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }: C
 				</div>
 				<DrawerFooter className="space-y-2">
 					<Button variant="outline" onClick={onCancel} className="w-full">
-						Cancel
+						{cancelLabel}
 					</Button>
 					<Button variant="destructive" onClick={onConfirm} className="w-full">
-						Delete
+						{confirmLabel}
 					</Button>
 				</DrawerFooter>
 			</DrawerContent>

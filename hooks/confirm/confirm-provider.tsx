@@ -52,6 +52,8 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
 				message={options.message || ""}
 				onConfirm={handleConfirm}
 				onCancel={handleCancel}
+				confirmLabel={options.confirmLabel}
+				cancelLabel={options.cancelLabel}
 			/>
 		</ConfirmContext.Provider>
 	);
