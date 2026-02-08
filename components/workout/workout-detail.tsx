@@ -84,7 +84,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	}
 
 	return (
-		<div className="pb-20">
+		<>
 			<header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 px-5 py-4 backdrop-blur-md dark:border-gray-700 dark:bg-gray-800/80">
 				<div className="flex items-center justify-between">
 					<div>
@@ -121,6 +121,6 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 					/>
 				))}
 			</div>
-		</div>
+		</>
 	);
 }
