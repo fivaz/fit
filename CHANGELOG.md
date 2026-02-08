@@ -1,3 +1,15 @@
+## [1.19.0](https://github.com/fivaz/fit-v2/compare/v1.18.0...v1.19.0) (2026-02-08)
+
+### ✨ Features
+
+* change the confirm button name in workout finish button ([2732028](https://github.com/fivaz/fit-v2/commit/27320284e252799f2ae3f6d41c11826c8dd9aa5c))
+* change toast notification position from button to top right ([f86855d](https://github.com/fivaz/fit-v2/commit/f86855d86704483b33442ec1fd2a529115ee84e1))
+* remove unnecessary bottom padding in workout page ([270aedb](https://github.com/fivaz/fit-v2/commit/270aedb41564cf26b93a74bf4243ea8c2d14aad1))
+
+### 🐛 Bug Fixes
+
+* remove unnecessary command in pre-push script, that will eventually fail in husky v10 ([c24ddf2](https://github.com/fivaz/fit-v2/commit/c24ddf20f8b78a4cb926dab41ce12ada25ead8bf))
+
 ## [1.18.0](https://github.com/fivaz/fit-v2/compare/v1.17.1...v1.18.0) (2026-02-07)
 
 ### ✨ Features
