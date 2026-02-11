@@ -27,6 +27,7 @@ model User {
   exercises     Exercise[]
   workouts      Workout[]
   bodyMetrics   BodyMetric[]
+  timezone      String       @default("UTC")
 
   @@unique([email])
   @@map("user")

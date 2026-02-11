@@ -34,6 +34,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 	const [loading, setLoading] = useState(false);
 	const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
 	const router = useRouter();
+	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -71,6 +72,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 			await signUp.email({
 				email,
 				password,
+				timezone,
 				name: `${firstName.trim()} ${lastName.trim()}`,
 				image: image ? await convertImageToBase64(image) : undefined,
 				callbackURL: ROUTES.HOME,
