@@ -45,9 +45,8 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 			try {
 				await syncWorkoutSetsAction(initialWorkout.id, debouncedSets);
 			} catch (error) {
-				logError(error, {
+				logError(error, "WorkoutDetail#syncData", {
 					extra: {
-						context: "WorkoutDetail#syncData",
 						initialWorkoutId: initialWorkout.id,
 						debouncedSets,
 					},
@@ -77,7 +76,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 			toast.success(`Workout finished on ${format(new Date(), "PPpp")}`);
 			router.push(ROUTES.PROGRESS);
 		} catch (error) {
-			logError(error, { extra: { context: "WorkoutDetail#handleFinish" } });
+			logError(error, "WorkoutDetail#handleFinish");
 			toast.error("Failed to finish workout");
 		} finally {
 			setIsFinishing(false);

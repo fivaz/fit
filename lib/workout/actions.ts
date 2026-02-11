@@ -189,7 +189,7 @@ export async function finishWorkoutAction(workoutId: string) {
 			},
 		});
 	} catch (error) {
-		logError(error, { extra: { context: "finishWorkout", workoutId } });
+		logError(error, "finishWorkout", { extra: { workoutId } });
 		throw new Error("Could not complete workout");
 	}
 

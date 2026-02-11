@@ -8,9 +8,11 @@ interface LogOptions {
 	extra?: Record<string, any>;
 }
 
-export function logError(error: unknown, options: LogOptions = {}) {
-	const { level = "error", extra } = options;
+export function logError(error: unknown, context: string, options: LogOptions = {}) {
+	const { level = "error", extra: initialContext } = options;
 	const message = error instanceof Error ? error.message : String(error);
+
+	const extra = { ...initialContext, context };
 
 	if (process.env.NODE_ENV === "development") {
 		const styles = {

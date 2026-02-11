@@ -4,11 +4,12 @@ import React, { ComponentProps, FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Dumbbell, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { GithubIcon } from "@/components/icons/github-icon";
 import { GoogleIcon } from "@/components/icons/google-icon";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -19,8 +20,8 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
-import { ROUTES } from "@/lib/consts";
+import { signIn } from "@/lib/auth-client";
+import { APP_NAME, ROUTES } from "@/lib/consts";
 import { cn } from "@/lib/utils";
 
 export function LoginForm({ className, ...props }: ComponentProps<"div">) {
@@ -35,7 +36,7 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 		e.preventDefault();
 		setLoading(true);
 		try {
-			await authClient.signIn.email({
+			await signIn.email({
 				email,
 				password,
 				rememberMe,
@@ -61,7 +62,7 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 	const handleSocialLogin = async (provider: "google" | "github") => {
 		setSocialLoading(provider);
 		try {
-			await authClient.signIn.social({
+			await signIn.social({
 				provider,
 				callbackURL: ROUTES.HOME,
 			});
@@ -79,9 +80,9 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 					<div className="flex flex-col items-center gap-2 text-center">
 						<div className="flex flex-col items-center gap-2 font-medium">
 							<div className="bg-primary text-primary-foreground flex size-10 items-center justify-center rounded-md">
-								<Dumbbell className="size-8 text-white" />
+								<Logo className="size-8 text-white" />
 							</div>
-							<span className="sr-only">Fit Tracker</span>
+							<span className="sr-only">{APP_NAME}</span>
 						</div>
 						<h1 className="text-xl font-bold">Welcome back</h1>
 						<FieldDescription>

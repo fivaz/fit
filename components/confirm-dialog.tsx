@@ -40,7 +40,7 @@ export function ConfirmDialog({
 				</DrawerHeader>
 				<div className="px-4">
 					<div className="flex items-center gap-4 py-4">
-						<div className="bg-destructive/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+						<div className="bg-destructive/10 flex size-10 shrink-0 items-center justify-center rounded-full">
 							<AlertTriangle className="text-destructive size-5" />
 						</div>
 						<div className="min-w-0 flex-1">
