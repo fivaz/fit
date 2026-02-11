@@ -1,3 +1,5 @@
+"use client";
+
 import { startTransition, useEffect, useRef } from "react";
 
 import { EntityStoreReturn, Identifiable } from "./create-entity-store";
@@ -12,6 +14,7 @@ type EntityMutationsReturn<T> = () => {
 	isPending: boolean;
 	addItem: (item: T, config?: PersistConfig<T>) => void;
 	updateItem: (item: T, config?: PersistConfig<T>) => void;
+	upsertItem: (item: T, config?: PersistConfig<T>) => void;
 	deleteItem: (id: string, config?: PersistConfig<T>) => void;
 	setItems: (items: T[], config?: PersistConfig<T>) => void;
 };
@@ -57,15 +60,23 @@ export function createEntityMutations<T extends Identifiable>(
 
 		return {
 			isPending: store.isUnstable,
+
 			addItem(item: T, config?: PersistConfig<T>) {
 				void runMutation(() => store.addItem(item), config);
 			},
+
 			updateItem(item: T, config?: PersistConfig<T>) {
 				void runMutation(() => store.updateItem(item), config);
 			},
+
+			upsertItem(item: T, config?: PersistConfig<T>) {
+				void runMutation(() => store.upsertItem(item), config);
+			},
+
 			deleteItem(id: string, config?: PersistConfig<T>) {
 				void runMutation(() => store.deleteItem(id), config);
 			},
+
 			setItems(items: T[], config?: PersistConfig<T>) {
 				void runMutation(() => store.setItems(items), config);
 			},
