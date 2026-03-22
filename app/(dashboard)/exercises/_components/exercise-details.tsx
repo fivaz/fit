@@ -22,7 +22,6 @@ interface ExerciseDrawerProps {
 }
 
 export function ExerciseDetails({ exercise, setOpen, open }: ExerciseDrawerProps) {
-
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
 			<DrawerContent>

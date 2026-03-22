@@ -1,6 +1,6 @@
 ## 🚀 Getting Started: Customizing Your App
 
-To transform this boilerplate into your specific application, replace all occurrences of the placeholder text **"boilerplate"** (case-sensitive) or **"boilerplate"** with your actual project name (e.g., "MyAwesomeApp").
+To transform this boilerplate into your specific application, replace all occurrences of the placeholder text **"boilerplate"** with your actual project name (e.g., "MyAwesomeApp").
 
 You can perform a **Global Search and Replace** in your editor (usually `Cmd+Shift+F` or `Ctrl+Shift+F` in VS Code).
 

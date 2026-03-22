@@ -12,7 +12,7 @@ import { APP_NAME } from "@/lib/consts";
 import { cn } from "@/lib/utils";
 
 const APP_DEFAULT_TITLE = APP_NAME;
-const APP_TITLE_TEMPLATE = "%s - Fit-Tracker";
+const APP_TITLE_TEMPLATE = `%s - ${APP_NAME}`;
 const APP_DESCRIPTION = "Track your workouts and monitor your progress.";
 
 export const metadata: Metadata = {

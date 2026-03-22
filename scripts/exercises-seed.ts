@@ -32,7 +32,7 @@ type ExerciseInput = z.infer<typeof exerciseSchema>;
 async function fetchExercises(): Promise<unknown> {
 	const seedUrl = process.env.EXERCISE_SEED_URL;
 	if (!seedUrl) {
-			throw new Error("EXERCISE_SEED_URL environment variable is not set");
+		throw new Error("EXERCISE_SEED_URL environment variable is not set");
 	}
 
 	console.log(`🌐 Fetching exercises from: ${seedUrl}...`);

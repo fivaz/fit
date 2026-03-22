@@ -40,7 +40,7 @@ export function ProgramExerciseList({ programId }: ProgramExerciseListProps) {
 				});
 			}}
 		>
-			<div className="pb-28 flex flex-col gap-4">
+			<div className="flex flex-col gap-4 pb-28">
 				{exercises.map((exercise, index) => (
 					<ProgramExerciseRow key={exercise.id} exercise={exercise} index={index} />
 				))}

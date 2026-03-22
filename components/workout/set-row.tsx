@@ -1,11 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import { motion } from "framer-motion";
-import {
-	DumbbellIcon,
-	ThermometerSunIcon,
-	Trash2,
-} from "lucide-react";
+import { DumbbellIcon, ThermometerSunIcon, Trash2 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { TimeInput } from "@/components/workout/time-input";
