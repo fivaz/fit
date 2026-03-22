@@ -9,7 +9,7 @@ import { logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { devDelay } from "@/lib/utils";
 import { getUserId } from "@/lib/utils-server";
-import { WorkoutSetMap, workoutWithExercisesAndSets } from "@/lib/workout/type";
+import { SetUI, WorkoutSetMap, workoutWithExercisesAndSets } from "@/lib/workout/type";
 
 export async function syncWorkoutSetsAction(workoutId: string, exerciseSetsMap: WorkoutSetMap) {
 	await devDelay();
@@ -81,103 +81,133 @@ export type WorkoutWithMappedSets = NonNullable<Awaited<ReturnType<typeof getWor
 export async function handleStartWorkoutAction(programId: string) {
 	await devDelay();
 
-	const userId = await getUserId();
-
-	const workoutId = await startWorkoutAction(userId, programId);
+	const workoutId = await startWorkoutAction(programId);
 
 	redirect(`${ROUTES.WORKOUT}/${workoutId}`);
 }
 
 /**
- * Creates a new workout session based on a program.
- * Pre-fills sets based on previous history or defaults.
+ * Coordinates the creation of a new workout session.
+ * @returns The ID of the newly created workout.
  */
-export async function startWorkoutAction(userId: string, programId: string) {
-	// 1. Fetch the Program with its ordered exercises
+export async function startWorkoutAction(programId: string): Promise<string> {
+	const userId = await getUserId();
+
+	// 1. Fetch the Program structure
 	const program = await prisma.program.findUnique({
 		where: { id: programId },
-		include: {
-			exercises: {
-				orderBy: { order: "asc" },
-				include: { exercise: true }, // We need the exercise details
-			},
-		},
+		include: { exercises: { orderBy: { order: "asc" } } },
 	});
 
 	if (!program) throw new Error("Program not found");
 
-	// 2. Fetch the LAST workout for this specific program + user
-	const lastWorkout = await prisma.workout.findFirst({
-		where: {
+	// 2. Resolve data for each exercise in the program
+	const exercisesToCreate = await Promise.all(
+		program.exercises.map(async (pEx) => {
+			const seedSets = await getSeedSetsForExercise(userId, programId, pEx.exerciseId);
+
+			return {
+				exerciseId: pEx.exerciseId,
+				order: pEx.order,
+				sets: {
+					create: formatSetsForNewWorkout(seedSets),
+				},
+			};
+		}),
+	);
+
+	// 3. Persist the new workout
+	const newWorkout = await prisma.workout.create({
+		data: {
 			userId,
 			programId,
-			endDate: { not: null }, // Only consider finished workouts
+			startDate: new Date(),
+			exercises: { create: exercisesToCreate },
 		},
-		orderBy: { startDate: "desc" },
-		include: {
-			exercises: {
-				include: {
-					sets: {
-						orderBy: { order: "asc" },
-					},
-				},
-			},
-		},
-	});
-
-	// Helper to find previous data for a specific exercise ID
-	const getPreviousStats = (exerciseId: string) => {
-		if (!lastWorkout) return null;
-		return lastWorkout.exercises.find((e) => e.exerciseId === exerciseId);
-	};
-
-	// 3. Create the new Workout with pre-filled data in a Transaction
-	const newWorkout = await prisma.$transaction(async (tx) => {
-		return tx.workout.create({
-			data: {
-				userId,
-				programId,
-				startDate: new Date(),
-
-				// Create the WorkoutExercises and Sets simultaneously
-				exercises: {
-					create: program.exercises.map((programExercise) => {
-						const previousData = getPreviousStats(programExercise.exerciseId);
-
-						let setsToCreate = [];
-
-						if (previousData && previousData.sets.length > 0) {
-							// CASE A: Copy from previous workout
-							setsToCreate = previousData.sets.map((prevSet, index) => ({
-								order: index,
-								reps: prevSet.reps,
-								weight: prevSet.weight,
-								time: null,
-								isWarmup: prevSet.isWarmup,
-							}));
-						} else {
-							// CASE B: Default to 3 empty sets
-							setsToCreate = [
-								{ order: 0, reps: 0, weight: null, time: null },
-								{ order: 1, reps: 0, weight: null, time: null },
-								{ order: 2, reps: 0, weight: null, time: null },
-							];
-						}
-
-						return {
-							exerciseId: programExercise.exerciseId,
-							order: programExercise.order,
-							sets: {
-								create: setsToCreate,
-							},
-						};
-					}),
-				},
-			},
-		});
 	});
 
 	return newWorkout.id;
+}
+
+/**
+ * FUNCTION B: DATA RESOLVER
+ * Finds historical sets to pre-fill the new workout.
+ * Logic: Recent Program History -> Oldest Global History (via 'time' column).
+ * @returns An array of Sets or an empty array if no history exists.
+ */
+async function getSeedSetsForExercise(
+	userId: string,
+	programId: string,
+	exerciseId: string,
+): Promise<SetUI[]> {
+	// Step 1: Look for the most recent session of THIS specific program
+	const lastProgramWorkout = await prisma.workout.findFirst({
+		// endDate: {not: null} - Only consider finished workouts
+		where: { userId, programId, endDate: { not: null } },
+		orderBy: { startDate: "desc" },
+		include: {
+			exercises: {
+				where: { exerciseId },
+				include: { sets: { orderBy: { order: "asc" } } },
+			},
+		},
+	});
+
+	const matchingExercise = lastProgramWorkout?.exercises.find((e) => e.exerciseId === exerciseId);
+
+	if (matchingExercise && matchingExercise.sets.length > 0) {
+		return matchingExercise.sets;
+	}
+
+	// Step 2: Fallback - Find the OLDEST sets ever recorded for this exercise
+	const oldestExerciseRecord = await prisma.set.findFirst({
+		where: {
+			workoutExercise: {
+				exerciseId,
+				workout: { userId, endDate: { not: null } },
+			},
+		},
+		orderBy: { time: "asc" },
+		select: {
+			workoutExercise: {
+				include: { sets: { orderBy: { order: "asc" } } },
+			},
+		},
+	});
+
+	return oldestExerciseRecord?.workoutExercise.sets || [];
+}
+
+/**
+ * Maps raw DB sets to the nested 'create' structure for Prisma.
+ * @returns Array of data objects for Prisma's 'create' input.
+ */
+function formatSetsForNewWorkout(sets: SetUI[]): Array<{
+	order: number;
+	reps: number;
+	weight: number | null;
+	isWarmup: boolean;
+	time: null;
+}> {
+	// If no history exists, provide default empty sets
+	if (sets.length === 0) {
+		return [0, 1, 2].map((i) => ({
+			order: i,
+			reps: 0,
+			weight: null,
+			isWarmup: false,
+			time: null,
+		}));
+	}
+
+	// Otherwise, map the historical data (resetting the 'time' for the new session)
+	return sets.map((s, index) => ({
+		order: index,
+		reps: s.reps,
+		weight: s.weight,
+		isWarmup: s.isWarmup,
+		time: null,
+	}));
 }
 
 export async function finishWorkoutAction(workoutId: string) {
