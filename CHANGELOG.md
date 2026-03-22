@@ -1,3 +1,27 @@
+## [1.20.0](https://github.com/fivaz/fit-v2/compare/v1.19.0...v1.20.0) (2026-03-22)
+
+### ✨ Features
+
+* add more consistent error treatment when updating timezone ([a42ab2c](https://github.com/fivaz/fit-v2/commit/a42ab2ca106be13842cfce10a48cd65a65c4f45d))
+* make new workout sets with previous sets or this or other workouts ([e6fd4ab](https://github.com/fivaz/fit-v2/commit/e6fd4ab6ee3e872a8e06779844c59edf2be7455d))
+* replace the name "Delete" with "Confirm" as the default confirm label ([ca44310](https://github.com/fivaz/fit-v2/commit/ca443104bc5720ab8e290e66fec22a81afa5c5ed))
+
+### 🐛 Bug Fixes
+
+* remove user db in seed script ([8a06be4](https://github.com/fivaz/fit-v2/commit/8a06be41b5176fe52623b8f94fc56eb7c7244ac1))
+
+### 🧹 Chores
+
+* add timezone to user and sync it automatically with browser's one ([f6797f2](https://github.com/fivaz/fit-v2/commit/f6797f272ee80a719af68a195f9148f8037fe214))
+* lint files before commit ([ec05a09](https://github.com/fivaz/fit-v2/commit/ec05a0983b8f58f95fae9f7db64bf0a2525b1c1c))
+* remove useless information in .env.example ([de19e2d](https://github.com/fivaz/fit-v2/commit/de19e2d86194e8353c5e6cde84e4e29e8365c5bb))
+* update vulnerable nextjs version and remove onlyBuiltDependecies ([dd41c99](https://github.com/fivaz/fit-v2/commit/dd41c99db78f92176266518cf8730f55db79097f))
+
+### 🔨 Code Refactoring
+
+* simplify logging ([48d4e1c](https://github.com/fivaz/fit-v2/commit/48d4e1c5a204e75fca77fa4b8cb1bc12ca595587))
+* small refactoring ([90e2847](https://github.com/fivaz/fit-v2/commit/90e2847cce470ad0151ca08d1ff2a64d0d6a49c7))
+
 ## [1.19.0](https://github.com/fivaz/fit-v2/compare/v1.18.0...v1.19.0) (2026-02-08)
 
 ### ✨ Features
