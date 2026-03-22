@@ -97,8 +97,8 @@ export async function saveExerciseAction({ id, name, muscles, imageUrl }: Exerci
 		revalidatePath(ROUTES.EXERCISES);
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, {
-			extra: { context: "saveExerciseAction", id, name, muscles, imageUrl, userId },
+		logError(error, "saveExerciseAction", {
+			extra: { id, name, muscles, imageUrl, userId },
 		});
 		throw new Error("Failed to save exercise");
 	}
@@ -118,8 +118,8 @@ export async function deleteExerciseAction(id: string) {
 		revalidatePath(ROUTES.EXERCISES);
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, {
-			extra: { context: "deleteExerciseAction", id, userId },
+		logError(error, "deleteExerciseAction", {
+			extra: { id, userId },
 		});
 		throw new Error("Deletion failed");
 	}
@@ -141,9 +141,7 @@ export async function reorderProgramExercisesAction(programId: string, exerciseI
 			),
 		);
 	} catch (error) {
-		logError(error, {
-			extra: { context: "reorderProgramExercisesAction", programId, exerciseIds },
-		});
+		logError(error, "reorderProgramExercisesAction", { extra: { programId, exerciseIds } });
 		throw new Error("Failed to reorder program exercises");
 	}
 }

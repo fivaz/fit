@@ -24,7 +24,6 @@ export function TimeInput({ value, onUpdate, isPending }: TimeInputProps) {
 		};
 	}, []);
 
-
 	const handlePointerDown = () => {
 		// Start timer for long press (edit mode)
 		timerRef.current = setTimeout(() => {

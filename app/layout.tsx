@@ -8,10 +8,11 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/hooks/confirm/confirm-provider";
+import { APP_NAME } from "@/lib/consts";
+import { cn } from "@/lib/utils";
 
-const APP_NAME = "Fit-Tracker";
-const APP_DEFAULT_TITLE = "Fit-Tracker";
-const APP_TITLE_TEMPLATE = "%s - Fit-Tracker";
+const APP_DEFAULT_TITLE = APP_NAME;
+const APP_TITLE_TEMPLATE = `%s - ${APP_NAME}`;
 const APP_DESCRIPTION = "Track your workouts and monitor your progress.";
 
 export const metadata: Metadata = {
@@ -81,7 +82,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+			<body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="system"

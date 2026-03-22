@@ -46,7 +46,6 @@ export async function getProgramByIdAction(id: string): Promise<ProgramWithExerc
 
 	if (!program) return null;
 
-
 	// Mapping the nested 'exercise' objects into a flat array
 	return {
 		...program,
@@ -82,8 +81,8 @@ export async function saveProgramAction({ id, name, muscles }: ProgramUI) {
 
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, {
-			extra: { context: "error saving program", id, name, muscles, userId },
+		logError(error, "saveProgramAction", {
+			extra: { id, name, muscles, userId },
 		});
 		throw new Error("Failed to save program");
 	}
@@ -107,9 +106,7 @@ export async function reorderProgramsAction(sortedIds: string[]) {
 
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, {
-			extra: { context: "error updating program order", sortedIds },
-		});
+		logError(error, "reorderProgramsAction", { extra: { sortedIds } });
 		throw new Error("Failed to update program order");
 	}
 }
@@ -129,8 +126,8 @@ export async function deleteProgramAction(id: string) {
 
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, {
-			extra: { context: "error deleting program", id, userId },
+		logError(error, "error deleting program", {
+			extra: { id, userId },
 		});
 		throw new Error("Deletion failed");
 	}
@@ -164,9 +161,8 @@ export async function updateProgramExercisesAction(exerciseIds: string[], progra
 
 		revalidatePath(`${ROUTES.PROGRAMS}/${programId}`);
 	} catch (error) {
-		logError(error, {
+		logError(error, "error updating program exercises", {
 			extra: {
-				context: "error updating program exercises",
 				programId,
 				exerciseIds,
 				userId,

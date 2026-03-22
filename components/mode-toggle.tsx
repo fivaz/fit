@@ -38,7 +38,7 @@ export function ModeToggle() {
 			<DropdownMenuContent align="end">
 				{themes.map(({ label, value, icon: Icon }) => (
 					<DropdownMenuItem key={value} onClick={() => setTheme(value)} className="capitalize">
-						<Icon className="mr-2 h-4 w-4" />
+						<Icon className="mr-2 size-4" />
 						{label}
 					</DropdownMenuItem>
 				))}

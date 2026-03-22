@@ -10,7 +10,6 @@ import { SetRow } from "@/components/workout/set-row";
 import { WorkoutWithMappedSets } from "@/lib/workout/actions";
 import { getEmptySet, SetUI, WorkoutSetMap } from "@/lib/workout/type";
 
-
 type ExerciseCardProps = {
 	exercise: WorkoutWithMappedSets["exercises"][number];
 	index: number;
@@ -18,7 +17,6 @@ type ExerciseCardProps = {
 	setExerciseSets: Dispatch<SetStateAction<WorkoutSetMap>>;
 	isPending: boolean;
 };
-
 
 export function ExerciseCard({
 	exercise,
@@ -68,50 +66,50 @@ export function ExerciseCard({
 					</h3>
 				</div>
 
-			<div className="p-4">
-				{/* Header Row */}
-				<div className="mb-2 grid grid-cols-[40px_1fr_1fr_1fr_40px] gap-2">
-					<TooltipProvider>
-						<div className="flex items-center justify-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-							SET
-							<Tooltip delayDuration={300}>
-								<TooltipTrigger asChild>
-									<button
-										type="button"
-										className="cursor-help transition-colors hover:text-orange-500"
+				<div className="p-4">
+					{/* Header Row */}
+					<div className="mb-2 grid grid-cols-[40px_1fr_1fr_1fr_40px] gap-2">
+						<TooltipProvider>
+							<div className="flex items-center justify-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+								SET
+								<Tooltip delayDuration={300}>
+									<TooltipTrigger asChild>
+										<button
+											type="button"
+											className="cursor-help transition-colors hover:text-orange-500"
+										>
+											<Info className="size-3" />
+											<span className="sr-only">Set info</span>
+										</button>
+									</TooltipTrigger>
+									<TooltipContent
+										side="top"
+										className="max-w-52 border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-600 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95 dark:text-gray-300"
 									>
-										<Info className="size-3" />
-										<span className="sr-only">Set info</span>
-									</button>
-								</TooltipTrigger>
-								<TooltipContent
-									side="top"
-									className="max-w-52 border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-600 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95 dark:text-gray-300"
-								>
-									<p className="leading-relaxed">
-										Tap the set number to toggle between{" "}
-										<strong className="font-bold text-orange-600 dark:text-orange-400">
-											Normal
-										</strong>{" "}
-										and{" "}
-										<strong className="font-bold text-blue-600 dark:text-blue-400">Warmup</strong>{" "}
-										sets.
-									</p>
-								</TooltipContent>
-							</Tooltip>
-						</div>
-					</TooltipProvider>
+										<p className="leading-relaxed">
+											Tap the set number to toggle between{" "}
+											<strong className="font-bold text-orange-600 dark:text-orange-400">
+												Normal
+											</strong>{" "}
+											and{" "}
+											<strong className="font-bold text-blue-600 dark:text-blue-400">Warmup</strong>{" "}
+											sets.
+										</p>
+									</TooltipContent>
+								</Tooltip>
+							</div>
+						</TooltipProvider>
 
-					{["REPS", "WEIGHT", "TIME"].map((label) => (
-						<div
-							key={label}
-							className="flex items-center justify-center text-xs font-medium text-gray-500 dark:text-gray-400"
-						>
-							{label}
-						</div>
-					))}
-					<div />
-				</div>
+						{["REPS", "WEIGHT", "TIME"].map((label) => (
+							<div
+								key={label}
+								className="flex items-center justify-center text-xs font-medium text-gray-500 dark:text-gray-400"
+							>
+								{label}
+							</div>
+						))}
+						<div />
+					</div>
 
 					<AnimatePresence mode="popLayout">
 						{sets.map((set, index) => (

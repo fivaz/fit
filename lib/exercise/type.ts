@@ -12,7 +12,7 @@ export const exerciseUIArgs = {
 	},
 } satisfies Prisma.ExerciseDefaultArgs;
 
-export type ExerciseRaw = Prisma.ExerciseGetPayload<typeof exerciseUIArgs>
+export type ExerciseRaw = Prisma.ExerciseGetPayload<typeof exerciseUIArgs>;
 
 export type ExerciseUI = Omit<ExerciseRaw, "userId"> & { isPrivate: boolean };
 

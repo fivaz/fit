@@ -1,3 +1,5 @@
+export const APP_NAME = "Fit-Tracker";
+
 export const ROUTES = {
 	HOME: "/",
 	PROGRAMS: "/programs",

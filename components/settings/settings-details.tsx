@@ -47,7 +47,7 @@ export function SettingsDetailsInternal() {
 			await authClient.signOut();
 			router.push(ROUTES.LOGIN);
 		} catch (error) {
-			logError(error, { extra: { context: "SettingsDetails#handleSignOut" } });
+			logError(error, "SettingsDetails#handleSignOut");
 			toast.error("Failed to sign out. Please try again.");
 		} finally {
 			setIsPendingSignOut(false);

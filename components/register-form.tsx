@@ -4,11 +4,12 @@ import { ChangeEvent, ComponentProps, FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Dumbbell, Loader2, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { GithubIcon } from "@/components/icons/github-icon";
 import { GoogleIcon } from "@/components/icons/google-icon";
+import { Logo } from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,8 +20,8 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { authClient, signUp } from "@/lib/auth-client";
-import { ROUTES } from "@/lib/consts";
+import { signIn, signUp } from "@/lib/auth-client";
+import { APP_NAME, ROUTES } from "@/lib/consts";
 import { cn } from "@/lib/utils";
 
 export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
@@ -34,6 +35,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 	const [loading, setLoading] = useState(false);
 	const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
 	const router = useRouter();
+	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -48,7 +50,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 	const handleSocialLogin = async (provider: "google" | "github") => {
 		setSocialLoading(provider);
 		try {
-			await authClient.signIn.social({
+			await signIn.social({
 				provider,
 				callbackURL: ROUTES.HOME,
 			});
@@ -71,6 +73,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 			await signUp.email({
 				email,
 				password,
+				timezone,
 				name: `${firstName.trim()} ${lastName.trim()}`,
 				image: image ? await convertImageToBase64(image) : undefined,
 				callbackURL: ROUTES.HOME,
@@ -99,9 +102,9 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 					<div className="flex flex-col items-center gap-2 text-center">
 						<Link href="/public" className="flex flex-col items-center gap-2 font-medium">
 							<div className="bg-primary text-primary-foreground flex size-10 items-center justify-center rounded-md">
-								<Dumbbell className="size-8 text-white" />
+								<Logo className="size-8" />
 							</div>
-							<span className="sr-only">Acme Inc.</span>
+							<span className="sr-only">{APP_NAME}</span>
 						</Link>
 						<h1 className="text-xl font-bold">Create an account</h1>
 						<FieldDescription>
