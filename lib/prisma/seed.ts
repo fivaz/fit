@@ -28,6 +28,8 @@ async function main() {
 	await safeDelete(() => prisma.programToExercise.deleteMany());
 	await safeDelete(() => prisma.exercise.deleteMany());
 	await safeDelete(() => prisma.program.deleteMany());
+	await safeDelete(() => prisma.account.deleteMany());
+	await safeDelete(() => prisma.user.deleteMany());
 
 	console.log("👤 Creating Test user...");
 	// --- 2️⃣ Create or upsert user ---
