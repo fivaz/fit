@@ -14,12 +14,18 @@ import { prisma } from "@/lib/prisma";
  */
 export async function updateTimezoneAction(newTimezone: string) {
 	try {
+		const validTimezones = Intl.supportedValuesOf("timeZone");
+		if (!validTimezones.includes(newTimezone)) {
+			// Throwing here ensures the .catch() on the caller side is triggered
+			throw new Error(`Invalid timezone: ${newTimezone}`);
+		}
+
 		const session = await auth.api.getSession({
 			headers: await headers(),
 		});
 
 		if (!session?.user) {
-			return { success: false, error: "Unauthorized" };
+			throw new Error("Unauthorized: No active session found");
 		}
 
 		await prisma.user.update({
@@ -30,7 +36,13 @@ export async function updateTimezoneAction(newTimezone: string) {
 		});
 
 		revalidatePath(ROUTES.HOME);
+
+		return { success: true };
 	} catch (error) {
+		// 1. Log it for server-side debugging
 		logError(error, "updateTimezoneAction");
+
+		// 2. Re-throw so the parent's .catch() block executes
+		throw error;
 	}
 }

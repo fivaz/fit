@@ -16,7 +16,9 @@ export function TimezoneProvider() {
 		const storedTimezone = session.user.timezone;
 
 		if (browserTimezone !== storedTimezone) {
-			void updateTimezoneAction(browserTimezone);
+			updateTimezoneAction(browserTimezone).catch((error) => {
+				console.error("Failed to update timezone", error);
+			});
 		}
 	}, [session, isPending]);
 
