@@ -4,20 +4,13 @@ import {
 	createExercise,
 	createProgram,
 	dragToTarget,
-	ensureSharedTestUser,
-	getSharedTestUser,
-	loginWithEmailPassword,
+	signUpAndLoginTestUser,
+	waitForLabeledItem,
 } from "@/tests/e2e/helpers/flow-helpers";
 
-test.describe.serial("Program exercise reorder", () => {
-	const testUser = getSharedTestUser();
-
-	test.beforeAll(async ({ request }) => {
-		await ensureSharedTestUser(request, testUser);
-	});
-
-	test("Authenticated user can reorder exercises within a program", async ({ page }) => {
-		await loginWithEmailPassword(page, testUser);
+test.describe("Program exercise reorder", () => {
+	test("Authenticated user can reorder exercises within a program", async ({ page, request }) => {
+		await signUpAndLoginTestUser(page, request, "program-exercise-reorder");
 
 		const exerciseOne = `Reorder Exercise A ${Date.now()}`;
 		const exerciseTwo = `Reorder Exercise B ${Date.now()}`;
@@ -38,8 +31,8 @@ test.describe.serial("Program exercise reorder", () => {
 		await addExercisesDialog.getByText(exerciseTwo).first().click();
 		await addExercisesDialog.getByRole("button", { name: "Confirm (2) exercises" }).click();
 		await expect(page.getByText("Exercises updated successfully.")).toBeVisible();
-		await expect(page.getByRole("button", { name: `Open exercise ${exerciseOne}` })).toBeVisible();
-		await expect(page.getByRole("button", { name: `Open exercise ${exerciseTwo}` })).toBeVisible();
+		await waitForLabeledItem(page, "button", /Open exercise /, exerciseOne);
+		await waitForLabeledItem(page, "button", /Open exercise /, exerciseTwo);
 
 		const exerciseOpenButtons = page.getByRole("button", { name: /Open exercise / });
 		const beforeOrder = await exerciseOpenButtons.evaluateAll((elements) =>
@@ -65,7 +58,12 @@ test.describe.serial("Program exercise reorder", () => {
 			.first();
 
 		await dragToTarget(page, firstExerciseHandle, secondExerciseHandle);
+		await expect(page.getByRole("button", { name: "Program actions" })).toBeVisible({
+			timeout: 15_000,
+		});
 		await page.reload();
+		await waitForLabeledItem(page, "button", /Open exercise /, exerciseOne);
+		await waitForLabeledItem(page, "button", /Open exercise /, exerciseTwo);
 
 		const afterOrder = await page
 			.getByRole("button", { name: /Open exercise / })

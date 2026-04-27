@@ -1,22 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 import { ROUTES } from "@/lib/consts";
-import {
-	createExercise,
-	ensureSharedTestUser,
-	getSharedTestUser,
-	loginWithEmailPassword,
-} from "@/tests/e2e/helpers/flow-helpers";
+import { createExercise, signUpAndLoginTestUser } from "@/tests/e2e/helpers/flow-helpers";
 
-test.describe.serial("Exercises and body stats", () => {
-	const testUser = getSharedTestUser();
-
-	test.beforeAll(async ({ request }) => {
-		await ensureSharedTestUser(request, testUser);
-	});
-
-	test("Authenticated user can create an exercise", async ({ page }) => {
-		await loginWithEmailPassword(page, testUser);
+test.describe("Exercises and body stats", () => {
+	test("Authenticated user can create an exercise", async ({ page, request }) => {
+		await signUpAndLoginTestUser(page, request, "exercises-stats-create");
 		const exerciseName = `E2E Exercise ${Date.now()}`;
 		await createExercise(page, exerciseName);
 
@@ -26,8 +15,8 @@ test.describe.serial("Exercises and body stats", () => {
 		await expect(page.getByText(exerciseName).first()).toBeVisible();
 	});
 
-	test("Authenticated user can update body stats", async ({ page }) => {
-		await loginWithEmailPassword(page, testUser);
+	test("Authenticated user can update body stats", async ({ page, request }) => {
+		await signUpAndLoginTestUser(page, request, "exercises-stats-body");
 		await page.goto(ROUTES.SETTINGS);
 		await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
 

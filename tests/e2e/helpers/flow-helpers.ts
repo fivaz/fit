@@ -22,17 +22,6 @@ export function buildTestUser(prefix: string): TestUser {
 	};
 }
 
-const SHARED_CREDENTIAL = process.env.E2E_SHARED_CREDENTIAL ?? "e2e-shared-user@example.com";
-const SHARED_TEST_USER: TestUser = {
-	email: SHARED_CREDENTIAL,
-	password: SHARED_CREDENTIAL,
-	name: "Playwright E2E",
-};
-
-export function getSharedTestUser(): TestUser {
-	return SHARED_TEST_USER;
-}
-
 export async function signUpTestUser(request: APIRequestContext, user: TestUser) {
 	console.log(`[E2E USER] email=${user.email}`);
 	const signupResponse = await request.post("/api/auth/sign-up/email", {
@@ -46,32 +35,15 @@ export async function signUpTestUser(request: APIRequestContext, user: TestUser)
 	expect(signupResponse.ok()).toBeTruthy();
 }
 
-export async function ensureSharedTestUser(request: APIRequestContext, user: TestUser) {
-	console.log(`[E2E USER] email=${user.email}`);
-	const signupResponse = await request.post("/api/auth/sign-up/email", {
-		data: {
-			email: user.email,
-			password: user.password,
-			name: user.name,
-			callbackURL: ROUTES.HOME,
-		},
-	});
-
-	if (signupResponse.ok()) return;
-
-	// Same shared account may already exist from another spec/previous run.
-	const responseText = await signupResponse.text();
-	const responseTextLower = responseText.toLowerCase();
-	const isAlreadyExistingUser =
-		signupResponse.status() === 409 ||
-		responseTextLower.includes("already") ||
-		responseTextLower.includes("exists") ||
-		responseTextLower.includes("duplicate");
-
-	expect(
-		isAlreadyExistingUser,
-		`Failed to create shared E2E user. status=${signupResponse.status()} body=${responseText}`,
-	).toBeTruthy();
+export async function signUpAndLoginTestUser(
+	page: Page,
+	request: APIRequestContext,
+	prefix: string,
+): Promise<TestUser> {
+	const user = buildTestUser(prefix);
+	await signUpTestUser(request, user);
+	await loginWithEmailPassword(page, user);
+	return user;
 }
 
 export async function loginWithEmailPassword(page: Page, user: TestUser) {
@@ -141,4 +113,24 @@ export async function dragToTarget(page: Page, source: Locator, target: Locator)
 	);
 	await page.mouse.up();
 	await page.waitForTimeout(150);
+}
+
+export async function waitForLabeledItem(
+	page: Page,
+	role: "link" | "button",
+	namePattern: RegExp,
+	expectedSubstring: string,
+) {
+	await expect
+		.poll(
+			async () => {
+				return page
+					.getByRole(role, { name: namePattern })
+					.evaluateAll((elements) =>
+						elements.map((element) => element.getAttribute("aria-label") ?? ""),
+					);
+			},
+			{ timeout: 15_000 },
+		)
+		.toContainEqual(expect.stringContaining(expectedSubstring));
 }

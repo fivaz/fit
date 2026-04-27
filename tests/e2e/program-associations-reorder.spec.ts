@@ -5,20 +5,13 @@ import {
 	createExercise,
 	createProgram,
 	dragToTarget,
-	ensureSharedTestUser,
-	getSharedTestUser,
-	loginWithEmailPassword,
+	signUpAndLoginTestUser,
+	waitForLabeledItem,
 } from "@/tests/e2e/helpers/flow-helpers";
 
-test.describe.serial("Program associations and reordering", () => {
-	const testUser = getSharedTestUser();
-
-	test.beforeAll(async ({ request }) => {
-		await ensureSharedTestUser(request, testUser);
-	});
-
-	test("Authenticated user can associate exercises with a program", async ({ page }) => {
-		await loginWithEmailPassword(page, testUser);
+test.describe("Program associations and reordering", () => {
+	test("Authenticated user can associate exercises with a program", async ({ page, request }) => {
+		await signUpAndLoginTestUser(page, request, "program-assoc");
 
 		const exerciseOne = `Assoc Exercise A ${Date.now()}`;
 		const exerciseTwo = `Assoc Exercise B ${Date.now()}`;
@@ -48,8 +41,8 @@ test.describe.serial("Program associations and reordering", () => {
 		await expect(page.getByText(exerciseTwo).first()).toBeVisible();
 	});
 
-	test("Authenticated user can reorder programs", async ({ page }) => {
-		await loginWithEmailPassword(page, testUser);
+	test("Authenticated user can reorder programs", async ({ page, request }) => {
+		await signUpAndLoginTestUser(page, request, "program-reorder");
 
 		const firstProgram = `Reorder Program A ${Date.now()}`;
 		const secondProgram = `Reorder Program B ${Date.now()}`;
@@ -57,6 +50,8 @@ test.describe.serial("Program associations and reordering", () => {
 		await createProgram(page, firstProgram);
 		await createProgram(page, secondProgram);
 		await page.goto(ROUTES.PROGRAMS);
+		await waitForLabeledItem(page, "link", /Open program /, firstProgram);
+		await waitForLabeledItem(page, "link", /Open program /, secondProgram);
 
 		const programLinks = page.getByRole("link", { name: /Open program / });
 		const beforeOrder = await programLinks.evaluateAll((elements) =>
@@ -79,7 +74,12 @@ test.describe.serial("Program associations and reordering", () => {
 			.first();
 
 		await dragToTarget(page, firstProgramHandle, secondProgramHandle);
+		await expect(page.getByRole("button", { name: "Create program" })).toBeEnabled({
+			timeout: 15_000,
+		});
 		await page.reload();
+		await waitForLabeledItem(page, "link", /Open program /, firstProgram);
+		await waitForLabeledItem(page, "link", /Open program /, secondProgram);
 
 		const afterOrder = await page
 			.getByRole("link", { name: /Open program / })

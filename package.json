@@ -23,7 +23,7 @@
 		"exercises-seed": "tsx scripts/exercises-seed.ts",
 		"generate-pwa-assets": "pwa-assets-generator",
 		"test:e2e": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
-		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e/auth-programs.spec.ts tests/e2e/exercises-stats.spec.ts tests/e2e/program-associations-reorder.spec.ts tests/e2e/program-exercise-reorder.spec.ts"
+		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e"
 	},
 	"dependencies": {
 		"@dnd-kit/helpers": "^0.2.1",
