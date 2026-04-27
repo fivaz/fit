@@ -1,14 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import {
-	createExercise,
-	createProgram,
-	dragToTarget,
-	signUpAndLoginTestUser,
-	waitForLabeledItem,
-} from "@/tests/e2e/helpers/flow-helpers";
+import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
+import { dragToTarget, waitForLabeledItem } from "@/tests/e2e/helpers/dnd";
+import { createExercise, createProgram } from "@/tests/e2e/helpers/entities";
 
-test.describe("Program exercise reorder", () => {
+test.describe("Program Exercise Reorder", () => {
 	test("Authenticated user can reorder exercises within a program", async ({ page, request }) => {
 		await signUpAndLoginTestUser(page, request, "program-exercise-reorder");
 
