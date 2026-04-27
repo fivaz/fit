@@ -74,6 +74,7 @@ export function ExerciseFormButton({
 						<DrawerTitle>{exercise.id ? "Edit Exercise" : "Create Exercise"}</DrawerTitle>
 						{exercise.id && exercise.isPrivate && (
 							<Button
+								aria-label="Delete exercise"
 								variant="destructive"
 								className="absolute top-0 right-0 mx-4 my-2"
 								onClick={handleDelete}
