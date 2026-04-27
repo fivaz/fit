@@ -12,4 +12,4 @@ Ensure all API responses follow a consistent JSON envelope: { data: T, error: st
 Use Zod for runtime validation of all incoming API requests."*
 
 # Documentation & Readability
-- **Regex Rule:** Every Regular Expression must be preceded by a comment explaining its logic and purpose in plain English/French. Provide examples of matching and non-matching strings if the regex is complex.
+- **Regex Rule:** Every Regular Expression must be preceded by a comment explaining its logic and purpose in plain English. Provide examples of matching and non-matching strings if the regex is complex.

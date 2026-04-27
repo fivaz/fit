@@ -1,0 +1,21 @@
+---
+description: Rules for writing Playwright tests and UI accessibility
+globs: tests/**/*.spec.ts
+alwaysApply: false
+---
+# Testing Standards
+
+<rules>
+- Use `page.getByRole` or `page.getByLabel` for all locators.
+- Never use class-based CSS selectors.
+- Every new component MUST include an `aria-label`.
+- Wrap logical journey steps in `test.step()`.
+</rules>
+
+<examples>
+// Good
+await page.getByRole('button', { name: 'Submit' }).click();
+
+// Bad
+await page.locator('.btn-primary').click();
+</examples>
