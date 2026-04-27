@@ -43,7 +43,9 @@ export function ProgramFormButton({
 			{/* Omit Trigger if controlled externally */}
 			{!isControlled && (
 				<DrawerTrigger asChild>
-					<Button {...props}>{children || <PlusIcon className="size-5" />}</Button>
+					<Button aria-label="Create program" {...props}>
+						{children || <PlusIcon className="size-5" />}
+					</Button>
 				</DrawerTrigger>
 			)}
 
