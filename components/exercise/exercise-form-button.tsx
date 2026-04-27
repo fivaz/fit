@@ -62,7 +62,9 @@ export function ExerciseFormButton({
 			{/* Omit Trigger if controlled externally */}
 			{!isControlled && (
 				<DrawerTrigger asChild>
-					<Button {...props}>{children || <PlusIcon className="size-5" />}</Button>
+					<Button aria-label="Create exercise" {...props}>
+						{children || <PlusIcon className="size-5" />}
+					</Button>
 				</DrawerTrigger>
 			)}
 
