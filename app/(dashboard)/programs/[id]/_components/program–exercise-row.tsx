@@ -32,17 +32,20 @@ export function ProgramExerciseRow({ exercise, index }: ProgramExerciseRowProps)
 		>
 			<div className="flex items-stretch">
 				{/* Drag Handle */}
-				<div
+				<button
+					type="button"
+					aria-label="Drag exercise to reorder"
 					ref={handleRef}
 					className="flex cursor-grab items-center bg-gray-100 px-3 active:cursor-grabbing dark:bg-gray-700/50"
 				>
 					<GripVertical className="h-5 w-5 text-gray-400" />
-				</div>
+				</button>
 
 				{/* Content */}
 				{/* Added 'min-w-0' here so the flex child can shrink smaller than its content, it's necessary for the truncate */}
 				<button
 					type="button"
+					aria-label={`Open exercise ${exercise.name}`}
 					className="flex min-w-0 flex-1 cursor-pointer items-center gap-4 p-4 text-left"
 					onClick={() => setShowForm(true)}
 				>

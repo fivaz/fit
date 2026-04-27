@@ -21,7 +21,11 @@ export function ProgramRow({ program, index }: ProgramRowProps) {
 	const { ref, handleRef, isDragging } = useSortable({ id: program.id, index });
 
 	return (
-		<Link ref={ref} href={`${ROUTES.PROGRAMS}/${program.id}`}>
+		<Link
+			ref={ref}
+			href={`${ROUTES.PROGRAMS}/${program.id}`}
+			aria-label={`Open program ${program.name}`}
+		>
 			<Card
 				className={cn(
 					"group ring-chart-1 relative h-32 cursor-pointer overflow-hidden rounded-2xl p-0 transition-all hover:ring-1 focus:ring-2 focus:outline-none",
