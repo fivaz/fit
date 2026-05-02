@@ -122,6 +122,8 @@ export function SetRow({ index, isPending, setExerciseSets, exerciseId, set }: S
 
 			{/* Delete */}
 			<button
+				type="button"
+				aria-label="Delete set"
 				onClick={handleRemoveSet}
 				className="flex items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
 			>

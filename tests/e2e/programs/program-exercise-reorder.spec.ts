@@ -6,29 +6,39 @@ import { createExercise, createProgram } from "@/tests/e2e/helpers/entities";
 
 test.describe("Program Exercise Reorder", () => {
 	test("Authenticated user can reorder exercises within a program", async ({ page, request }) => {
-		await signUpAndLoginTestUser(page, request, "program-exercise-reorder");
+		await test.step("Authenticate user", async () => {
+			await signUpAndLoginTestUser(page, request, "program-exercise-reorder");
+		});
 
 		const exerciseOne = `Reorder Exercise A ${Date.now()}`;
 		const exerciseTwo = `Reorder Exercise B ${Date.now()}`;
 		const programName = `Reorder Exercise Program ${Date.now()}`;
 
-		await createExercise(page, exerciseOne);
-		await createExercise(page, exerciseTwo);
-		await createProgram(page, programName);
-		await page.getByRole("link", { name: `Open program ${programName}` }).click();
+		await test.step("Create data and open program", async () => {
+			await createExercise(page, exerciseOne);
+			await createExercise(page, exerciseTwo);
+			await createProgram(page, programName);
+			await page.getByRole("link", { name: `Open program ${programName}` }).click();
+		});
 
-		await page.getByRole("button", { name: "Program actions" }).click();
-		await page.getByRole("menuitem", { name: "Add Exercises" }).click();
-		const addExercisesDialog = page.getByRole("dialog");
-		await addExercisesDialog.getByRole("button", { name: "All" }).click();
-		await addExercisesDialog.getByPlaceholder("Search exercises...").fill(exerciseOne);
-		await addExercisesDialog.getByText(exerciseOne).first().click();
-		await addExercisesDialog.getByPlaceholder("Search exercises...").fill(exerciseTwo);
-		await addExercisesDialog.getByText(exerciseTwo).first().click();
-		await addExercisesDialog.getByRole("button", { name: "Confirm (2) exercises" }).click();
-		await expect(page.getByText("Exercises updated successfully.")).toBeVisible();
-		await waitForLabeledItem(page, "button", /Open exercise /, exerciseOne);
-		await waitForLabeledItem(page, "button", /Open exercise /, exerciseTwo);
+		await test.step("Associate both exercises", async () => {
+			await page.getByRole("button", { name: "Program actions" }).click();
+			await page.getByRole("menuitem", { name: "Add Exercises" }).click();
+			const addExercisesDialog = page.getByRole("dialog");
+			await addExercisesDialog.getByRole("button", { name: "All" }).click();
+			await addExercisesDialog
+				.getByRole("textbox", { name: "Search exercises..." })
+				.fill(exerciseOne);
+			await addExercisesDialog.getByText(exerciseOne).first().click();
+			await addExercisesDialog
+				.getByRole("textbox", { name: "Search exercises..." })
+				.fill(exerciseTwo);
+			await addExercisesDialog.getByText(exerciseTwo).first().click();
+			await addExercisesDialog.getByRole("button", { name: "Confirm (2) exercises" }).click();
+			await expect(page.getByText("Exercises updated successfully.")).toBeVisible();
+			await waitForLabeledItem(page, "button", /Open exercise /, exerciseOne);
+			await waitForLabeledItem(page, "button", /Open exercise /, exerciseTwo);
+		});
 
 		const exerciseOpenButtons = page.getByRole("button", { name: /Open exercise / });
 		const beforeOrder = await exerciseOpenButtons.evaluateAll((elements) =>
@@ -40,26 +50,19 @@ test.describe("Program Exercise Reorder", () => {
 		expect(beforeFirstIndex).toBeGreaterThanOrEqual(0);
 		expect(beforeSecondIndex).toBeGreaterThanOrEqual(0);
 
-		const firstExerciseHandle = page
-			.getByRole("button", { name: `Open exercise ${exerciseOne}` })
-			.locator(
-				"xpath=ancestor::div[contains(@class,'flex items-stretch')]//button[@aria-label='Drag exercise to reorder']",
-			)
-			.first();
-		const secondExerciseHandle = page
-			.getByRole("button", { name: `Open exercise ${exerciseTwo}` })
-			.locator(
-				"xpath=ancestor::div[contains(@class,'flex items-stretch')]//button[@aria-label='Drag exercise to reorder']",
-			)
-			.first();
+		const dragHandles = page.getByRole("button", { name: "Drag exercise to reorder" });
+		const firstExerciseHandle = dragHandles.nth(beforeFirstIndex);
+		const secondExerciseHandle = dragHandles.nth(beforeSecondIndex);
 
-		await dragToTarget(page, firstExerciseHandle, secondExerciseHandle);
-		await expect(page.getByRole("button", { name: "Program actions" })).toBeVisible({
-			timeout: 15_000,
+		await test.step("Reorder and verify persistence", async () => {
+			await dragToTarget(page, firstExerciseHandle, secondExerciseHandle);
+			await expect(page.getByRole("button", { name: "Program actions" })).toBeVisible({
+				timeout: 15_000,
+			});
+			await page.reload();
+			await waitForLabeledItem(page, "button", /Open exercise /, exerciseOne);
+			await waitForLabeledItem(page, "button", /Open exercise /, exerciseTwo);
 		});
-		await page.reload();
-		await waitForLabeledItem(page, "button", /Open exercise /, exerciseOne);
-		await waitForLabeledItem(page, "button", /Open exercise /, exerciseTwo);
 
 		const afterOrder = await page
 			.getByRole("button", { name: /Open exercise / })

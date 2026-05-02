@@ -7,16 +7,20 @@ import { createProgram } from "@/tests/e2e/helpers/entities";
 
 test.describe("Program Reorder", () => {
 	test("Authenticated user can reorder programs", async ({ page, request }) => {
-		await signUpAndLoginTestUser(page, request, "program-reorder");
+		await test.step("Authenticate user", async () => {
+			await signUpAndLoginTestUser(page, request, "program-reorder");
+		});
 
 		const firstProgram = `Reorder Program A ${Date.now()}`;
 		const secondProgram = `Reorder Program B ${Date.now()}`;
 
-		await createProgram(page, firstProgram);
-		await createProgram(page, secondProgram);
-		await page.goto(ROUTES.PROGRAMS);
-		await waitForLabeledItem(page, "link", /Open program /, firstProgram);
-		await waitForLabeledItem(page, "link", /Open program /, secondProgram);
+		await test.step("Create programs and open listing", async () => {
+			await createProgram(page, firstProgram);
+			await createProgram(page, secondProgram);
+			await page.goto(ROUTES.PROGRAMS);
+			await waitForLabeledItem(page, "link", /Open program /, firstProgram);
+			await waitForLabeledItem(page, "link", /Open program /, secondProgram);
+		});
 
 		const programLinks = page.getByRole("link", { name: /Open program / });
 		const beforeOrder = await programLinks.evaluateAll((elements) =>
@@ -38,13 +42,15 @@ test.describe("Program Reorder", () => {
 			.getByRole("button", { name: "Drag to reorder" })
 			.first();
 
-		await dragToTarget(page, firstProgramHandle, secondProgramHandle);
-		await expect(page.getByRole("button", { name: "Create program" })).toBeEnabled({
-			timeout: 15_000,
+		await test.step("Reorder programs and verify persisted order", async () => {
+			await dragToTarget(page, firstProgramHandle, secondProgramHandle);
+			await expect(page.getByRole("button", { name: "Create program" })).toBeEnabled({
+				timeout: 15_000,
+			});
+			await page.reload();
+			await waitForLabeledItem(page, "link", /Open program /, firstProgram);
+			await waitForLabeledItem(page, "link", /Open program /, secondProgram);
 		});
-		await page.reload();
-		await waitForLabeledItem(page, "link", /Open program /, firstProgram);
-		await waitForLabeledItem(page, "link", /Open program /, secondProgram);
 
 		const afterOrder = await page
 			.getByRole("link", { name: /Open program / })
