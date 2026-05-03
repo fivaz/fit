@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-
+import { expect, test } from "@/tests/e2e/fixtures";
 import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
 import { createExercise, createProgram } from "@/tests/e2e/helpers/entities";
 import {

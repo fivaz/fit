@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import "dotenv/config";
+
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3001";
 
 export default defineConfig({
@@ -14,7 +16,8 @@ export default defineConfig({
 		trace: "on-first-retry",
 	},
 	webServer: {
-		command: "pnpm dev --port 3001",
+		// Own distDir (see package.json `dev:e2e`) so this server does not share `.next/dev/lock` with `pnpm dev` on :3000.
+		command: "pnpm run dev:e2e",
 		url: baseURL,
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000,

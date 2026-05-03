@@ -6,6 +6,9 @@ import pkg from "./package.json";
 
 const nextConfig: NextConfig = {
 	/* config options here */
+	// Separate output dir when NEXT_DIST_DIR is set (e.g. E2E on :3001) so a second `next dev`
+	// does not fight `.next/dev/lock` with the main dev server on :3000.
+	distDir: process.env.NEXT_DIST_DIR ?? ".next",
 	env: {
 		NEXT_PUBLIC_APP_VERSION: pkg.version,
 	},

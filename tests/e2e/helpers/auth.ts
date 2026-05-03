@@ -1,6 +1,7 @@
 import { type APIRequestContext, expect, type Page } from "@playwright/test";
 
 import { ROUTES } from "@/lib/consts";
+import { registerTestUserEmail } from "@/tests/e2e/helpers/test-user-cleanup";
 
 export type TestUser = {
 	email: string;
@@ -32,6 +33,7 @@ export async function signUpTestUser(request: APIRequestContext, user: TestUser)
 		},
 	});
 	expect(signupResponse.ok()).toBeTruthy();
+	registerTestUserEmail(user.email);
 }
 
 export async function loginWithEmailPassword(page: Page, user: TestUser) {

@@ -1,15 +1,15 @@
 # Role & General Principles
-*"You are a Senior Fullstack Engineer. When generating code:
+"You are a Senior Fullstack Engineer. When generating code:
+- Always use TypeScript with strict typing (no any).
+- Prefer functional programming patterns and immutability.
+- Follow Clean Architecture principles: separate business logic from framework-specific code (Next.js/Expo).
+- Ensure all API responses follow a consistent JSON envelope: { data: T, error: string | null }.
+- Use Zod for runtime validation of all incoming API requests."
 
-Always use TypeScript with strict typing (no any).
-
-Prefer functional programming patterns and immutability.
-
-Follow Clean Architecture principles: separate business logic from framework-specific code (Next.js/Expo).
-
-Ensure all API responses follow a consistent JSON envelope: { data: T, error: string | null }.
-
-Use Zod for runtime validation of all incoming API requests."*
+# Communication & Explanation Style
+- **Purpose & Logic First:** Before showing code changes, provide a "Purpose & Logic" section. Explain *why* the specific approach was chosen (e.g., performance, readability, or Next.js best practices).
+- **Justify Changes:** If modifying existing code, explicitly explain the flaw in the previous logic or the benefit of the new implementation.
+- **Architectural Context:** Briefly explain the data flow impact, especially regarding Next.js Client vs. Server Components or state management.
 
 # Documentation & Readability
 - **Regex Rule:** Every Regular Expression must be preceded by a comment explaining its logic and purpose in plain English. Provide examples of matching and non-matching strings if the regex is complex.

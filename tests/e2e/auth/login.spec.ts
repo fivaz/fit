@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
-
 import { ROUTES } from "@/lib/consts";
+import { expect, test } from "@/tests/e2e/fixtures";
 import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
+import { registerTestUserEmail } from "@/tests/e2e/helpers/test-user-cleanup";
 
 test.describe("Auth", () => {
 	test("UI sign up creates account and redirects to dashboard", async ({ page }) => {
@@ -19,6 +19,7 @@ test.describe("Auth", () => {
 
 		await test.step("Verify successful account creation and redirect", async () => {
 			await expect(page.getByText("Account created successfully!")).toBeVisible();
+			registerTestUserEmail(credential);
 			await expect(page).toHaveURL(/\/$|\/workout\/.*/);
 			await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
 		});

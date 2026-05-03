@@ -1,6 +1,5 @@
-import { expect, test } from "@playwright/test";
-
 import { ROUTES } from "@/lib/consts";
+import { expect, test } from "@/tests/e2e/fixtures";
 import { buildTestUser, signUpTestUser } from "@/tests/e2e/helpers/auth";
 
 test.describe("Auth validation", () => {
