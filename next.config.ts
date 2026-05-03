@@ -4,8 +4,29 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 import pkg from "./package.json";
 
+/** Hostnames (and `a.b.*.*`-style patterns per Next.js) allowed to hit `/_next/*` in dev. Comma-separated. */
+function parseAllowedDevOriginsFromEnv(): string[] {
+	const raw = process.env.NEXT_ALLOWED_DEV_ORIGINS;
+	if (!raw?.trim()) return [];
+	return raw
+		.split(",")
+		.map((s) => s.trim())
+		.filter(Boolean);
+}
+
+// When set (including defaults below), dev uses block mode for disallowed origins instead of warn-only.
+// Wildcards follow Next’s `isCsrfOriginAllowed` rules (dot-separated segments; `*` per segment).
+const allowedDevOrigins: string[] = [
+	...parseAllowedDevOriginsFromEnv(),
+	"127.0.0.1",
+	"192.168.*.*",
+	"10.*.*.*",
+	"172.*.*.*",
+];
+
 const nextConfig: NextConfig = {
 	/* config options here */
+	allowedDevOrigins,
 	// Separate output dir when NEXT_DIST_DIR is set (e.g. E2E on :3001) so a second `next dev`
 	// does not fight `.next/dev/lock` with the main dev server on :3000.
 	distDir: process.env.NEXT_DIST_DIR ?? ".next",
