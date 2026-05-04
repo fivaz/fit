@@ -1,0 +1,28 @@
+---
+description: API response envelope and runtime validation standards
+globs: ["app/api/**/*.ts", "lib/**/*.ts", "**/*route.ts"]
+alwaysApply: false
+---
+
+# API Contracts
+
+- Keep API responses consistent with this envelope:
+  - `{ data: T, error: string | null }`
+- Validate incoming API requests at runtime using Zod.
+- Treat all external input as untrusted until validated.
+
+## Request Validation
+
+- Define Zod schemas for params, query, headers (when relevant), and body.
+- Return clear, stable validation errors through the standard response envelope.
+- Parse once at the boundary, then pass typed values deeper into the system.
+
+## Response Shape
+
+- Success: `error` must be `null` and `data` must contain the payload.
+- Failure: `data` should be `null` or an empty-safe equivalent, and `error` should be actionable.
+
+## Don't
+
+- Return ad-hoc response formats per route.
+- Skip validation for "internal" endpoints that still accept request input.

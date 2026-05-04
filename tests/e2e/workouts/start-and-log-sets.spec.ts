@@ -70,7 +70,6 @@ test.describe("Workout Logging", () => {
 
 		await test.step("Wait for sync and verify persisted values", async () => {
 			// Wait for debounce -> sync cycle (upload icon then synced icon).
-			await page.waitForTimeout(1900);
 			await expect(page.getByLabel("syncing-icon")).toBeVisible({ timeout: 8000 });
 			await expect(page.getByLabel("synced-icon")).toBeVisible({ timeout: 12000 });
 

@@ -44,6 +44,11 @@ test.describe("Workout advanced interactions", () => {
 
 		await test.step("Open exercise details drawer", async () => {
 			await page.getByRole("button", { name: "View exercise details" }).click();
+			// We build a case-insensitive RegExp from `exerciseName` because the details drawer heading can
+			// include extra context around the exercise label (for example, "Advanced Exercise 12345" or
+			// "advanced exercise 12345"), and we only need to verify that the generated `exerciseName` appears.
+			// This should match headings that contain the same text in different casing, and ignore unrelated
+			// headings (for example, it matches "ADVANCED EXERCISE 12345" but not "Different Exercise 12345").
 			await expect(
 				page.getByRole("heading", { name: new RegExp(exerciseName, "i") }),
 			).toBeVisible();

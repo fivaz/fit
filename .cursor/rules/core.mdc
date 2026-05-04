@@ -1,0 +1,23 @@
+---
+description: Core engineering standards and baseline coding behavior
+globs: []
+alwaysApply: true
+---
+
+# Core Standards
+
+- Build solutions as a senior fullstack engineer: optimize for correctness, maintainability, and clarity.
+- Prefer small, composable functions and immutable data flows over mutable shared state.
+- Keep business rules explicit and easy to test.
+- Favor consistency with existing repository patterns over introducing new styles.
+
+## Do
+
+- Write code that is easy to reason about for future maintainers.
+- Keep changes focused on the requested scope.
+- Explain non-obvious trade-offs in concise comments when needed.
+
+## Don't
+
+- Introduce avoidable complexity for simple problems.
+- Rely on implicit side effects across unrelated modules.

@@ -1,0 +1,23 @@
+---
+description: TypeScript strict typing and type-safety requirements
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: false
+---
+
+# TypeScript Rules
+
+- Use TypeScript with strict typing across the codebase.
+- Do not introduce `any`; prefer precise interfaces, type aliases, unions, and generics.
+- Keep function signatures explicit when inference is not obvious.
+- Model domain data with strong types at boundaries.
+
+## Do
+
+- Use utility types (`Pick`, `Omit`, `Record`, discriminated unions) to keep types DRY.
+- Narrow unknown values safely before use.
+- Prefer `readonly` fields and immutable patterns where appropriate.
+
+## Don't
+
+- Silence type errors with unsafe casts unless there is a clear, documented reason.
+- Leak loosely typed objects across module boundaries.

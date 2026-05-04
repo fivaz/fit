@@ -1,0 +1,28 @@
+---
+description: Readability and regex documentation requirements
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: false
+---
+
+# Documentation & Readability
+
+- Keep code self-explanatory through naming and structure first.
+- Add brief comments only when logic is non-obvious.
+
+## Regex Rule (Mandatory)
+
+- Every regular expression must be preceded by a comment that explains:
+  - What the pattern is intended to match
+  - Why this pattern is needed
+- For complex expressions, include short examples of:
+  - Matching strings
+  - Non-matching strings
+
+## Example
+
+```ts
+// Match ISO dates in YYYY-MM-DD format used by report filters.
+// Matches: "2026-05-04"
+// Does not match: "04-05-2026", "2026/05/04"
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+```

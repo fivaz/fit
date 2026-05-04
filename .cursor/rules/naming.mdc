@@ -1,0 +1,34 @@
+---
+description: Naming and convention rules for readable, consistent code
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: false
+---
+
+# Naming Conventions
+
+- Choose descriptive names that communicate intent, not implementation noise.
+- Use consistent naming across modules for the same concept.
+- Prefer domain vocabulary over generic terms like `data`, `item`, or `value`.
+
+## Identifier Style
+
+- `camelCase` for variables, functions, and object fields.
+- `PascalCase` for React components, classes, and TypeScript types/interfaces.
+- `UPPER_SNAKE_CASE` for compile-time constants.
+- File names should follow existing project conventions; stay consistent within each folder.
+
+## Functions & Booleans
+
+- Use verb-first names for actions (for example: `createWorkout`, `fetchSession`).
+- Use `is/has/can/should` prefixes for booleans (for example: `isLoading`, `hasAccess`).
+- Name async functions as actions and return typed results.
+
+## Do
+
+- Keep acronyms readable (`userId` instead of `userID` if repo style prefers `Id`).
+- Rename ambiguous identifiers during refactors when safe.
+
+## Don't
+
+- Use single-letter names outside short, local loops.
+- Reuse the same name for different meanings in nearby scopes.
