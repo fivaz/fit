@@ -1,3 +1,5 @@
+import { addMinutes, subMilliseconds } from "date-fns";
+
 import { MuscleGroup, Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -15,10 +17,9 @@ async function safeDelete(modelDelete: () => Promise<unknown>) {
 
 /** Calendar day at UTC midnight for `BodyMetric.date` (@db.Date). */
 function utcDateOnly(daysAgo: number): Date {
-	const d = new Date();
-	d.setUTCDate(d.getUTCDate() - daysAgo);
-	d.setUTCHours(0, 0, 0, 0);
-	return d;
+	const now = new Date();
+	const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+	return subMilliseconds(new Date(utcMidnight), daysAgo * 86_400_000);
 }
 
 type ExerciseSeed = {
@@ -316,13 +317,11 @@ async function main() {
 	console.log("📜 Seeding historical workouts (progress + prefill)...");
 
 	const daysAgo = (n: number) => {
-		const start = new Date();
-		start.setDate(start.getDate() - n);
-		start.setHours(9, 30, 0, 0);
-		return start;
+		const now = new Date();
+		const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+		const dayStart = subMilliseconds(new Date(utcMidnight), n * 86_400_000);
+		return addMinutes(dayStart, 9 * 60 + 30);
 	};
-
-	const addMinutes = (d: Date, m: number) => new Date(d.getTime() + m * 60_000);
 
 	// Finished push — 6 days ago: warmups, working sets, mixed timestamps
 	const pushStart = daysAgo(6);

@@ -23,7 +23,6 @@ export function buildTestUser(prefix: string): TestUser {
 }
 
 export async function signUpTestUser(request: APIRequestContext, user: TestUser) {
-	console.log(user.email);
 	const signupResponse = await request.post("/api/auth/sign-up/email", {
 		data: {
 			email: user.email,
