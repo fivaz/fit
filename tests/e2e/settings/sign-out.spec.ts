@@ -6,9 +6,9 @@ test.describe("Sign out", () => {
 	test("Authenticated user can sign out from Settings and reach login", async ({
 		page,
 		request,
-	}) => {
+	}, testInfo) => {
 		await test.step("Authenticate", async () => {
-			await signUpAndLoginTestUser(page, request, "settings-sign-out");
+			await signUpAndLoginTestUser(page, request, `settings-sign-out-${testInfo.testId}`);
 		});
 
 		await test.step("Open Settings and sign out", async () => {
@@ -18,6 +18,7 @@ test.describe("Sign out", () => {
 		});
 
 		await test.step("Verify login route", async () => {
+			// Escape login-path slashes and anchor with `$` so the URL ends exactly at the login route.
 			await expect(page).toHaveURL(new RegExp(`${ROUTES.LOGIN.replace("/", "\\/")}$`));
 			await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
 		});

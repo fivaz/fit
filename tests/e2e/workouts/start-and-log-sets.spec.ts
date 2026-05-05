@@ -34,6 +34,7 @@ test.describe("Workout Logging", () => {
 
 		await test.step("Start workout and log set values", async () => {
 			await page.getByRole("button", { name: "Start Workout" }).click();
+			// `toHaveURL(/\/workout\/.+/)` accepts any generated workout id path (e.g., `/workout/abc123`) and rejects non-workout or empty-id paths (e.g., `/workouts/abc123`, `/workout/`).
 			await expect(page).toHaveURL(/\/workout\/.+/);
 			await expect(page.getByRole("heading", { name: programName })).toBeVisible();
 
@@ -48,6 +49,7 @@ test.describe("Workout Logging", () => {
 
 			// Quick click should set current time.
 			await timeButton.click();
+			// `toHaveText(/\d{2}:\d{2}/)` enforces zero-padded HH:MM output (e.g., `08:30`) and rejects non-padded/invalid formats (e.g., `8:30`, `0830`) because the button shows formatted clock time.
 			await expect(timeButton).toHaveText(/\d{2}:\d{2}/);
 
 			// Long press should open time input and allow manual change.

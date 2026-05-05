@@ -37,13 +37,15 @@ export function ProgramFormButton({
 	const isControlled = externalOpen !== undefined;
 	const open = isControlled ? externalOpen : internalOpen;
 	const onOpenChange = isControlled ? setExternalOpen : setInternalOpen;
+	const isEditProgram = Boolean(program.id);
+	const ariaLabel = props["aria-label"] ?? (isEditProgram ? "Edit program" : "Create program");
 
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange}>
 			{/* Omit Trigger if controlled externally */}
 			{!isControlled && (
 				<DrawerTrigger asChild>
-					<Button aria-label="Create program" {...props}>
+					<Button aria-label={ariaLabel} {...props}>
 						{children || <PlusIcon className="size-5" />}
 					</Button>
 				</DrawerTrigger>
@@ -52,8 +54,8 @@ export function ProgramFormButton({
 			<DrawerContent className="max-h-[90vh]">
 				<div className="mx-auto w-full max-w-md overflow-y-auto pb-6">
 					<DrawerHeader>
-						<DrawerTitle>{program.id ? "Edit Program" : "Create Program"}</DrawerTitle>
-						{!program.id && (
+						<DrawerTitle>{isEditProgram ? "Edit Program" : "Create Program"}</DrawerTitle>
+						{!isEditProgram && (
 							<DrawerDescription>
 								Name your program and select target muscle groups.
 							</DrawerDescription>

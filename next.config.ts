@@ -21,7 +21,6 @@ const allowedDevOrigins: string[] = [
 	"127.0.0.1",
 	"192.168.*.*",
 	"10.*.*.*",
-	"172.*.*.*",
 ];
 
 const nextConfig: NextConfig = {

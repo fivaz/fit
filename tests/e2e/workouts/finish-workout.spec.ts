@@ -37,7 +37,9 @@ test.describe("Finish workout", () => {
 		});
 
 		await test.step("Verify redirect to Progress", async () => {
-			await expect(page).toHaveURL(new RegExp(`${ROUTES.PROGRESS.replace("/", "\\/")}$`));
+			const escapedProgressRoute = ROUTES.PROGRESS.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			// Matches the exact Progress route URL with an end-of-string anchor ($).
+			await expect(page).toHaveURL(new RegExp(`${escapedProgressRoute}$`));
 			await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
 			await expect(page.getByText(/Workout finished on/i)).toBeVisible();
 		});

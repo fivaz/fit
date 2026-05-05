@@ -60,7 +60,7 @@ test.describe("Exercise CRUD", () => {
 			await page.getByRole("button", { name: "All" }).click();
 			await page.getByRole("textbox", { name: "Search exercises..." }).fill(updatedExerciseName);
 			await expect(
-				page.getByRole("button", { name: new RegExp(updatedExerciseName, "i") }).first(),
+				page.getByRole("button", { name: new RegExp(updatedExerciseName, "i") }),
 			).toHaveCount(0);
 		});
 	});

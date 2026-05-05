@@ -17,7 +17,7 @@ alwaysApply: false
 
 <workflow>
 1. **Develop:** Update the UI and/or the `.spec.ts` file.
-2. **Auto-Verify:** Run `npx playwright test <file_path>` internally. If it fails, fix the code and re-run until it passes.
+2. **Auto-Verify:** Run `pnpm exec playwright test <file_path>` internally. If it fails, fix the code and re-run until it passes.
 3. **Report:** State "I've verified the test passes in the background." 
 4. **Hand-off:** Provide the command for the user to run it with the UI/Headed mode enabled.
 </workflow>
@@ -34,4 +34,5 @@ await test.step('Create Workout', async () => {
 Conclude every test-related task with:
 "Verification complete. You can run this test yourself to see the UI:"
 ```bash
-npx playwright test tests/auth.spec.ts --headed
+pnpm exec playwright test <file_path> --headed
+```

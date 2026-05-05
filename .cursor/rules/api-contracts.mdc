@@ -20,7 +20,7 @@ alwaysApply: false
 ## Response Shape
 
 - Success: `error` must be `null` and `data` must contain the payload.
-- Failure: `data` should be `null` or an empty-safe equivalent, and `error` should be actionable.
+- Failure: `data` must use a declared empty-safe form for that endpoint (prefer `null`; allowed equivalents only when semantically clearer: `{}` for object payloads, `[]` for list payloads, `""` for string payloads), and each endpoint contract example must declare and consistently use exactly one form; `error` must be actionable and include `code` and `message` (enforced via endpoint contract examples). Failure examples by allowed form: `{"data": null, "error": {"code": "WORKOUT_NOT_FOUND", "message": "Workout was not found."}}`, `{"data": {}, "error": {"code": "SETTINGS_UNAVAILABLE", "message": "Settings are currently unavailable."}}`, `{"data": [], "error": {"code": "NO_WORKOUTS", "message": "No workouts available for this user."}}`, `{"data": "", "error": {"code": "TOKEN_INVALID", "message": "Provided token is invalid."}}`.
 
 ## Don't
 
