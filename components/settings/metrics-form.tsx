@@ -26,14 +26,14 @@ interface MetricsFormProps {
 }
 
 export function MetricsForm({ isOpen, onClose, bodyMetrics }: MetricsFormProps) {
-	const { addItem } = useBodyMetricsMutations();
+	const { updateItem } = useBodyMetricsMutations();
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const formData = new FormData(e.currentTarget);
 
-		const bodyMetricsData = formToBodyMetric(formData);
+		const bodyMetricsData = { ...formToBodyMetric(formData), id: bodyMetrics.id };
 
-		addItem(bodyMetricsData, {
+		updateItem(bodyMetricsData, {
 			persist: () => saveBodyMetrics(bodyMetricsData),
 			onSuccess: () => toast.success("Body metrics added successfully."),
 			onError: () => toast.error("Failed to add body metrics."),
