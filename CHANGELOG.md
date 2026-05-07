@@ -1,3 +1,28 @@
+## [1.20.1](https://github.com/fivaz/fit-v2/compare/v1.20.0...v1.20.1) (2026-05-07)
+
+### 🧹 Chores
+
+* add a coderabbit cursor rule ([93af9a0](https://github.com/fivaz/fit-v2/commit/93af9a0027f0f0332097f5e44bdf0a34274ce40d))
+* add a sign up test ([58a05c0](https://github.com/fivaz/fit-v2/commit/58a05c0df8e0eb33206ba9f1867862fec1c5ce03))
+* add cursorrules ([9e57512](https://github.com/fivaz/fit-v2/commit/9e57512ea869c710abf5a8ea3302d9daf003d4bd))
+* add test for auth and add programs ([9316045](https://github.com/fivaz/fit-v2/commit/93160456ea78adae76c615a8737615325693e613))
+* add test for CRUD exercise and bodyStats ([b2d1c6f](https://github.com/fivaz/fit-v2/commit/b2d1c6febff8e6ff66d5268a4d8b7368b56fac85))
+* add test to associating programs to exercises and reordering them ([bc2bdd1](https://github.com/fivaz/fit-v2/commit/bc2bdd19862d1ad04466bd4eb822a619b17c1adc))
+* add workout logging test ([39e739d](https://github.com/fivaz/fit-v2/commit/39e739df51f088b2cef6417fcacc3b427daa7119))
+* apply new test rules ([d1d0fc8](https://github.com/fivaz/fit-v2/commit/d1d0fc89e83cee478921ac956b8392c34ba977c0))
+* apply small changes in tests ([2db0bf6](https://github.com/fivaz/fit-v2/commit/2db0bf698f729a088432ba4dfa83567b7d379461))
+* delete data created by test ([c841849](https://github.com/fivaz/fit-v2/commit/c841849153632ec2d09e4701b51bb5de6e9c9658))
+* improve test organization by files ([711a011](https://github.com/fivaz/fit-v2/commit/711a01142973845eab2869a86f20d483a7c440ee))
+* increase test coverage on marginal features ([19e6907](https://github.com/fivaz/fit-v2/commit/19e6907bf36ed7eb4b27a8ef94f1c266cfd959e7))
+* make CRUD test for program and exercise ([b07ff3f](https://github.com/fivaz/fit-v2/commit/b07ff3f544438ca86b4b35253f347f40ae179517))
+* make seed more complet ([1b70055](https://github.com/fivaz/fit-v2/commit/1b70055641792ecbe20d0d5e1372075b3aeacf48))
+* make tests fully parallel by using api driven login ([ad90fc7](https://github.com/fivaz/fit-v2/commit/ad90fc74f6af5d5b4be7ef5fa4130ad9698a171f))
+* use cursor rules new format ([e9a6ec3](https://github.com/fivaz/fit-v2/commit/e9a6ec3d22db9cad63405c9ce68a4b65891d9036))
+
+### 🔨 Code Refactoring
+
+* use date-fns lib to manage dates ([79e35ac](https://github.com/fivaz/fit-v2/commit/79e35acb93e8c99f648d1c5a0161fc5f93ac4f01))
+
 ## [1.20.0](https://github.com/fivaz/fit-v2/compare/v1.19.0...v1.20.0) (2026-03-22)
 
 ### ✨ Features
