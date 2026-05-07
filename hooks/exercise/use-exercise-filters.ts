@@ -5,7 +5,7 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { ExerciseFilterShellProps } from "@/components/exercise/exercise-filter-shell";
 import { PAGE_SIZE } from "@/lib/consts";
-import { getExercisesSearchAction } from "@/lib/exercise/actions";
+import { getExercisesSearch } from "@/lib/exercise/api";
 import { ExerciseUI } from "@/lib/exercise/type";
 import { MuscleGroupType } from "@/lib/muscle/type";
 
@@ -36,7 +36,7 @@ export function useExerciseFilters(muscles: MuscleGroupType[]): UseExerciseFilte
 
 	const { data, size, setSize, isLoading, isValidating } = useSWRInfinite(
 		getKey,
-		getExercisesSearchAction,
+		getExercisesSearch,
 	);
 
 	return {

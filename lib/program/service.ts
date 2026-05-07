@@ -1,4 +1,3 @@
-"use server";
 import { revalidatePath } from "next/cache";
 
 import { ROUTES } from "@/lib/consts";
@@ -12,17 +11,11 @@ import {
 	programWithExercisesArgs,
 } from "@/lib/program/type";
 import { devDelay } from "@/lib/utils";
-import { getUserId } from "@/lib/utils-server";
 
 import "server-only";
 
-/**
- * Fetches all programs for the current user.
- */
-export async function getProgramsAction(): Promise<ProgramUI[]> {
+export async function getPrograms(userId: string): Promise<ProgramUI[]> {
 	await devDelay();
-
-	const userId = await getUserId();
 
 	return prisma.program.findMany({
 		where: { userId },
@@ -33,12 +26,12 @@ export async function getProgramsAction(): Promise<ProgramUI[]> {
 	});
 }
 
-/**
- * Public fetcher for a single program.
- */
-export async function getProgramByIdAction(id: string): Promise<ProgramWithExercises | null> {
+export async function getProgramById(
+	id: string,
+	userId: string,
+): Promise<ProgramWithExercises | null> {
 	await devDelay();
-	const userId = await getUserId();
+
 	const program = await prisma.program.findFirst({
 		where: { id, userId },
 		...programWithExercisesArgs,
@@ -46,7 +39,6 @@ export async function getProgramByIdAction(id: string): Promise<ProgramWithExerc
 
 	if (!program) return null;
 
-	// Mapping the nested 'exercise' objects into a flat array
 	return {
 		...program,
 		exercises: program.exercises.map(({ exercise, order }) => ({
@@ -56,17 +48,12 @@ export async function getProgramByIdAction(id: string): Promise<ProgramWithExerc
 	};
 }
 
-/**
- * Saves or updates a program.
- */
-export async function saveProgramAction({ id, name, muscles }: ProgramUI) {
+export async function saveProgram({ id, name, muscles }: ProgramUI, userId: string) {
 	await devDelay();
-
-	const userId = await getUserId();
 
 	try {
 		await prisma.program.upsert({
-			where: { id: id || "new-id" },
+			where: { id: id || "new-id", userId },
 			update: {
 				name,
 				muscles,
@@ -81,24 +68,21 @@ export async function saveProgramAction({ id, name, muscles }: ProgramUI) {
 
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, "saveProgramAction", {
+		logError(error, "saveProgram", {
 			extra: { id, name, muscles, userId },
 		});
 		throw new Error("Failed to save program");
 	}
 }
 
-/**
- * Updates the order of programs.
- */
-export async function reorderProgramsAction(sortedIds: string[]) {
+export async function reorderPrograms(sortedIds: string[], userId: string) {
 	await devDelay();
 
 	try {
 		await prisma.$transaction(
 			sortedIds.map((id, index) =>
 				prisma.program.update({
-					where: { id },
+					where: { id, userId },
 					data: { order: index },
 				}),
 			),
@@ -106,18 +90,13 @@ export async function reorderProgramsAction(sortedIds: string[]) {
 
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, "reorderProgramsAction", { extra: { sortedIds } });
+		logError(error, "reorderPrograms", { extra: { sortedIds, userId } });
 		throw new Error("Failed to update program order");
 	}
 }
 
-/**
- * Deletes a program.
- */
-export async function deleteProgramAction(id: string) {
+export async function deleteProgram(id: string, userId: string) {
 	await devDelay();
-
-	const userId = await getUserId();
 
 	try {
 		await prisma.program.delete({
@@ -126,19 +105,18 @@ export async function deleteProgramAction(id: string) {
 
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, "error deleting program", {
+		logError(error, "deleteProgram", {
 			extra: { id, userId },
 		});
 		throw new Error("Deletion failed");
 	}
 }
 
-/**
- * Updates exercises linked to a program.
- */
-export async function updateProgramExercisesAction(exerciseIds: string[], programId: string) {
-	const userId = await getUserId();
-
+export async function updateProgramExercises(
+	exerciseIds: string[],
+	programId: string,
+	userId: string,
+) {
 	try {
 		const program = await prisma.program.findFirst({
 			where: { id: programId, userId },
@@ -147,9 +125,7 @@ export async function updateProgramExercisesAction(exerciseIds: string[], progra
 		if (!program) throw new Error("Program not found or not owned by user");
 
 		await prisma.$transaction([
-			// Delete existing relations
 			prisma.programToExercise.deleteMany({ where: { programId } }),
-			// Insert new relations with order
 			prisma.programToExercise.createMany({
 				data: exerciseIds.map((exerciseId, index) => ({
 					programId,
@@ -161,7 +137,7 @@ export async function updateProgramExercisesAction(exerciseIds: string[], progra
 
 		revalidatePath(`${ROUTES.PROGRAMS}/${programId}`);
 	} catch (error) {
-		logError(error, "error updating program exercises", {
+		logError(error, "updateProgramExercises", {
 			extra: {
 				programId,
 				exerciseIds,

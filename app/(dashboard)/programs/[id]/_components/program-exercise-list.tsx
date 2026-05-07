@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { ProgramExerciseRow } from "@/app/(dashboard)/programs/[id]/_components/program–exercise-row";
 import { ExerciseEmptyState } from "@/components/exercise/exercise-empty-state";
 import { useExerciseMutations, useExercisesStore } from "@/hooks/exercise/store";
-import { reorderProgramExercisesAction } from "@/lib/exercise/actions";
+import { reorderProgramExercises } from "@/lib/exercise/api";
 import { OrderedExercise } from "@/lib/program/type";
 import { sameOrder } from "@/lib/utils";
 
@@ -32,7 +32,7 @@ export function ProgramExerciseList({ programId }: ProgramExerciseListProps) {
 
 				setItems(nextItems, {
 					persist: () =>
-						reorderProgramExercisesAction(
+						reorderProgramExercises(
 							programId,
 							nextItems.map((e) => e.id),
 						),

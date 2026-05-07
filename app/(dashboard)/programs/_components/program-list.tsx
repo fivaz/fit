@@ -10,7 +10,7 @@ import { ProgramEmptyState } from "@/app/(dashboard)/programs/_components/progra
 import { ProgramRow } from "@/app/(dashboard)/programs/_components/program-row";
 import { ProgramFormButton } from "@/components/program/program-form-button";
 import { ProgramsProvider, useProgramMutations, useProgramsStore } from "@/hooks/program/store";
-import { reorderProgramsAction } from "@/lib/program/actions";
+import { reorderPrograms } from "@/lib/program/api";
 import { ProgramUI } from "@/lib/program/type";
 import { sameOrder } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ export function ProgramsListInternal() {
 
 		// TODO check later why this doesn't rollback
 		setItems(reordered, {
-			persist: () => reorderProgramsAction(reordered.map((p) => p.id)),
+			persist: () => reorderPrograms(reordered.map((p) => p.id)),
 			onError: () => toast.error("Failed to reorder programs. Reverting."),
 		});
 	}

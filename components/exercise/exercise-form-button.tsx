@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/drawer";
 import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { useExerciseMutations } from "@/hooks/exercise/store";
-import { deleteExerciseAction } from "@/lib/exercise/actions";
+import { deleteExercise } from "@/lib/exercise/api";
 import { buildEmptyExercise, ExerciseUI } from "@/lib/exercise/type";
 
 type ExerciseFormButtonProps = React.ComponentProps<typeof Button> & {
@@ -51,7 +51,7 @@ export function ExerciseFormButton({
 		if (!confirmed) return;
 
 		deleteItem(exercise.id, {
-			persist: () => deleteExerciseAction(exercise.id),
+			persist: () => deleteExercise(exercise.id),
 			onSuccess: () => toast.success("Exercise deleted successfully."),
 			onError: () => toast.error("Failed to delete exercise."),
 		});

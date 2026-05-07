@@ -21,7 +21,7 @@ import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { ExercisesProvider } from "@/hooks/exercise/store";
 import { ProgramsProvider, useProgramMutations, useProgramsStore } from "@/hooks/program/store";
 import { ROUTES } from "@/lib/consts";
-import { deleteProgramAction } from "@/lib/program/actions";
+import { deleteProgram } from "@/lib/program/api";
 import { ProgramWithExercises } from "@/lib/program/type";
 
 type ProgramDetailProps = {
@@ -55,7 +55,7 @@ export function ProgramDetailsInternal() {
 		if (!confirmed) return;
 
 		deleteItem(program.id, {
-			persist: () => deleteProgramAction(program.id),
+			persist: () => deleteProgram(program.id),
 			onSuccess: () => {
 				toast.success("Program deleted successfully.");
 				router.push(ROUTES.PROGRAMS);

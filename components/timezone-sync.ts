@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { authClient } from "@/lib/auth-client";
-import { updateTimezoneAction } from "@/lib/user/actions";
+import { updateTimezone } from "@/lib/user/api";
 
 export function TimezoneProvider() {
 	// This fetch happens in the background after the page loads
@@ -16,7 +16,7 @@ export function TimezoneProvider() {
 		const storedTimezone = session.user.timezone;
 
 		if (browserTimezone !== storedTimezone) {
-			updateTimezoneAction(browserTimezone).catch((error) => {
+			updateTimezone(browserTimezone).catch((error) => {
 				console.error("Failed to update timezone", error);
 			});
 		}

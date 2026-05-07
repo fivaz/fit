@@ -14,12 +14,8 @@ import { ExerciseCard } from "@/components/workout/workout-exercise-row";
 import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
-import {
-	finishWorkoutAction,
-	syncWorkoutSetsAction,
-	WorkoutWithMappedSets,
-} from "@/lib/workout/actions";
-import { WorkoutSetMap } from "@/lib/workout/type";
+import { finishWorkout, syncWorkoutSets } from "@/lib/workout/api";
+import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
 
 type WorkoutDetailProps = {
 	initialWorkout: WorkoutWithMappedSets;
@@ -43,7 +39,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 		const syncData = async () => {
 			setIsSyncing(true);
 			try {
-				await syncWorkoutSetsAction(initialWorkout.id, debouncedSets);
+				await syncWorkoutSets(initialWorkout.id, debouncedSets);
 			} catch (error) {
 				logError(error, "WorkoutDetail#syncData", {
 					extra: {
@@ -72,7 +68,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 		setIsFinishing(true);
 
 		try {
-			await finishWorkoutAction(initialWorkout.id);
+			await finishWorkout(initialWorkout.id);
 			toast.success(`Workout finished on ${format(new Date(), "PPpp")}`);
 			router.push(ROUTES.PROGRESS);
 		} catch (error) {
