@@ -4,14 +4,26 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 // If your Prisma file is located elsewhere, you can change the path
 import { prisma } from "@/lib/prisma";
 
+const trustedOriginsFromEnv = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
+	.split(",")
+	.map((origin) => origin.trim())
+	.filter(Boolean);
+
+const trustedOrigins =
+	trustedOriginsFromEnv.length > 0
+		? trustedOriginsFromEnv
+		: process.env.NODE_ENV === "production"
+			? []
+			: ["http://localhost:3001"];
+
 export const auth = betterAuth({
 	/** if no database is provided, the user data will be stored in memory.
 	 * Make sure to provide a database to persist user data **/
 	logger: {
 		level: "debug", // Options: "info", "warn", "error", "debug"
 	},
-	// Playwright `playwright.config.ts` uses http://localhost:3001; Better Auth validates Origin.
-	trustedOrigins: ["http://localhost:3001"],
+	// Better Auth validates Origin against this allowlist for CSRF protection.
+	trustedOrigins,
 	database: prismaAdapter(prisma, { provider: "postgresql" }),
 
 	user: {

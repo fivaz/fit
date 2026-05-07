@@ -16,6 +16,7 @@ alwaysApply: true
 - Write code that is easy to reason about for future maintainers.
 - Keep changes focused on the requested scope.
 - Explain non-obvious trade-offs in concise comments when needed.
+- When introducing an environment variable that users must set, add it to `.env.example` and document it in `README.md`.
 
 ## Don't
 
