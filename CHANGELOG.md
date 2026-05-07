@@ -1,3 +1,20 @@
+## [1.21.0](https://github.com/fivaz/fit-v2/compare/v1.20.1...v1.21.0) (2026-05-07)
+
+### ✨ Features
+
+* use env variables to handle trustedorigins for better auth ([59a2408](https://github.com/fivaz/fit-v2/commit/59a24089980aef06bb556c0759075cb3c4bcf887))
+
+### 🐛 Bug Fixes
+
+* isolate act e2e env ([3784b69](https://github.com/fivaz/fit-v2/commit/3784b69d7aec14676b29a00471b3cad5fad28be7))
+
+### 🧹 Chores
+
+* add convention rules for naming package.scripts ([11a1bee](https://github.com/fivaz/fit-v2/commit/11a1bee7f2c19d137e1d48dbf783d16ada9a1655))
+* add git workflow rule ([3316b69](https://github.com/fivaz/fit-v2/commit/3316b691c563cde2aeb6eb9d62e945b3f7f8b471))
+* add README ([bb05235](https://github.com/fivaz/fit-v2/commit/bb05235f7c857e4c0a91ac5f487c9760ce5769fd))
+* centralize act e2e options ([98251d8](https://github.com/fivaz/fit-v2/commit/98251d8212653b66c4abdb56ef94f7ab8f876971))
+
 ## [1.20.1](https://github.com/fivaz/fit-v2/compare/v1.20.0...v1.20.1) (2026-05-07)
 
 ### 🧹 Chores
