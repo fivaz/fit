@@ -1,0 +1,10 @@
+---
+description: Git workflow preferences for commits and pushes
+alwaysApply: true
+---
+
+# Git Workflow
+
+- Do not automatically push commits or branches.
+- Make local commits when appropriate, but wait for explicit user instruction before running `git push` or creating/updating a PR that depends on pushed changes.
+- When work is ready but not pushed, clearly summarize the local branch, commit status, and the exact push command the user can approve.
