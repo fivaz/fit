@@ -20,7 +20,7 @@
 		"postinstall": "prisma generate",
 		"prepare": "husky",
 		"act:release": "act -W .github/workflows/release.yml",
-		"act:e2e": "act -W .github/workflows/e2e.yml --env-file .github/act/e2e.env -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:full-latest --container-architecture linux/amd64",
+		"act:e2e": "act -W .github/workflows/e2e.yml",
 		"act:prune-cache": "rm -rf .act-cache",
 		"exercises-seed": "tsx scripts/exercises-seed.ts",
 		"generate-pwa-assets": "pwa-assets-generator",
