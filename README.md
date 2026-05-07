@@ -115,6 +115,24 @@ pnpm run db:reset
 pnpm run dev
 ```
 
+## Static export build path (iOS/Capacitor)
+
+Use the dedicated static target when preparing a bundle for Capacitor:
+
+```bash
+pnpm run build:static
+```
+
+This enables `output: "export"` in Next.js and generates an exportable web bundle while keeping the default `pnpm run build` behavior unchanged for server-backed web deployment.
+
+### Static/mobile environment variables
+
+For regular web deployment, leave these unset to use same-origin `/api` and auth routes.
+For static export/mobile runtime, set both to your hosted backend origin:
+
+- `NEXT_PUBLIC_API_BASE_URL` (used by `lib/api-client.ts`)
+- `NEXT_PUBLIC_AUTH_BASE_URL` (used by `lib/auth-client.ts`)
+
 ## Running tests
 
 ### E2E suite

@@ -26,6 +26,11 @@ const allowedDevOrigins: string[] = [
 const nextConfig: NextConfig = {
 	/* config options here */
 	allowedDevOrigins,
+	// `output: "export"` is only enabled for the dedicated static bundle build path.
+	output: process.env.NEXT_BUILD_TARGET === "static" ? "export" : undefined,
+	images: {
+		unoptimized: process.env.NEXT_BUILD_TARGET === "static",
+	},
 	// Separate output dir when NEXT_DIST_DIR is set (e.g. E2E on :3001) so a second `next dev`
 	// does not fight `.next/dev/lock` with the main dev server on :3000.
 	distDir: process.env.NEXT_DIST_DIR ?? ".next",

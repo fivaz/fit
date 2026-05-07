@@ -11,6 +11,7 @@ import {
 
 export const authClient = createAuthClient({
 	plugins: [inferAdditionalFields<typeof auth>()],
+	baseURL: process.env.NEXT_PUBLIC_AUTH_BASE_URL || undefined,
 	fetchOptions: {
 		auth: {
 			type: "Bearer",
@@ -22,8 +23,6 @@ export const authClient = createAuthClient({
 			await persistMobileAuthToken(token);
 		},
 	},
-	// if using a foreign domain for the server, uncomment the line below and set the env variable
-	// baseURL: process.env.NEXT_PUBLIC_APP_URL,
 });
 
 if (typeof window !== "undefined") {
