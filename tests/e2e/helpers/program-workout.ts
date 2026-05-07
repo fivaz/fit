@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, type Response } from "@playwright/test";
 
 /**
  * From program list: open program, add exercises via dialog, wait for success toast.
@@ -30,10 +30,18 @@ export async function startWorkoutFromProgramPage(page: Page, programName: strin
 }
 
 /**
- * Wait for debounced workout set sync (orange upload → green check in header).
+ * Wait for the debounced workout set sync request and the settled header state.
  */
 export async function waitForWorkoutSynced(page: Page) {
-	await page.waitForTimeout(1900);
-	await expect(page.getByLabel("syncing-icon")).toBeVisible({ timeout: 8000 });
+	await page.waitForResponse(isWorkoutSetSyncResponse, { timeout: 12_000 });
 	await expect(page.getByLabel("synced-icon")).toBeVisible({ timeout: 12_000 });
+}
+
+function isWorkoutSetSyncResponse(response: Response) {
+	return (
+		response.url().includes("/api/workouts/") &&
+		response.url().endsWith("/sets") &&
+		response.request().method() === "PUT" &&
+		response.ok()
+	);
 }

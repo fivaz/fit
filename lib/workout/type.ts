@@ -1,4 +1,5 @@
 import { exerciseUIArgs } from "@/lib/exercise/type";
+import { ExerciseUI } from "@/lib/exercise/type";
 import { Prisma } from "@/lib/generated/prisma/client";
 
 export const setUIArgs = {
@@ -55,6 +56,15 @@ export type WorkoutWithExercises = Prisma.WorkoutGetPayload<typeof workoutWithEx
 
 // The Map type for your sync function
 export type WorkoutSetMap = Record<string, SetUI[]>;
+
+type WorkoutExerciseUI = Omit<WorkoutWithExercises["exercises"][number], "exercise" | "sets"> & {
+	exercise: ExerciseUI;
+};
+
+export type WorkoutWithMappedSets = Omit<WorkoutWithExercises, "exercises"> & {
+	exercises: WorkoutExerciseUI[];
+	exerciseSets: WorkoutSetMap;
+};
 
 export function getEmptySet(order: number): SetUI {
 	return {

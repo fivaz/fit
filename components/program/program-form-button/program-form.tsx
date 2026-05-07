@@ -9,7 +9,7 @@ import { DrawerClose, DrawerFooter } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProgramMutations } from "@/hooks/program/store";
-import { saveProgramAction } from "@/lib/program/actions";
+import { saveProgram } from "@/lib/program/api";
 import { formToProgram, ProgramUI } from "@/lib/program/type";
 
 const formSchema = z.object({
@@ -52,13 +52,13 @@ export function ProgramForm({ program, onClose }: ProgramFormProps) {
 
 		if (isEdit) {
 			void updateItem(newProgram, {
-				persist: () => saveProgramAction(newProgram),
+				persist: () => saveProgram(newProgram),
 				onSuccess: () => toast.success("Program updated successfully."),
 				onError: () => toast.error("Failed to update program. Reverting."),
 			});
 		} else {
 			void addItem(newProgram, {
-				persist: () => saveProgramAction(newProgram),
+				persist: () => saveProgram(newProgram),
 				onSuccess: () => toast.success("Program created successfully."),
 				onError: () => toast.error("Failed to create program. Reverting."),
 			});

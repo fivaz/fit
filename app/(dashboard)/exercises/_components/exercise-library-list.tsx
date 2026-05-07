@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useIntersectionObserver } from "usehooks-ts";
 
@@ -31,6 +31,7 @@ export function ExerciseLibraryList({ initialExercises }: ExerciseLibraryListPro
 }
 
 function LibraryInternal() {
+	const [editingExercise, setEditingExercise] = useState<ExerciseUI | null>(null);
 	const filterData = useExerciseFilters(ALL_MUSCLES);
 	const { isLoading, hasNextPage, fetchNextPage, filteredExercises } = filterData;
 
@@ -53,9 +54,18 @@ function LibraryInternal() {
 			{/* Management Results Section */}
 			<div className="flex flex-col gap-4">
 				{sortedExercises.length > 0
-					? sortedExercises.map((exercise) => <ExerciseRow key={exercise.id} exercise={exercise} />)
+					? sortedExercises.map((exercise) => (
+							<ExerciseRow key={exercise.id} exercise={exercise} onEdit={setEditingExercise} />
+						))
 					: !isLoading && <NoResultsFound />}
 			</div>
+			<ExerciseFormButton
+				exercise={editingExercise ?? undefined}
+				open={!!editingExercise}
+				onOpenChange={(open) => {
+					if (!open) setEditingExercise(null);
+				}}
+			/>
 			<div ref={bottomRef} className="flex h-20 items-center justify-center">
 				{isLoading && (
 					<p className="text-muted-foreground animate-pulse text-sm">Loading more exercises...</p>

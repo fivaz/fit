@@ -7,8 +7,7 @@ import { ExerciseDetails } from "@/app/(dashboard)/exercises/_components/exercis
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SetRow } from "@/components/workout/set-row";
-import { WorkoutWithMappedSets } from "@/lib/workout/actions";
-import { getEmptySet, SetUI, WorkoutSetMap } from "@/lib/workout/type";
+import { getEmptySet, SetUI, WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
 
 type ExerciseCardProps = {
 	exercise: WorkoutWithMappedSets["exercises"][number];

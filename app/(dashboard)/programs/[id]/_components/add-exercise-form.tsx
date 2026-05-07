@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/drawer";
 import { useExerciseMutations, useExercisesStore } from "@/hooks/exercise/store";
 import { ExerciseUI } from "@/lib/exercise/type";
-import { updateProgramExercisesAction } from "@/lib/program/actions";
+import { updateProgramExercises } from "@/lib/program/api";
 import { ProgramWithExercises } from "@/lib/program/type";
 
 type AddExerciseFormProps = {
@@ -39,9 +39,11 @@ export function AddExerciseForm({ program, open, onOpenChange }: AddExerciseForm
 	};
 
 	const handleConfirm = () => {
-		setItems(selected, {
+		const orderedSelected = selected.map((exercise, order) => ({ ...exercise, order }));
+
+		setItems(orderedSelected, {
 			persist: () =>
-				updateProgramExercisesAction(
+				updateProgramExercises(
 					selected.map((e) => e.id),
 					program.id,
 				),

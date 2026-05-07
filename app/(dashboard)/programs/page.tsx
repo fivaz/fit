@@ -1,10 +1,12 @@
 import * as React from "react";
 
 import { ProgramList } from "@/app/(dashboard)/programs/_components/program-list";
-import { getProgramsAction } from "@/lib/program/actions";
+import { getPrograms } from "@/lib/program/service";
+import { getUserId } from "@/lib/utils-server";
 
 export default async function ProgramsPage() {
-	const programs = await getProgramsAction();
+	const userId = await getUserId();
+	const programs = await getPrograms(userId);
 
 	return (
 		<div className="relative">

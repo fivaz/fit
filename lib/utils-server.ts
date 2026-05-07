@@ -1,18 +1,25 @@
-"use server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { ROUTES } from "@/lib/consts";
 
-export async function getUserId() {
+import "server-only";
+
+export async function getSessionUserId() {
 	const session = await auth.api.getSession({
 		headers: await headers(), // you need to pass the headers object.
 	});
 
-	if (!session) {
+	return session?.user.id ?? null;
+}
+
+export async function getUserId() {
+	const userId = await getSessionUserId();
+
+	if (!userId) {
 		redirect(ROUTES.LOGIN);
 	}
 
-	return session.user.id;
+	return userId;
 }

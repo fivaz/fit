@@ -1,19 +1,12 @@
-"use server";
-
 import { revalidatePath } from "next/cache";
 
 import { BodyMetricsUI, getEmptyBodyMetrics, latestBodyMetric } from "@/lib/body-metrics/type";
 import { ROUTES } from "@/lib/consts";
 import { prisma } from "@/lib/prisma";
-import { getUserId } from "@/lib/utils-server";
 
-/**
- * Retrieves the most recent body metrics for the current user.
- * Returns an empty body metrics object if no metrics exist yet.
- */
-export async function getBodyMetricsAction(): Promise<BodyMetricsUI> {
-	const userId = await getUserId();
+import "server-only";
 
+export async function getBodyMetrics(userId: string): Promise<BodyMetricsUI> {
 	const metrics = await prisma.bodyMetric.findFirst({
 		where: { userId },
 		orderBy: { date: "desc" },
@@ -23,19 +16,12 @@ export async function getBodyMetricsAction(): Promise<BodyMetricsUI> {
 	return metrics ?? getEmptyBodyMetrics();
 }
 
-/**
- * Upserts body metrics for a specific user.
- * Expects a complete BodyMetricsUI object containing the measurements.
- */
-export async function saveBodyMetricsAction(metrics: BodyMetricsUI) {
-	const userId = await getUserId();
-	// Normalize date to 00:00:00.000 UTC to hit the daily unique constraint
+export async function saveBodyMetrics(metrics: BodyMetricsUI, userId: string) {
 	const today = new Date();
 	today.setUTCHours(0, 0, 0, 0);
 
 	await prisma.bodyMetric.upsert({
 		where: {
-			// This maps to the @@unique([userId, date]) in your schema
 			userId_date: {
 				userId,
 				date: today,
@@ -46,7 +32,6 @@ export async function saveBodyMetricsAction(metrics: BodyMetricsUI) {
 			bodyFat: metrics.bodyFat,
 			muscleMass: metrics.muscleMass,
 			visceralFat: metrics.visceralFat,
-			// Prisma handles @updatedAt automatically
 		},
 		create: {
 			userId,

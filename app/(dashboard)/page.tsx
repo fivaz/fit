@@ -1,9 +1,17 @@
 import React from "react";
+import { redirect } from "next/navigation";
 
-import { redirectToActiveWorkoutAction } from "@/lib/workout/actions";
+import { ROUTES } from "@/lib/consts";
+import { getUserId } from "@/lib/utils-server";
+import { getActiveWorkout } from "@/lib/workout/service";
 
 export default async function HomePage() {
-	await redirectToActiveWorkoutAction();
+	const userId = await getUserId();
+	const activeWorkout = await getActiveWorkout(userId);
+
+	if (activeWorkout) {
+		redirect(`${ROUTES.WORKOUT}/${activeWorkout.id}`);
+	}
 
 	return (
 		<div className="relative flex w-full flex-col">

@@ -1,6 +1,7 @@
 import { expect, test } from "@/tests/e2e/fixtures";
 import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
 import { createExercise, createProgram } from "@/tests/e2e/helpers/entities";
+import { waitForWorkoutSynced } from "@/tests/e2e/helpers/program-workout";
 
 test.describe("Workout Logging", () => {
 	test("Authenticated user can start a workout and log set data", async ({ page, request }) => {
@@ -71,9 +72,7 @@ test.describe("Workout Logging", () => {
 		});
 
 		await test.step("Wait for sync and verify persisted values", async () => {
-			// Wait for debounce -> sync cycle (upload icon then synced icon).
-			await expect(page.getByLabel("syncing-icon")).toBeVisible({ timeout: 8000 });
-			await expect(page.getByLabel("synced-icon")).toBeVisible({ timeout: 12000 });
+			await waitForWorkoutSynced(page);
 
 			await page.reload();
 			await expect(page.getByRole("spinbutton").first()).toHaveValue("10");

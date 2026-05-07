@@ -31,7 +31,16 @@ test.describe("Exercise CRUD", () => {
 				.click();
 			await expect(page.getByRole("heading", { name: "Edit Exercise" })).toBeVisible();
 			await page.getByLabel("Exercise Name").fill(updatedExerciseName);
-			await page.getByRole("button", { name: "Save Changes" }).click();
+
+			const updateResponse = page.waitForResponse(
+				(response) =>
+					response.url().endsWith("/api/exercises") &&
+					response.request().method() === "POST" &&
+					response.ok(),
+				{ timeout: 12_000 },
+			);
+			await page.getByLabel("Exercise Name").press("Enter");
+			await updateResponse;
 			await expect(page.getByText("Exercise updated successfully.")).toBeVisible();
 		});
 

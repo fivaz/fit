@@ -1,29 +1,37 @@
-import { useTransition } from "react";
+"use client";
+
+import { FormEvent, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { LoaderCircleIcon, TimerIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useExerciseMutations } from "@/hooks/exercise/store";
-import { handleStartWorkoutAction } from "@/lib/workout/actions";
+import { useExerciseMutations, useExercisesStore } from "@/hooks/exercise/store";
+import { ROUTES } from "@/lib/consts";
+import { startWorkout } from "@/lib/workout/api";
 
 type StartWorkoutButtonProps = {
 	programId: string;
-	isDisabled: boolean;
 };
 
-export function StartWorkoutButton({ programId, isDisabled }: StartWorkoutButtonProps) {
+export function StartWorkoutButton({ programId }: StartWorkoutButtonProps) {
 	const [isSubmitting, startTransition] = useTransition();
 	const { isPending } = useExerciseMutations();
+	const { items: exercises } = useExercisesStore();
+	const router = useRouter();
+	const isDisabled = exercises.length === 0;
 
-	const handleStart = () => {
+	const handleStart = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
 		startTransition(async () => {
-			await handleStartWorkoutAction(programId);
+			const workout = await startWorkout(programId);
+			router.push(`${ROUTES.WORKOUT}/${workout.id}`);
 		});
 	};
 
 	return (
 		<div className="fixed bottom-28 left-1/2 z-20 w-full max-w-md -translate-x-1/2 px-6">
-			<form action={handleStart}>
+			<form onSubmit={handleStart}>
 				<Button
 					size="lg"
 					type="submit"

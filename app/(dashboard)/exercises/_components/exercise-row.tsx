@@ -1,21 +1,21 @@
 import { useState } from "react";
 
-import { ExerciseFormButton } from "@/components/exercise/exercise-form-button";
 import { ExerciseUI } from "@/lib/exercise/type";
 
 import { ExerciseDetails } from "./exercise-details";
 
 type ExerciseRowProps = {
 	exercise: ExerciseUI;
+	onEdit: (exercise: ExerciseUI) => void;
 };
 
-export function ExerciseRow({ exercise }: ExerciseRowProps) {
-	const [showForm, setShowForm] = useState(false);
+export function ExerciseRow({ exercise, onEdit }: ExerciseRowProps) {
+	const [showDetails, setShowDetails] = useState(false);
 
 	return (
 		<>
 			<button
-				onClick={() => setShowForm(true)}
+				onClick={() => (exercise.isPrivate ? onEdit(exercise) : setShowDetails(true))}
 				className="group ring-chart-1 relative h-24 cursor-pointer overflow-hidden rounded-2xl text-left hover:ring-2 focus:ring-2 focus:outline-none"
 			>
 				<img
@@ -28,10 +28,8 @@ export function ExerciseRow({ exercise }: ExerciseRowProps) {
 					<p className="text-sm text-white capitalize">{exercise.muscles.join(", ")}</p>
 				</div>
 			</button>
-			{exercise.isPrivate ? (
-				<ExerciseFormButton exercise={exercise} open={showForm} onOpenChange={setShowForm} />
-			) : (
-				<ExerciseDetails exercise={exercise} open={showForm} setOpen={setShowForm} />
+			{!exercise.isPrivate && (
+				<ExerciseDetails exercise={exercise} open={showDetails} setOpen={setShowDetails} />
 			)}
 		</>
 	);

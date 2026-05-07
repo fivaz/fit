@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useBodyMetricsMutations } from "@/hooks/body-metrics/store";
-import { saveBodyMetricsAction } from "@/lib/body-metrics/actions";
+import { saveBodyMetrics } from "@/lib/body-metrics/api";
 import { BodyMetricsUI, formToBodyMetric } from "@/lib/body-metrics/type";
 
 interface MetricsFormProps {
@@ -26,15 +26,15 @@ interface MetricsFormProps {
 }
 
 export function MetricsForm({ isOpen, onClose, bodyMetrics }: MetricsFormProps) {
-	const { addItem } = useBodyMetricsMutations();
+	const { updateItem } = useBodyMetricsMutations();
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const formData = new FormData(e.currentTarget);
 
-		const bodyMetricsData = formToBodyMetric(formData);
+		const bodyMetricsData = { ...formToBodyMetric(formData), id: bodyMetrics.id };
 
-		addItem(bodyMetricsData, {
-			persist: () => saveBodyMetricsAction(bodyMetricsData),
+		updateItem(bodyMetricsData, {
+			persist: () => saveBodyMetrics(bodyMetricsData),
 			onSuccess: () => toast.success("Body metrics added successfully."),
 			onError: () => toast.error("Failed to add body metrics."),
 		});

@@ -9,7 +9,7 @@ import { DrawerClose, DrawerFooter } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useExerciseMutations } from "@/hooks/exercise/store";
-import { saveExerciseAction } from "@/lib/exercise/actions";
+import { saveExercise } from "@/lib/exercise/api";
 import { ExerciseUI, formToExercise } from "@/lib/exercise/type";
 
 const formSchema = z.object({
@@ -55,13 +55,13 @@ export function ExerciseForm({ exercise, onClose }: ExerciseFormProps) {
 
 		if (isEdit) {
 			updateItem(optimisticExercise, {
-				persist: () => saveExerciseAction(optimisticExercise),
+				persist: () => saveExercise(optimisticExercise),
 				onSuccess: () => toast.success("Exercise updated successfully."),
 				onError: () => toast.error("Failed to update exercise."),
 			});
 		} else {
 			addItem(optimisticExercise, {
-				persist: () => saveExerciseAction(optimisticExercise),
+				persist: () => saveExercise(optimisticExercise),
 				onSuccess: () => toast.success("Exercise created successfully."),
 				onError: () => toast.error("Failed to create exercise."),
 			});

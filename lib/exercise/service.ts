@@ -1,5 +1,3 @@
-"use server";
-
 import { revalidatePath } from "next/cache";
 
 import { PAGE_SIZE, ROUTES } from "@/lib/consts";
@@ -9,52 +7,48 @@ import { MuscleGroup, Prisma } from "@/lib/generated/prisma/client";
 import { logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { devDelay } from "@/lib/utils";
-import { getUserId } from "@/lib/utils-server";
 
 import "server-only";
 
-export async function getExercisesSearchAction({
-	search,
-	muscles,
-	page = 1,
-	pageSize = PAGE_SIZE,
-}: {
-	search?: string;
-	muscles?: MuscleGroup[];
-	page: number;
-	pageSize?: number;
-}) {
-	// 1. Split the search string into individual words and filter out empty strings
+export async function getExercisesSearch(
+	userId: string,
+	{
+		search,
+		muscles,
+		page = 1,
+		pageSize = PAGE_SIZE,
+	}: {
+		search?: string;
+		muscles?: MuscleGroup[];
+		page: number;
+		pageSize?: number;
+	},
+) {
 	const searchWords = search?.trim().split(/\s+/).filter(Boolean) || [];
 
-	const filter: Prisma.ExerciseWhereInput = {
-		AND: [
-			// 2. Map each word to a "contains" check
-			...searchWords.map((word) => ({
-				name: { contains: word, mode: "insensitive" as Prisma.QueryMode },
-			})),
-			{
-				muscles: { hasSome: muscles },
-			},
-		],
-	};
+	const andFilters: Prisma.ExerciseWhereInput[] = searchWords.map((word) => ({
+		name: { contains: word, mode: "insensitive" as Prisma.QueryMode },
+	}));
 
-	return getExercisesAction(filter, page, pageSize);
+	if (muscles?.length) {
+		andFilters.push({
+			muscles: { hasSome: muscles },
+		});
+	}
+
+	const filter: Prisma.ExerciseWhereInput = andFilters.length ? { AND: andFilters } : {};
+
+	return getExercises(userId, filter, page, pageSize);
 }
 
-/**
- * Fetches all exercises for the current user.
- */
-export async function getExercisesAction(
+export async function getExercises(
+	userId: string,
 	filter?: Prisma.ExerciseWhereInput,
 	page: number = 1,
 	pageSize: number = PAGE_SIZE,
 ): Promise<ExerciseUI[]> {
 	await devDelay();
 
-	const userId = await getUserId();
-
-	// Calculate how many items to skip for pagination
 	const skip = (page - 1) * pageSize;
 
 	const exercises = await prisma.exercise.findMany({
@@ -73,20 +67,17 @@ export async function getExercisesAction(
 	return exercises.map(mapExerciseToUI);
 }
 
-/**
- * Saves or updates an exercise from FormData.
- */
-export async function saveExerciseAction({ id, name, muscles, imageUrl }: ExerciseUI) {
-	const userId = await getUserId();
+export async function saveExercise({ id, name, muscles, imageUrl }: ExerciseUI, userId: string) {
 	try {
 		await prisma.exercise.upsert({
-			where: { id: id || "new-id" },
+			where: { id: id || "new-id", userId },
 			update: {
 				name,
 				muscles,
 				imageUrl,
 			},
 			create: {
+				id,
 				name,
 				muscles,
 				imageUrl,
@@ -97,19 +88,14 @@ export async function saveExerciseAction({ id, name, muscles, imageUrl }: Exerci
 		revalidatePath(ROUTES.EXERCISES);
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, "saveExerciseAction", {
+		logError(error, "saveExercise", {
 			extra: { id, name, muscles, imageUrl, userId },
 		});
 		throw new Error("Failed to save exercise");
 	}
 }
 
-/**
- * Deletes an exercise.
- */
-export async function deleteExerciseAction(id: string) {
-	const userId = await getUserId();
-
+export async function deleteExercise(id: string, userId: string) {
 	try {
 		await prisma.exercise.delete({
 			where: { id, userId },
@@ -118,18 +104,28 @@ export async function deleteExerciseAction(id: string) {
 		revalidatePath(ROUTES.EXERCISES);
 		revalidatePath(ROUTES.PROGRAMS);
 	} catch (error) {
-		logError(error, "deleteExerciseAction", {
+		logError(error, "deleteExercise", {
 			extra: { id, userId },
 		});
 		throw new Error("Deletion failed");
 	}
 }
 
-/**
- * Reorders exercises in a program based on the order of the array.
- */
-export async function reorderProgramExercisesAction(programId: string, exerciseIds: string[]) {
+export async function reorderProgramExercises(
+	programId: string,
+	exerciseIds: string[],
+	userId: string,
+) {
 	try {
+		const program = await prisma.program.findFirst({
+			where: { id: programId, userId },
+			select: { id: true },
+		});
+
+		if (!program) {
+			throw new Error("Program not found or not owned by user");
+		}
+
 		await prisma.$transaction(
 			exerciseIds.map((exerciseId, index) =>
 				prisma.programToExercise.update({
@@ -141,7 +137,7 @@ export async function reorderProgramExercisesAction(programId: string, exerciseI
 			),
 		);
 	} catch (error) {
-		logError(error, "reorderProgramExercisesAction", { extra: { programId, exerciseIds } });
+		logError(error, "reorderProgramExercises", { extra: { programId, exerciseIds, userId } });
 		throw new Error("Failed to reorder program exercises");
 	}
 }
