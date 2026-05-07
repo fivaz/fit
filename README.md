@@ -1,148 +1,176 @@
-## 🚀 Getting Started: Customizing Your App
+# Fit Tracker
 
-To transform this boilerplate into your specific application, replace all occurrences of the placeholder text **"boilerplate"** with your actual project name (e.g., "MyAwesomeApp").
+Fit Tracker is first and foremost a workout application designed to help users manage their training end to end: organize exercises and programs, start sessions, log sets, and complete workouts with persisted progress.
 
-You can perform a **Global Search and Replace** in your editor (usually `Cmd+Shift+F` or `Ctrl+Shift+F` in VS Code).
+## Why this project exists
 
----
+This repository is intentionally built to show both:
 
-### 📂 Files to Update
+1. hands-on software engineering (architecture, data modeling, testing, release automation), and
+2. AI/agent orchestration in a real codebase (rules, contracts, repeatable quality gates).
 
-| File             | Context                                                      | Meaning/Purpose                                                                                                  |
-| :--------------- | :----------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| `package.json`   | `"name": "boilerplate"`                                      | Defines the official project name for the Node.js environment and package manager.                               |
-| `app/layout.tsx` | `APP_DEFAULT_TITLE`, `APP_TITLE_TEMPLATE`, `APP_DESCRIPTION` | Sets the HTML metadata and the name that appears in browser tabs.                                                |
-| `manifest.json`  | `name`, `short_name`                                         | Configures the Progressive Web App (PWA) name for mobile and desktop installation.                               |
-| `next.config.ts` | `project: "boilerplate"`                                     | Links the application to your specific **Sentry project** for error tracking and performance monitoring.         |
-| `consts.ts`      | `APP_NAME`                                                   | The single source of truth for the app name; used by `login-form.tsx`, `register-form.tsx` and `app/layout.tsx`. |
+## Core product capabilities
 
----
+Implemented and tested user journeys include:
 
-### 🔑 Environment Setup
+- Auth flows: register, login, validation, sign-out
+- Exercise library: CRUD + filtering
+- Workout programs: CRUD + ordering + exercise association
+- Workout session flow:
+  - start from a program
+  - log reps/weight/time
+  - manage sets (add/delete/warmup)
+  - finish workout and redirect to progress
+- Navigation + not-found states for invalid entities
+- Body stats settings flow
 
-Before running the application, you need to initialize your environment variables and your database:
+Reference E2E coverage lives in `tests/e2e`.
 
-1.  **Create your .env file:** Copy the example template to create your local environment file:
-    ```bash
-    cp .env.example .env
-    ```
-2.  **Configure Variables:** Open the newly created `.env` file and update the variables. Specifically, ensure the `DATABASE_URL` points to a unique database name to keep your data isolated from other projects.
+## Tech stack
 
-3.  **Initialize the Database:** Once your `.env` is configured, run the following command to apply migrations and seed the initial data. This is required to create the necessary tables for **better-auth**:
+- Framework: Next.js 16 (App Router), React 19, TypeScript
+- Data: PostgreSQL + Prisma
+- Auth: better-auth (email/password + social provider config)
+- UI: Tailwind CSS + Radix primitives + Framer Motion + Lucide icons
+- Observability: Sentry (`@sentry/nextjs`)
+- Testing: Playwright end-to-end suite
+- Tooling: pnpm, ESLint, Prettier, Husky, Semantic Release
 
-    ```bash
-    pnpm run db:reset
-    ```
+## Architecture highlights
 
-4.  **Test Credentials:** The `seed.ts` file automatically generates a default user for development. You can log in with:
-    - **Email:** `test@test.com`
-    - **Password:** `test@test.com`
+- Clear separation between UI composition and action/data layers (for example: pages in `app/` call domain actions in `lib/**/actions`)
+- Explicit relational data model for training domain:
+  - `Program` <-> `Exercise` via `ProgramToExercise`
+  - `Workout` + `WorkoutExercise` + `Set`
+  - user-scoped ownership and cascade rules
+- Runtime auth + origin constraints for local and E2E execution
 
----
+See:
 
-### 🎨 Customizing Icons & Branding
+- `prisma/schema.prisma`
+- `lib/auth.ts`
+- `app/(dashboard)/**`
 
-This boilerplate uses a PWA asset generator to handle icons for all platforms automatically.
+## Agent orchestration and engineering process
 
-1.  **Replace the Base Icon:** Replace `public/favicon.svg` with your own logo/icon (keep the same filename).
-2.  **Generate Assets:** Run the following command to automatically generate the `favicon.ico`, Apple touch icons, and all PWA-compliant sizes defined in your `manifest.json`:
+A key portfolio goal is showing structured AI-assisted delivery, not just code generation.
 
-```bash
-pnpm run generate-pwa-assets
-```
+This repo includes a ruleset under `.cursor/rules` that codifies expectations for:
 
----
+- architecture boundaries
+- API envelope contracts and runtime validation
+- security posture
+- TypeScript and naming conventions
+- testing and verification protocol
 
-### 💻 Available Scripts
+Notable examples:
 
-| Command                        | Description                                                                         |
-| :----------------------------- | :---------------------------------------------------------------------------------- |
-| `pnpm run dev`                 | 'Starts the Next.js development server.'                                            |
-| `pnpm run build`               | 'Compiles the application for production.'                                          |
-| `pnpm run start`               | 'Starts the production server (run build first).'                                   |
-| `pnpm run lint`                | 'Runs ESLint to find code quality issues.'                                          |
-| `pnpm run format`              | 'Cleans up code using Prettier and fixes ESLint errors (including unused imports).' |
-| `pnpm run tsc`                 | 'Runs the TypeScript compiler in watch mode to catch type errors.'                  |
-| `pnpm run db:setup`            | 'Hard resets the database, runs seeds, and prepares migrations.'                    |
-| `pnpm run db:reset`            | 'Resets the database to a clean state and runs seed data.'                          |
-| `pnpm run db:seed`             | 'Populates the database with initial/dummy data.'                                   |
-| `pnpm run db:generate`         | 'Generates the Prisma Client based on your schema.'                                 |
-| `pnpm run generate-pwa-assets` | 'Generates all necessary PWA icons from your favicon.svg.'                          |
-| `pnpm run release:test`        | 'Runs GitHub Actions locally using act.'                                            |
-| `pnpm run release:prune-cache` | 'Clears the local cache used by act.'                                               |
+- `.cursor/rules/api-contracts.mdc`
+- `.cursor/rules/testing.mdc`
+- `.cursor/rules/architecture.mdc`
+- `.cursor/rules/security.mdc`
 
----
+In practice, this means agent output is constrained by repeatable rules and reviewable standards.
 
-### ⚡ Optimistic UI Hook Factory
+## Getting started
 
-The boilerplate includes a powerful factory in `hooks/use-entity-mutations.ts`. Its purpose is to allow you to mutate entities **optimistically** (updating the UI instantly) while running server actions in the background to persist changes in the DB, with automatic rollbacks on error.
+### 1) Prerequisites
 
-#### 1. Create your Entity Store
+- Node.js 24
+- pnpm 10+
+- PostgreSQL
 
-To manage a specific entity (e.g., `Task`), create a file like `hooks/task-store.ts`:
-
-```typescript
-import { createEntityStore } from "@/hooks/optimistic/create-entity-store";
-import { createEntityMutations } from "@/hooks/optimistic/use-entity-mutations";
-import { Task } from "@/lib/generated/prisma/client";
-
-export const [TasksProvider, useTasksStore] = createEntityStore<Task>();
-export const useTaskMutations = createEntityMutations(useTasksStore);
-```
-
-#### 2. Usage in Components
-
-Wrap your parent component in the TasksProvider. In child components, you can access the state and mutations:
-
-```tsx
-<TasksProvider initialItems={dataFromDatabase}>
-	<TaskList />
-</TasksProvider>
-```
-
-##### Read state in `<TaskList />` or any of its children:
-
-```typescript
-const { items: tasks } = useTasksStore();
-// or const { items: tasks } = useTaskMutations();
-```
-
-##### Perform mutations:
-
-```tsx
-const { updateItem, isPending } = useTaskMutations();
-
-const handleRename = (task: Task) => {
-	updateItem(
-		{ ...task, name: "New Name" },
-		{
-			// 1. The background work (Server Action)
-			persist: () => renameTaskAction(task.id, "New Name"),
-
-			// 2. Feedback
-			onSuccess: () => toast.success("Saved"),
-			onError: () => toast.error("Connection lost. Reverting changes..."),
-		},
-	);
-};
-
-return (
-	<button onClick={handleRename} disabled={isPending}>
-		{isPending ? "Saving..." : "Rename Task"}
-	</button>
-);
-```
-
----
-
-### 💡 Refactoring Tip (Optional)
-
-If you find that your IDE automatically deletes imports while you are still moving code around, you can temporarily disable this behavior at the IDE level.
-
-Add the following flag to your IDE's ESLint "run on save" configuration: --rule 'unused-imports/no-unused-imports: off'
-
-This allows you to keep unused imports during active refactoring. To perform a final cleanup and remove all unused imports across the project, simply run:
+### 2) Install dependencies
 
 ```bash
-pnpm run format
+pnpm install
 ```
+
+### 3) Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Set at minimum:
+
+- `DATABASE_URL`
+- `BETTER_AUTH_SECRET`
+- `BETTER_AUTH_URL`
+
+If you want social login enabled locally, also set:
+
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
+
+### 4) Prepare database
+
+```bash
+pnpm run db:reset
+```
+
+### 5) Start the app
+
+```bash
+pnpm run dev
+```
+
+## Running tests
+
+### E2E suite
+
+```bash
+pnpm exec playwright test tests/e2e
+```
+
+### Single E2E file (headed)
+
+```bash
+pnpm exec playwright test tests/e2e/settings/sign-out.spec.ts --headed
+```
+
+Playwright configuration: `playwright.config.ts`.
+
+## CI/CD
+
+- E2E workflow: `.github/workflows/e2e.yml`
+  - runs on PRs and pushes to `main`/`master`
+  - provisions PostgreSQL service
+  - installs Playwright browser
+  - runs migrations
+  - executes E2E tests
+  - uploads `playwright-report/` and `test-results/` artifacts
+- Release workflow: `.github/workflows/release.yml` (semantic-release)
+
+## Current status and roadmap
+
+- Core training flows are implemented and covered by E2E tests.
+- Some areas are intentionally still evolving (for example, parts of Home/Progress UI are marked as not fully implemented in code).
+
+Planned evolution:
+
+- richer progress analytics backed by persisted metrics
+- broader CI test partitioning (smoke vs full suites)
+- further hardening of agent-driven contribution workflows
+
+## Repository scripts
+
+Common commands:
+
+- `pnpm run dev` - start dev server
+- `pnpm run build` - production build
+- `pnpm run lint` - lint checks
+- `pnpm run format` - format + lint fixes
+- `pnpm run db:reset` - reset DB + seed
+- `pnpm run db:deploy` - apply migrations (CI/prod style)
+- `pnpm exec playwright test tests/e2e` - run E2E suite
+
+---
+
+If you are reviewing this project for portfolio purposes, the most representative folders are:
+
+- `app/` (product UI and route composition)
+- `lib/` (actions, domain logic, integrations)
+- `prisma/` (schema + seed data)
+- `tests/e2e/` (behavioral verification)
+- `.cursor/rules/` (agent orchestration standards)
