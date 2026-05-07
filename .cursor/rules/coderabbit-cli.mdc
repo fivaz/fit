@@ -1,0 +1,19 @@
+---
+description: Manual instructions for running CodeRabbit CLI reviews
+globs: []
+alwaysApply: false
+---
+
+# Running the CodeRabbit CLI
+
+CodeRabbit is installed in the terminal and can be used to review code changes.
+
+## Commands
+
+- Run `cr -h` to see available commands and options.
+- Prefer running CodeRabbit with the `--agent` flag.
+- For uncommitted changes, run `coderabbit --agent -t uncommitted`.
+
+## Limits
+
+- Do not run CodeRabbit more than 3 times for the same set of code changes.

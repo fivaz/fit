@@ -10,6 +10,8 @@ export const auth = betterAuth({
 	logger: {
 		level: "debug", // Options: "info", "warn", "error", "debug"
 	},
+	// Playwright `playwright.config.ts` uses http://localhost:3001; Better Auth validates Origin.
+	trustedOrigins: ["http://localhost:3001"],
 	database: prismaAdapter(prisma, { provider: "postgresql" }),
 
 	user: {

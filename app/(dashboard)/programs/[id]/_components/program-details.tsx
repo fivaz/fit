@@ -78,7 +78,7 @@ export function ProgramDetailsInternal() {
 
 					<DropdownMenu modal={false}>
 						<DropdownMenuTrigger asChild>
-							<Button variant="outline" size="icon">
+							<Button aria-label="Program actions" variant="outline" size="icon">
 								<MoreVertical className="size-5" />
 							</Button>
 						</DropdownMenuTrigger>

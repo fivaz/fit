@@ -91,9 +91,12 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 						<div className="flex items-center gap-2">
 							<h1 className="text-lg font-bold">{initialWorkout.program?.name}</h1>
 							{isSyncing ? (
-								<CloudUpload className="h-4 w-4 animate-pulse text-orange-500" />
+								<CloudUpload
+									aria-label="syncing-icon"
+									className="h-4 w-4 animate-pulse text-orange-500"
+								/>
 							) : (
-								<CloudCheck className="h-4 w-4 text-green-500" />
+								<CloudCheck aria-label="synced-icon" className="h-4 w-4 text-green-500" />
 							)}
 						</div>
 						<div className="flex items-center gap-2 text-sm">

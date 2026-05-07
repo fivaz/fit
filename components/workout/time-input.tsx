@@ -45,6 +45,7 @@ export function TimeInput({ value, onUpdate, isPending }: TimeInputProps) {
 		return (
 			<Input
 				type="time"
+				aria-label="Set time input"
 				autoFocus
 				defaultValue={formattedTime}
 				onBlur={() => setIsEditing(false)}
@@ -62,6 +63,7 @@ export function TimeInput({ value, onUpdate, isPending }: TimeInputProps) {
 	return (
 		<motion.button
 			type="button"
+			aria-label="Set time"
 			disabled={isPending}
 			onPointerDown={handlePointerDown}
 			onPointerUp={handlePointerUp}

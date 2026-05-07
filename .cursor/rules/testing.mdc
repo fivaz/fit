@@ -1,0 +1,38 @@
+---
+description: Rules for writing, executing, and verifying Playwright tests
+globs: tests/**/*.spec.ts
+alwaysApply: false
+---
+
+# Testing Standards & Verification Protocol
+
+<rules>
+- **Locators:** Use `page.getByRole` or `page.getByLabel` for all locators. Never use class-based CSS selectors or deep DOM paths.
+- **Accessibility:** Every new interactive component MUST include an `aria-label` or `title`.
+- **Organization:** Wrap logical journey steps in `test.step()`. For journeys >50 lines, use descriptive steps to organize the report.
+- **Data Isolation:** When using a shared seeded user, always append a unique suffix to created items (e.g., `Program - ${testInfo.testId}`) to prevent race conditions.
+- **Verification Rule:** After modifying any test, you MUST execute the test in the background terminal to ensure it passes (Green) before concluding the task.
+- **Command Hand-off:** Every response MUST end with a bash code block containing the exact command for the user to run the test manually.
+</rules>
+
+<workflow>
+1. **Develop:** Update the UI and/or the `.spec.ts` file.
+2. **Auto-Verify:** Run `pnpm exec playwright test <file_path>` internally. If it fails, fix the code and re-run until it passes.
+3. **Report:** State "I've verified the test passes in the background." 
+4. **Hand-off:** Provide the command for the user to run it with the UI/Headed mode enabled.
+</workflow>
+
+<examples>
+// ✅ Good: Accessible and isolated
+await test.step('Create Workout', async () => {
+  await page.getByRole('button', { name: 'Add' }).click();
+  await page.getByLabel('Name').fill(`Leg Day ${testInfo.testId}`);
+});
+</examples>
+
+<execution_format>
+Conclude every test-related task with:
+"Verification complete. You can run this test yourself to see the UI:"
+```bash
+pnpm exec playwright test <file_path> --headed
+```

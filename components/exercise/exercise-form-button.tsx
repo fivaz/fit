@@ -62,7 +62,9 @@ export function ExerciseFormButton({
 			{/* Omit Trigger if controlled externally */}
 			{!isControlled && (
 				<DrawerTrigger asChild>
-					<Button {...props}>{children || <PlusIcon className="size-5" />}</Button>
+					<Button aria-label="Create exercise" {...props}>
+						{children || <PlusIcon className="size-5" />}
+					</Button>
 				</DrawerTrigger>
 			)}
 
@@ -72,6 +74,7 @@ export function ExerciseFormButton({
 						<DrawerTitle>{exercise.id ? "Edit Exercise" : "Create Exercise"}</DrawerTitle>
 						{exercise.id && exercise.isPrivate && (
 							<Button
+								aria-label="Delete exercise"
 								variant="destructive"
 								className="absolute top-0 right-0 mx-4 my-2"
 								onClick={handleDelete}

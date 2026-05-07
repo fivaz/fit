@@ -109,6 +109,15 @@ export function SettingsDetailsInternal() {
 							<div
 								key={item.label}
 								onClick={() => setIsMetricsOpen(true)}
+								role="button"
+								tabIndex={0}
+								aria-label={`Edit ${item.label}`}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" || e.key === " ") {
+										e.preventDefault();
+										setIsMetricsOpen(true);
+									}
+								}}
 								className={cn(
 									"flex cursor-pointer items-center justify-between p-4 transition-colors active:bg-gray-50 dark:active:bg-gray-700/50",
 									idx < metricsDisplay.length - 1 && "border-b border-gray-50 dark:border-gray-700",
