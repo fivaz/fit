@@ -8,159 +8,212 @@ import { devDelay } from "@/lib/utils";
 import {
 	SetUI,
 	WorkoutSetMap,
+	WorkoutWithExercises,
 	workoutWithExercisesAndSets,
 	WorkoutWithMappedSets,
 } from "@/lib/workout/type";
 
 import "server-only";
 
-export async function syncWorkoutSets(
-	workoutId: string,
-	exerciseSetsMap: WorkoutSetMap,
-	userId: string,
-) {
-	await devDelay();
+type WorkoutSetsInsert = {
+	id: string;
+	reps: number;
+	weight: number | null;
+	time: Date | null;
+	isWarmup: boolean;
+	order: number;
+	workoutExerciseId: string;
+};
 
-	const workout = await prisma.workout.findFirst({
-		where: { id: workoutId, userId },
-		select: { id: true },
-	});
-
-	if (!workout) {
-		throw new Error("Workout not found");
-	}
-
-	const allSets = Object.entries(exerciseSetsMap).flatMap(([workoutExerciseId, sets]) =>
-		sets.map((set, index) => ({
-			id: set.id,
-			reps: set.reps,
-			weight: set.weight,
-			time: set.time ? new Date(set.time) : null,
-			isWarmup: set.isWarmup,
-			order: index,
-			workoutExerciseId,
-		})),
-	);
-
-	await prisma.$transaction(async (tx) => {
-		await tx.set.deleteMany({
-			where: { workoutExercise: { workoutId, workout: { userId } } },
-		});
-
-		if (allSets.length > 0) {
-			await tx.set.createMany({ data: allSets });
-		}
-	});
-
-	revalidatePath(`${ROUTES.WORKOUT}/${workoutId}`);
-
-	return exerciseSetsMap;
+export interface WorkoutRepository {
+	hasOwnedWorkout(workoutId: string, userId: string): Promise<boolean>;
+	replaceWorkoutSets(workoutId: string, userId: string, sets: WorkoutSetsInsert[]): Promise<void>;
+	getWorkoutById(id: string, userId: string): Promise<WorkoutWithExercises | null>;
+	getProgramWithExercises(
+		programId: string,
+		userId: string,
+	): Promise<{
+		exercises: Array<{ exerciseId: string; order: number }>;
+	} | null>;
+	getLastProgramExerciseSets(
+		userId: string,
+		programId: string,
+		exerciseId: string,
+	): Promise<SetUI[]>;
+	getOldestExerciseSets(userId: string, exerciseId: string): Promise<SetUI[]>;
+	createWorkout(
+		userId: string,
+		programId: string,
+		exercises: Array<{ exerciseId: string; order: number; sets: SetUI[] }>,
+	): Promise<string>;
+	finishWorkout(workoutId: string, userId: string): Promise<void>;
+	getActiveWorkout(userId: string): Promise<{ id: string } | null>;
 }
 
-export async function getWorkoutById(
-	id: string,
-	userId: string,
-): Promise<WorkoutWithMappedSets | null> {
-	const workout = await prisma.workout.findUnique({
-		where: { id, userId },
-		...workoutWithExercisesAndSets,
-	});
+const prismaWorkoutRepository: WorkoutRepository = {
+	async hasOwnedWorkout(workoutId, userId) {
+		const workout = await prisma.workout.findFirst({
+			where: { id: workoutId, userId },
+			select: { id: true },
+		});
+		return !!workout;
+	},
+	async replaceWorkoutSets(workoutId, userId, sets) {
+		await prisma.$transaction(async (tx) => {
+			await tx.set.deleteMany({ where: { workoutExercise: { workoutId, workout: { userId } } } });
+			if (sets.length > 0) {
+				await tx.set.createMany({ data: sets });
+			}
+		});
+	},
+	async getWorkoutById(id, userId) {
+		return prisma.workout.findUnique({ where: { id, userId }, ...workoutWithExercisesAndSets });
+	},
+	async getProgramWithExercises(programId, userId) {
+		return prisma.program.findFirst({
+			where: { id: programId, userId },
+			include: { exercises: { orderBy: { order: "asc" } } },
+		});
+	},
+	async getLastProgramExerciseSets(userId, programId, exerciseId) {
+		const lastProgramWorkout = await prisma.workout.findFirst({
+			where: { userId, programId, endDate: { not: null } },
+			orderBy: { startDate: "desc" },
+			include: {
+				exercises: { where: { exerciseId }, include: { sets: { orderBy: { order: "asc" } } } },
+			},
+		});
+		const matchingExercise = lastProgramWorkout?.exercises.find(
+			(exercise) => exercise.exerciseId === exerciseId,
+		);
+		return matchingExercise?.sets || [];
+	},
+	async getOldestExerciseSets(userId, exerciseId) {
+		const oldestExerciseRecord = await prisma.set.findFirst({
+			where: { workoutExercise: { exerciseId, workout: { userId, endDate: { not: null } } } },
+			orderBy: { time: "asc" },
+			select: { workoutExercise: { include: { sets: { orderBy: { order: "asc" } } } } },
+		});
+		return oldestExerciseRecord?.workoutExercise.sets || [];
+	},
+	async createWorkout(userId, programId, exercises) {
+		const newWorkout = await prisma.workout.create({
+			data: {
+				userId,
+				programId,
+				startDate: new Date(),
+				exercises: {
+					create: exercises.map((exercise) => ({
+						exerciseId: exercise.exerciseId,
+						order: exercise.order,
+						sets: { create: formatSetsForNewWorkout(exercise.sets) },
+					})),
+				},
+			},
+		});
+		return newWorkout.id;
+	},
+	async finishWorkout(workoutId, userId) {
+		await prisma.workout.update({
+			where: { id: workoutId, userId },
+			data: { endDate: new Date() },
+		});
+	},
+	async getActiveWorkout(userId) {
+		return prisma.workout.findFirst({ where: { userId, endDate: null }, select: { id: true } });
+	},
+};
 
-	if (!workout) return null;
-
-	const exerciseSets: WorkoutSetMap = {};
-
-	const exercisesUI = workout.exercises.map(({ id, sets, exercise, ...rest }) => {
-		exerciseSets[id] = sets;
-
-		return {
-			...rest,
-			id,
-			exercise: mapExerciseToUI(exercise),
-		};
-	});
-
+export function createWorkoutService(repository: WorkoutRepository) {
 	return {
-		...workout,
-		exercises: exercisesUI,
-		exerciseSets,
+		async syncWorkoutSets(workoutId: string, exerciseSetsMap: WorkoutSetMap, userId: string) {
+			await devDelay();
+			const hasWorkout = await repository.hasOwnedWorkout(workoutId, userId);
+			if (!hasWorkout) throw new Error("Workout not found");
+
+			const allSets = Object.entries(exerciseSetsMap).flatMap(([workoutExerciseId, sets]) =>
+				sets.map((set, index) => ({
+					id: set.id,
+					reps: set.reps,
+					weight: set.weight,
+					time: set.time ? new Date(set.time) : null,
+					isWarmup: set.isWarmup,
+					order: index,
+					workoutExerciseId,
+				})),
+			);
+
+			await repository.replaceWorkoutSets(workoutId, userId, allSets);
+			revalidatePath(`${ROUTES.WORKOUT}/${workoutId}`);
+			return exerciseSetsMap;
+		},
+
+		async getWorkoutById(id: string, userId: string): Promise<WorkoutWithMappedSets | null> {
+			const workout = await repository.getWorkoutById(id, userId);
+			if (!workout) return null;
+
+			const exerciseSets: WorkoutSetMap = {};
+			const exercisesUI = workout.exercises.map(
+				({ id: workoutExerciseId, sets, exercise, ...rest }) => {
+					exerciseSets[workoutExerciseId] = sets;
+					return { ...rest, id: workoutExerciseId, exercise: mapExerciseToUI(exercise) };
+				},
+			);
+
+			return { ...workout, exercises: exercisesUI, exerciseSets };
+		},
+
+		async startWorkout(programId: string, userId: string): Promise<string> {
+			const program = await repository.getProgramWithExercises(programId, userId);
+			if (!program) throw new Error("Program not found");
+
+			const exercisesToCreate = await Promise.all(
+				program.exercises.map(async (programExercise) => ({
+					exerciseId: programExercise.exerciseId,
+					order: programExercise.order,
+					sets: await getSeedSetsForExercise(
+						repository,
+						userId,
+						programId,
+						programExercise.exerciseId,
+					),
+				})),
+			);
+
+			return repository.createWorkout(userId, programId, exercisesToCreate);
+		},
+
+		async finishWorkout(workoutId: string, userId: string) {
+			try {
+				await repository.finishWorkout(workoutId, userId);
+			} catch (error) {
+				logError(error, "finishWorkout", { extra: { workoutId, userId } });
+				throw new Error("Could not complete workout");
+			}
+			revalidatePath(ROUTES.PROGRESS);
+		},
+
+		async getActiveWorkout(userId: string) {
+			return repository.getActiveWorkout(userId);
+		},
 	};
 }
 
-export async function startWorkout(programId: string, userId: string): Promise<string> {
-	const program = await prisma.program.findFirst({
-		where: { id: programId, userId },
-		include: { exercises: { orderBy: { order: "asc" } } },
-	});
-
-	if (!program) throw new Error("Program not found");
-
-	const exercisesToCreate = await Promise.all(
-		program.exercises.map(async (programExercise) => {
-			const seedSets = await getSeedSetsForExercise(userId, programId, programExercise.exerciseId);
-
-			return {
-				exerciseId: programExercise.exerciseId,
-				order: programExercise.order,
-				sets: {
-					create: formatSetsForNewWorkout(seedSets),
-				},
-			};
-		}),
-	);
-
-	const newWorkout = await prisma.workout.create({
-		data: {
-			userId,
-			programId,
-			startDate: new Date(),
-			exercises: { create: exercisesToCreate },
-		},
-	});
-
-	return newWorkout.id;
-}
-
 async function getSeedSetsForExercise(
+	repository: WorkoutRepository,
 	userId: string,
 	programId: string,
 	exerciseId: string,
 ): Promise<SetUI[]> {
-	const lastProgramWorkout = await prisma.workout.findFirst({
-		where: { userId, programId, endDate: { not: null } },
-		orderBy: { startDate: "desc" },
-		include: {
-			exercises: {
-				where: { exerciseId },
-				include: { sets: { orderBy: { order: "asc" } } },
-			},
-		},
-	});
-
-	const matchingExercise = lastProgramWorkout?.exercises.find(
-		(exercise) => exercise.exerciseId === exerciseId,
+	const lastProgramSets = await repository.getLastProgramExerciseSets(
+		userId,
+		programId,
+		exerciseId,
 	);
-
-	if (matchingExercise && matchingExercise.sets.length > 0) {
-		return matchingExercise.sets;
+	if (lastProgramSets.length > 0) {
+		return lastProgramSets;
 	}
-
-	const oldestExerciseRecord = await prisma.set.findFirst({
-		where: {
-			workoutExercise: {
-				exerciseId,
-				workout: { userId, endDate: { not: null } },
-			},
-		},
-		orderBy: { time: "asc" },
-		select: {
-			workoutExercise: {
-				include: { sets: { orderBy: { order: "asc" } } },
-			},
-		},
-	});
-
-	return oldestExerciseRecord?.workoutExercise.sets || [];
+	return repository.getOldestExerciseSets(userId, exerciseId);
 }
 
 function formatSetsForNewWorkout(sets: SetUI[]): Array<{
@@ -189,28 +242,10 @@ function formatSetsForNewWorkout(sets: SetUI[]): Array<{
 	}));
 }
 
-export async function finishWorkout(workoutId: string, userId: string) {
-	try {
-		await prisma.workout.update({
-			where: { id: workoutId, userId },
-			data: {
-				endDate: new Date(),
-			},
-		});
-	} catch (error) {
-		logError(error, "finishWorkout", { extra: { workoutId, userId } });
-		throw new Error("Could not complete workout");
-	}
+const workoutService = createWorkoutService(prismaWorkoutRepository);
 
-	revalidatePath(ROUTES.PROGRESS);
-}
-
-export async function getActiveWorkout(userId: string) {
-	return prisma.workout.findFirst({
-		where: {
-			userId,
-			endDate: null,
-		},
-		select: { id: true },
-	});
-}
+export const syncWorkoutSets = workoutService.syncWorkoutSets;
+export const getWorkoutById = workoutService.getWorkoutById;
+export const startWorkout = workoutService.startWorkout;
+export const finishWorkout = workoutService.finishWorkout;
+export const getActiveWorkout = workoutService.getActiveWorkout;
