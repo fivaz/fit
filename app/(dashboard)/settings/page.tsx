@@ -1,12 +1,21 @@
+"use client";
+
 import * as React from "react";
+import { useEffect, useState } from "react";
 
 import { SettingsDetails } from "@/components/settings/settings-details";
-import { getBodyMetrics } from "@/lib/body-metrics/service";
-import { getUserId } from "@/lib/utils-server";
+import { getBodyMetrics } from "@/lib/body-metrics/api";
+import { BodyMetricsUI, getEmptyBodyMetrics } from "@/lib/body-metrics/type";
 
-export default async function SettingsPage() {
-	const userId = await getUserId();
-	const bodyMetrics = await getBodyMetrics(userId);
+export default function SettingsPage() {
+	const [bodyMetrics, setBodyMetrics] = useState<BodyMetricsUI>(getEmptyBodyMetrics());
+
+	useEffect(() => {
+		void getBodyMetrics().then((metrics) => {
+			if (!metrics) return;
+			setBodyMetrics(metrics);
+		});
+	}, []);
 
 	return (
 		<div className="relative flex w-full flex-col">

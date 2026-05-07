@@ -1,23 +1,14 @@
-import * as React from "react";
-
-import { ProgramDetails } from "@/app/(dashboard)/programs/[id]/_components/program-details";
-import { ProgramNotFound } from "@/app/(dashboard)/programs/[id]/_components/program-not-found";
-import { getProgramById } from "@/lib/program/service";
-import { getUserId } from "@/lib/utils-server";
+import { ProgramPageClient } from "@/app/(dashboard)/programs/[id]/_components/program-page-client";
 
 type ProgramPageProps = {
 	params: Promise<{ id: string }>;
 };
 
+export async function generateStaticParams() {
+	return [{ id: "placeholder" }];
+}
+
 export default async function ProgramPage({ params }: ProgramPageProps) {
 	const { id } = await params;
-	const userId = await getUserId();
-
-	const program = await getProgramById(id, userId);
-
-	if (!program) {
-		return <ProgramNotFound />;
-	}
-
-	return <ProgramDetails program={program} />;
+	return <ProgramPageClient programId={id} />;
 }

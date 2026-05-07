@@ -1,8 +1,12 @@
 import { offlineDataAdapters } from "@/lib/offline/data-adapters";
-import { ProgramUI } from "@/lib/program/type";
+import { ProgramUI, ProgramWithExercises } from "@/lib/program/type";
 
 export function getPrograms() {
 	return offlineDataAdapters.getPrograms();
+}
+
+export function getProgramById(programId: string): Promise<ProgramWithExercises | null> {
+	return offlineDataAdapters.getProgramById(programId);
 }
 
 export function saveProgram(program: ProgramUI) {

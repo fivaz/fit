@@ -1,7 +1,8 @@
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { auth } from "@/lib/auth";
 import { logError } from "@/lib/logger";
-import { getSessionUserId } from "@/lib/utils-server";
 
 import "server-only";
 
@@ -13,6 +14,14 @@ export class ApiError extends Error {
 		super(message);
 		this.name = "ApiError";
 	}
+}
+
+async function getSessionUserId() {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+
+	return session?.user.id ?? null;
 }
 
 export async function requireApiUserId() {

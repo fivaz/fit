@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, rename } from "node:fs/promises";
+import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -51,7 +51,7 @@ async function moveE2eDistOutOfBuild() {
 async function restoreE2eDist(moved) {
 	if (!moved) return;
 	if (existsSync(e2eDistDir)) {
-		throw new Error(`Cannot restore E2E dist directory because destination exists: ${e2eDistDir}`);
+		await rm(e2eDistDir, { recursive: true, force: true });
 	}
 	await rename(e2eDistBackupDir, e2eDistDir);
 }

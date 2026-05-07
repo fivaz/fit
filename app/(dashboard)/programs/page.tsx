@@ -1,12 +1,18 @@
+"use client";
+
 import * as React from "react";
+import { useEffect, useState } from "react";
 
 import { ProgramList } from "@/app/(dashboard)/programs/_components/program-list";
-import { getPrograms } from "@/lib/program/service";
-import { getUserId } from "@/lib/utils-server";
+import { getPrograms } from "@/lib/program/api";
+import { ProgramUI } from "@/lib/program/type";
 
-export default async function ProgramsPage() {
-	const userId = await getUserId();
-	const programs = await getPrograms(userId);
+export default function ProgramsPage() {
+	const [programs, setPrograms] = useState<ProgramUI[]>([]);
+
+	useEffect(() => {
+		void getPrograms().then(setPrograms);
+	}, []);
 
 	return (
 		<div className="relative">

@@ -2,7 +2,9 @@ import { apiFetch } from "@/lib/api-client";
 import { BodyMetricsUI } from "@/lib/body-metrics/type";
 import { ExerciseUI } from "@/lib/exercise/type";
 import { ProgramUI } from "@/lib/program/type";
+import { ProgramWithExercises } from "@/lib/program/type";
 import { WorkoutSetMap } from "@/lib/workout/type";
+import { WorkoutWithMappedSets } from "@/lib/workout/type";
 
 type HttpMethod = "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -144,6 +146,27 @@ export const offlineDataAdapters = {
 			return programs;
 		} catch {
 			return this.getProgramsLocal();
+		}
+	},
+
+	async getProgramById(programId: string): Promise<ProgramWithExercises | null> {
+		await flushPendingOperations();
+		try {
+			const program = await apiFetch<ProgramWithExercises>(`/api/programs/${programId}`);
+			updateStore((store) => ({
+				...store,
+				programs: upsertById(store.programs, {
+					id: program.id,
+					name: program.name,
+					muscles: program.muscles,
+					imageUrl: program.imageUrl,
+					order: program.order,
+				}),
+				exercises: program.exercises.map(({ order: _order, ...exercise }) => exercise),
+			}));
+			return program;
+		} catch {
+			return null;
 		}
 	},
 
@@ -331,6 +354,32 @@ export const offlineDataAdapters = {
 			body: { exerciseSetsMap },
 		});
 		return exerciseSetsMap;
+	},
+
+	async getWorkoutById(workoutId: string): Promise<WorkoutWithMappedSets | null> {
+		await flushPendingOperations();
+		try {
+			const workout = await apiFetch<WorkoutWithMappedSets>(`/api/workouts/${workoutId}`);
+			updateStore((store) => ({
+				...store,
+				workoutSetsByWorkoutId: {
+					...store.workoutSetsByWorkoutId,
+					[workoutId]: workout.exerciseSets,
+				},
+			}));
+			return workout;
+		} catch {
+			return null;
+		}
+	},
+
+	async getActiveWorkout(): Promise<{ id: string } | null> {
+		await flushPendingOperations();
+		try {
+			return await apiFetch<{ id: string } | null>("/api/workouts/active");
+		} catch {
+			return null;
+		}
 	},
 
 	async startWorkout(programId: string) {
