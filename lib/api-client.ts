@@ -5,6 +5,7 @@ type JsonRequestInit = Omit<RequestInit, "body"> & {
 export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Promise<T> {
 	const headers = new Headers(init.headers);
 	const hasBody = init.body !== undefined;
+	const method = init.method?.toUpperCase() ?? "GET";
 
 	if (hasBody && !headers.has("Content-Type")) {
 		headers.set("Content-Type", "application/json");
@@ -14,6 +15,7 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 		...init,
 		headers,
 		body: hasBody ? JSON.stringify(init.body) : undefined,
+		keepalive: init.keepalive ?? (method !== "GET" && method !== "HEAD"),
 	});
 
 	if (!response.ok) {

@@ -39,7 +39,9 @@ export function AddExerciseForm({ program, open, onOpenChange }: AddExerciseForm
 	};
 
 	const handleConfirm = () => {
-		setItems(selected, {
+		const orderedSelected = selected.map((exercise, order) => ({ ...exercise, order }));
+
+		setItems(orderedSelected, {
 			persist: () =>
 				updateProgramExercises(
 					selected.map((e) => e.id),

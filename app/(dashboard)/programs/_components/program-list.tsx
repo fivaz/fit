@@ -41,7 +41,7 @@ export function ProgramsListInternal() {
 	if (sortedPrograms.length === 0) return <ProgramEmptyState />;
 
 	function handleReorder(event: Parameters<typeof move>[1]) {
-		const reordered = move(sortedPrograms, event);
+		const reordered = move(sortedPrograms, event).map((program, order) => ({ ...program, order }));
 
 		if (sameOrder(sortedPrograms, reordered)) return;
 

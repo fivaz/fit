@@ -26,7 +26,10 @@ export function ProgramExerciseList({ programId }: ProgramExerciseListProps) {
 	return (
 		<DragDropProvider
 			onDragEnd={(event) => {
-				const nextItems = move(exercises, event);
+				const nextItems = move(exercises, event).map((exercise, order) => ({
+					...exercise,
+					order,
+				}));
 
 				if (sameOrder(exercises, nextItems)) return;
 
