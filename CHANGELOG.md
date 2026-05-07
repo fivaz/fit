@@ -1,3 +1,21 @@
+## [1.21.1](https://github.com/fivaz/fit-v2/compare/v1.21.0...v1.21.1) (2026-05-07)
+
+### 🐛 Bug Fixes
+
+* derive start workout disabled state from store ([a430019](https://github.com/fivaz/fit-v2/commit/a430019645ae3af4839f243300f917c53b47bc47))
+* persist api-backed optimistic mutations ([e4d0aeb](https://github.com/fivaz/fit-v2/commit/e4d0aebbd81c7e33332a4adcb3874233faa8d1e1))
+* stabilize api-backed reorder persistence ([e5dbf30](https://github.com/fivaz/fit-v2/commit/e5dbf30c6cb92da1bd51b2e9dff9166a49fabf61))
+* stabilize e2e flows without artificial delay ([624556b](https://github.com/fivaz/fit-v2/commit/624556b94b50104b834caf24883adcf5b33b0b22))
+* update body metrics store entry ([cafb326](https://github.com/fivaz/fit-v2/commit/cafb326f7f50cfb82a1008f72a9965cd6ff30c6a))
+
+### 🧹 Chores
+
+* remove devDelay default delay ([2c94305](https://github.com/fivaz/fit-v2/commit/2c9430501e8fe8c051b67b79d87c3a397f3bc2f9))
+
+### 🔨 Code Refactoring
+
+* replace server actions with route handlers ([4c71c48](https://github.com/fivaz/fit-v2/commit/4c71c483729d7f21cf12a6f82bda0d826968077b))
+
 ## [1.21.0](https://github.com/fivaz/fit-v2/compare/v1.20.1...v1.21.0) (2026-05-07)
 
 ### ✨ Features
