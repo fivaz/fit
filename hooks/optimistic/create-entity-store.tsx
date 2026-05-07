@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useContext } from "react";
-import { useOptimistic } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 export type Identifiable = { id: string };
 
@@ -24,39 +23,48 @@ type Action<T> =
 	| { type: "delete"; id: string }
 	| { type: "set"; items: T[] };
 
+function itemsReducer<T extends Identifiable>(state: T[], action: Action<T>) {
+	switch (action.type) {
+		case "add":
+			return [...state, action.item];
+
+		case "update":
+			return state.map((item) => (item.id === action.item.id ? { ...item, ...action.item } : item));
+
+		case "upsert": {
+			const exists = state.some((item) => item.id === action.item.id);
+			return exists
+				? state.map((item) => (item.id === action.item.id ? { ...item, ...action.item } : item))
+				: [...state, action.item];
+		}
+
+		case "delete":
+			return state.filter((item) => item.id !== action.id);
+
+		case "set":
+			return action.items;
+
+		default:
+			return state;
+	}
+}
+
 export function createEntityStore<T extends Identifiable>() {
 	const Context = createContext<EntityStoreReturn<T> | null>(null);
 
 	type ProviderProps = { initialItems: T[]; children: ReactNode };
 
 	function Provider({ initialItems, children }: ProviderProps) {
-		const [items, dispatch] = useOptimistic(initialItems, (state: T[], action: Action<T>) => {
-			switch (action.type) {
-				case "add":
-					return [...state, action.item];
+		const [items, setItemsState] = useState(initialItems);
+		const [isUnstable, setIsUnstable] = useState(false);
 
-				case "update":
-					return state.map((i) => (i.id === action.item.id ? { ...i, ...action.item } : i));
+		useEffect(() => {
+			setItemsState(initialItems);
+		}, [initialItems]);
 
-				case "upsert": {
-					const exists = state.some((i) => i.id === action.item.id);
-					return exists
-						? state.map((i) => (i.id === action.item.id ? { ...i, ...action.item } : i))
-						: [...state, action.item];
-				}
-
-				case "delete":
-					return state.filter((i) => i.id !== action.id);
-
-				case "set":
-					return action.items;
-
-				default:
-					return state;
-			}
-		});
-
-		const [isUnstable, setIsUnstable] = useOptimistic(false, (_, newValue: boolean) => newValue);
+		const dispatch = (action: Action<T>) => {
+			setItemsState((state) => itemsReducer(state, action));
+		};
 
 		const store: EntityStoreReturn<T> = {
 			items,
