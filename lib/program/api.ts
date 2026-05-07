@@ -1,33 +1,22 @@
-import { apiFetch } from "@/lib/api-client";
+import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { ProgramUI } from "@/lib/program/type";
 
 export function getPrograms() {
-	return apiFetch<ProgramUI[]>("/api/programs");
+	return offlineDataAdapters.getPrograms();
 }
 
 export function saveProgram(program: ProgramUI) {
-	return apiFetch<void>("/api/programs", {
-		method: "POST",
-		body: program,
-	});
+	return offlineDataAdapters.saveProgram(program);
 }
 
 export function reorderPrograms(sortedIds: string[]) {
-	return apiFetch<void>("/api/programs/reorder", {
-		method: "PATCH",
-		body: { sortedIds },
-	});
+	return offlineDataAdapters.reorderPrograms(sortedIds);
 }
 
 export function deleteProgram(id: string) {
-	return apiFetch<void>(`/api/programs/${id}`, {
-		method: "DELETE",
-	});
+	return offlineDataAdapters.deleteProgram(id);
 }
 
 export function updateProgramExercises(exerciseIds: string[], programId: string) {
-	return apiFetch<void>(`/api/programs/${programId}/exercises`, {
-		method: "PUT",
-		body: { exerciseIds },
-	});
+	return offlineDataAdapters.updateProgramExercises(exerciseIds, programId);
 }

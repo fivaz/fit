@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { motion } from "framer-motion";
@@ -16,6 +16,7 @@ import { authClient } from "@/lib/auth-client";
 import { BodyMetricsUI } from "@/lib/body-metrics/type";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
+import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { cn } from "@/lib/utils";
 
 type SettingsDetailProps = {
@@ -23,6 +24,10 @@ type SettingsDetailProps = {
 };
 
 export function SettingsDetails({ bodyMetrics }: SettingsDetailProps) {
+	useEffect(() => {
+		offlineDataAdapters.setBodyMetricsLocal(bodyMetrics);
+	}, [bodyMetrics]);
+
 	return (
 		<BodyMetricsProvider initialItems={[bodyMetrics]}>
 			<SettingsDetailsInternal />

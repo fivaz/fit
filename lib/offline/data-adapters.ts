@@ -1,0 +1,350 @@
+import { apiFetch } from "@/lib/api-client";
+import { BodyMetricsUI } from "@/lib/body-metrics/type";
+import { ExerciseUI } from "@/lib/exercise/type";
+import { ProgramUI } from "@/lib/program/type";
+import { WorkoutSetMap } from "@/lib/workout/type";
+
+type HttpMethod = "POST" | "PUT" | "PATCH" | "DELETE";
+
+type PendingOperation = {
+	id: string;
+	url: string;
+	method: HttpMethod;
+	body?: unknown;
+	createdAt: string;
+};
+
+type OfflineStore = {
+	programs: ProgramUI[];
+	exercises: ExerciseUI[];
+	bodyMetrics: BodyMetricsUI | null;
+	workoutSetsByWorkoutId: Record<string, WorkoutSetMap>;
+	pendingOperations: PendingOperation[];
+};
+
+const OFFLINE_STORE_KEY = "fit:offline-store:v1";
+
+const emptyStore: OfflineStore = {
+	programs: [],
+	exercises: [],
+	bodyMetrics: null,
+	workoutSetsByWorkoutId: {},
+	pendingOperations: [],
+};
+
+let isSyncingQueue = false;
+
+function isBrowser() {
+	return typeof window !== "undefined";
+}
+
+function readStore(): OfflineStore {
+	if (!isBrowser()) return emptyStore;
+
+	try {
+		const raw = window.localStorage.getItem(OFFLINE_STORE_KEY);
+		if (!raw) return emptyStore;
+		const parsed = JSON.parse(raw) as Partial<OfflineStore>;
+
+		return {
+			programs: parsed.programs ?? [],
+			exercises: parsed.exercises ?? [],
+			bodyMetrics: parsed.bodyMetrics ?? null,
+			workoutSetsByWorkoutId: parsed.workoutSetsByWorkoutId ?? {},
+			pendingOperations: parsed.pendingOperations ?? [],
+		};
+	} catch {
+		return emptyStore;
+	}
+}
+
+function writeStore(store: OfflineStore) {
+	if (!isBrowser()) return;
+	window.localStorage.setItem(OFFLINE_STORE_KEY, JSON.stringify(store));
+}
+
+function updateStore(update: (store: OfflineStore) => OfflineStore) {
+	const current = readStore();
+	writeStore(update(current));
+}
+
+function enqueueOperation(operation: Omit<PendingOperation, "id" | "createdAt">) {
+	updateStore((store) => ({
+		...store,
+		pendingOperations: [
+			...store.pendingOperations,
+			{
+				...operation,
+				id: crypto.randomUUID(),
+				createdAt: new Date().toISOString(),
+			},
+		],
+	}));
+}
+
+async function flushPendingOperations() {
+	if (!isBrowser() || isSyncingQueue) return;
+
+	isSyncingQueue = true;
+	try {
+		const store = readStore();
+		const remaining: PendingOperation[] = [];
+
+		for (const operation of store.pendingOperations) {
+			try {
+				await apiFetch<void>(operation.url, {
+					method: operation.method,
+					body: operation.body,
+				});
+			} catch {
+				remaining.push(operation);
+			}
+		}
+
+		writeStore({
+			...store,
+			pendingOperations: remaining,
+		});
+	} finally {
+		isSyncingQueue = false;
+	}
+}
+
+function upsertById<T extends { id: string }>(items: T[], item: T): T[] {
+	const index = items.findIndex((value) => value.id === item.id);
+	if (index === -1) return [...items, item];
+	const next = [...items];
+	next[index] = item;
+	return next;
+}
+
+function removeById<T extends { id: string }>(items: T[], id: string): T[] {
+	return items.filter((item) => item.id !== id);
+}
+
+async function runOrQueue(operation: Omit<PendingOperation, "id" | "createdAt">) {
+	enqueueOperation(operation);
+	await flushPendingOperations();
+}
+
+export const offlineDataAdapters = {
+	async syncNow() {
+		await flushPendingOperations();
+	},
+
+	getProgramsLocal() {
+		return readStore().programs;
+	},
+
+	async getPrograms() {
+		await flushPendingOperations();
+		try {
+			const programs = await apiFetch<ProgramUI[]>("/api/programs");
+			this.setProgramsLocal(programs);
+			return programs;
+		} catch {
+			return this.getProgramsLocal();
+		}
+	},
+
+	setProgramsLocal(programs: ProgramUI[]) {
+		updateStore((store) => ({ ...store, programs }));
+	},
+
+	async saveProgram(program: ProgramUI) {
+		updateStore((store) => ({
+			...store,
+			programs: upsertById(store.programs, program),
+		}));
+		await runOrQueue({
+			url: "/api/programs",
+			method: "POST",
+			body: program,
+		});
+	},
+
+	async reorderPrograms(sortedIds: string[]) {
+		updateStore((store) => ({
+			...store,
+			programs: store.programs
+				.map((program) => ({ ...program, order: sortedIds.indexOf(program.id) }))
+				.sort((a, b) => a.order - b.order),
+		}));
+		await runOrQueue({
+			url: "/api/programs/reorder",
+			method: "PATCH",
+			body: { sortedIds },
+		});
+	},
+
+	async deleteProgram(id: string) {
+		updateStore((store) => ({
+			...store,
+			programs: removeById(store.programs, id),
+		}));
+		await runOrQueue({
+			url: `/api/programs/${id}`,
+			method: "DELETE",
+		});
+	},
+
+	async updateProgramExercises(exerciseIds: string[], programId: string) {
+		await runOrQueue({
+			url: `/api/programs/${programId}/exercises`,
+			method: "PUT",
+			body: { exerciseIds },
+		});
+	},
+
+	getExercisesLocal() {
+		return readStore().exercises;
+	},
+
+	setExercisesLocal(exercises: ExerciseUI[]) {
+		updateStore((store) => ({ ...store, exercises }));
+	},
+
+	async getExercisesSearch(params: {
+		search?: string;
+		muscles?: string[];
+		page: number;
+		pageSize: number;
+	}): Promise<ExerciseUI[]> {
+		await flushPendingOperations();
+		const query = new URLSearchParams({
+			page: String(params.page),
+			pageSize: String(params.pageSize),
+		});
+
+		if (params.search) query.set("search", params.search);
+		params.muscles?.forEach((muscle) => query.append("muscles", muscle));
+
+		try {
+			const exercises = await apiFetch<ExerciseUI[]>(`/api/exercises?${query.toString()}`);
+			updateStore((store) => {
+				const merged = [...store.exercises];
+				for (const exercise of exercises) {
+					const index = merged.findIndex((item) => item.id === exercise.id);
+					if (index >= 0) merged[index] = exercise;
+					else merged.push(exercise);
+				}
+				return { ...store, exercises: merged };
+			});
+			return exercises;
+		} catch {
+			const local = readStore().exercises;
+			const search = params.search?.trim().toLowerCase();
+			const filtered = local.filter((exercise) => {
+				const matchesSearch = !search || exercise.name.toLowerCase().includes(search);
+				const matchesMuscles =
+					!params.muscles?.length ||
+					params.muscles.some((muscle) =>
+						exercise.muscles.includes(muscle as ExerciseUI["muscles"][number]),
+					);
+				return matchesSearch && matchesMuscles;
+			});
+			const start = (params.page - 1) * params.pageSize;
+			return filtered.slice(start, start + params.pageSize);
+		}
+	},
+
+	async saveExercise(exercise: ExerciseUI) {
+		updateStore((store) => ({
+			...store,
+			exercises: upsertById(store.exercises, exercise),
+		}));
+		await runOrQueue({
+			url: "/api/exercises",
+			method: "POST",
+			body: exercise,
+		});
+	},
+
+	async deleteExercise(id: string) {
+		updateStore((store) => ({
+			...store,
+			exercises: removeById(store.exercises, id),
+		}));
+		await runOrQueue({
+			url: `/api/exercises/${id}`,
+			method: "DELETE",
+		});
+	},
+
+	async reorderProgramExercises(programId: string, exerciseIds: string[]) {
+		await runOrQueue({
+			url: `/api/programs/${programId}/exercises/reorder`,
+			method: "PATCH",
+			body: { exerciseIds },
+		});
+	},
+
+	getBodyMetricsLocal() {
+		return readStore().bodyMetrics;
+	},
+
+	async getBodyMetrics() {
+		await flushPendingOperations();
+		try {
+			const metrics = await apiFetch<BodyMetricsUI>("/api/body-metrics");
+			this.setBodyMetricsLocal(metrics);
+			return metrics;
+		} catch {
+			return this.getBodyMetricsLocal();
+		}
+	},
+
+	setBodyMetricsLocal(metrics: BodyMetricsUI) {
+		updateStore((store) => ({
+			...store,
+			bodyMetrics: metrics,
+		}));
+	},
+
+	async saveBodyMetrics(metrics: BodyMetricsUI) {
+		updateStore((store) => ({
+			...store,
+			bodyMetrics: metrics,
+		}));
+		await runOrQueue({
+			url: "/api/body-metrics",
+			method: "PUT",
+			body: metrics,
+		});
+	},
+
+	getWorkoutSetsLocal(workoutId: string) {
+		return readStore().workoutSetsByWorkoutId[workoutId] ?? {};
+	},
+
+	async syncWorkoutSets(workoutId: string, exerciseSetsMap: WorkoutSetMap) {
+		updateStore((store) => ({
+			...store,
+			workoutSetsByWorkoutId: {
+				...store.workoutSetsByWorkoutId,
+				[workoutId]: exerciseSetsMap,
+			},
+		}));
+		await runOrQueue({
+			url: `/api/workouts/${workoutId}/sets`,
+			method: "PUT",
+			body: { exerciseSetsMap },
+		});
+		return exerciseSetsMap;
+	},
+
+	async startWorkout(programId: string) {
+		await flushPendingOperations();
+		return apiFetch<{ id: string }>("/api/workouts", {
+			method: "POST",
+			body: { programId },
+		});
+	},
+
+	async finishWorkout(workoutId: string) {
+		await runOrQueue({
+			url: `/api/workouts/${workoutId}/finish`,
+			method: "POST",
+		});
+	},
+};
