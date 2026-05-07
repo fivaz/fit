@@ -52,7 +52,10 @@ export function ExerciseFormButton({
 
 		deleteItem(exercise.id, {
 			persist: () => deleteExercise(exercise.id),
-			onSuccess: () => toast.success("Exercise deleted successfully."),
+			onSuccess: () => {
+				toast.success("Exercise deleted successfully.");
+				setOpen?.(false);
+			},
 			onError: () => toast.error("Failed to delete exercise."),
 		});
 	};

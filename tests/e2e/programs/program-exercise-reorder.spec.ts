@@ -54,7 +54,17 @@ test.describe("Program Exercise Reorder", () => {
 		const secondExerciseHandle = dragHandles.nth(beforeSecondIndex);
 
 		await test.step("Reorder and verify persistence", async () => {
+			const reorderResponse = page.waitForResponse(
+				(response) =>
+					response.url().includes("/api/programs/") &&
+					response.url().endsWith("/exercises/reorder") &&
+					response.request().method() === "PATCH" &&
+					response.ok(),
+				{ timeout: 12_000 },
+			);
+
 			await dragToTarget(page, firstExerciseHandle, secondExerciseHandle);
+			await reorderResponse;
 			await expect(page.getByRole("button", { name: "Program actions" })).toBeVisible({
 				timeout: 15_000,
 			});
