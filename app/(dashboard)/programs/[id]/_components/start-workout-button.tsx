@@ -6,19 +6,20 @@ import { useRouter } from "next/navigation";
 import { LoaderCircleIcon, TimerIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useExerciseMutations } from "@/hooks/exercise/store";
+import { useExerciseMutations, useExercisesStore } from "@/hooks/exercise/store";
 import { ROUTES } from "@/lib/consts";
 import { startWorkout } from "@/lib/workout/api";
 
 type StartWorkoutButtonProps = {
 	programId: string;
-	isDisabled: boolean;
 };
 
-export function StartWorkoutButton({ programId, isDisabled }: StartWorkoutButtonProps) {
+export function StartWorkoutButton({ programId }: StartWorkoutButtonProps) {
 	const [isSubmitting, startTransition] = useTransition();
 	const { isPending } = useExerciseMutations();
+	const { items: exercises } = useExercisesStore();
 	const router = useRouter();
+	const isDisabled = exercises.length === 0;
 
 	const handleStart = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();

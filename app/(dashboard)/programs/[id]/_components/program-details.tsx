@@ -101,7 +101,7 @@ export function ProgramDetailsInternal() {
 
 				<ExercisesProvider initialItems={program.exercises}>
 					<ProgramExerciseList programId={program.id} />
-					<StartWorkoutButton programId={program.id} isDisabled={program.exercises.length === 0} />
+					<StartWorkoutButton programId={program.id} />
 					<AddExerciseForm
 						program={program}
 						open={showAddExerciseForm}
