@@ -28,6 +28,7 @@
 		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e"
 	},
 	"dependencies": {
+		"@aparajita/capacitor-secure-storage": "^8.0.0",
 		"@dnd-kit/helpers": "^0.2.1",
 		"@dnd-kit/react": "^0.2.1",
 		"@prisma/adapter-pg": "^7.2.0",
