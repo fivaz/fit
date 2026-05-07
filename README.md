@@ -123,7 +123,36 @@ Use the dedicated static target when preparing a bundle for Capacitor:
 pnpm run build:static
 ```
 
-This enables `output: "export"` in Next.js and generates an exportable web bundle while keeping the default `pnpm run build` behavior unchanged for server-backed web deployment.
+This enables `output: "export"` in Next.js and generates an exportable web bundle in `.next-static/` while keeping the default `pnpm run build` behavior unchanged for server-backed web deployment.
+
+### Capacitor iOS workflow
+
+The native iOS shell lives in `ios/` and is configured by `capacitor.config.ts` to load the static `.next-static/` bundle.
+
+Prerequisites for native iOS work:
+
+- Xcode with the iOS SDK
+- Xcode command line tools
+
+Build and sync the static web bundle into the native project:
+
+```bash
+pnpm run ios:build
+```
+
+Open the generated Xcode workspace:
+
+```bash
+pnpm run ios:open
+```
+
+If `.next-static/` already exists and only native plugin/config wiring changed, run:
+
+```bash
+pnpm run ios:sync
+```
+
+Use Xcode to select signing, run on a simulator/device, and create App Store archives. The copied web assets and generated Capacitor config under `ios/App/App/` are ignored because they are reproducible from `pnpm run ios:build`.
 
 ### Static/mobile environment variables
 
@@ -219,6 +248,9 @@ Common commands:
 
 - `pnpm run dev` - start dev server
 - `pnpm run build` - production build
+- `pnpm run build:static` - static export build for mobile/native bundles
+- `pnpm run ios:build` - build the static bundle and sync it into the iOS project
+- `pnpm run ios:open` - open the Capacitor iOS workspace in Xcode
 - `pnpm run lint` - lint checks
 - `pnpm run format` - format + lint fixes
 - `pnpm run db:reset` - reset DB + seed

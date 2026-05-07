@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api-client";
 import { BodyMetricsUI } from "@/lib/body-metrics/type";
 import { ExerciseUI } from "@/lib/exercise/type";
+import { isNetworkAvailable } from "@/lib/mobile/network";
 import { ProgramUI } from "@/lib/program/type";
 import { ProgramWithExercises } from "@/lib/program/type";
 import { WorkoutSetMap } from "@/lib/workout/type";
@@ -89,6 +90,8 @@ async function flushPendingOperations() {
 
 	isSyncingQueue = true;
 	try {
+		if (!(await isNetworkAvailable())) return;
+
 		const store = readStore();
 		const remaining: PendingOperation[] = [];
 

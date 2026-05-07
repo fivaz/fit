@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { AppLayout } from "@/components/app-layout";
+import { NetworkSync } from "@/components/network-sync";
 import { TimezoneProvider } from "@/components/timezone-sync";
 import { authClient } from "@/lib/auth-client";
 import { ROUTES } from "@/lib/consts";
@@ -41,6 +42,7 @@ export default function DashboardLayout({ children }: DashboardLayoutType) {
 	return (
 		<AppLayout className={cn({ "px-5 pt-12": !isWorkoutPage })}>
 			<TimezoneProvider />
+			<NetworkSync />
 			{children}
 		</AppLayout>
 	);
