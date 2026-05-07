@@ -1,7 +1,7 @@
-# Use a custom Docker image for the 'ubuntu-latest' runner
+# Use a custom Docker image for the 'ubuntu-latest' runner.
 # '-P' stands for "platform". Whenever a workflow requests 'ubuntu-latest',
-# act will use the image 'catthehacker/ubuntu:act-latest'.
--P ubuntu-latest=catthehacker/ubuntu:act-latest
+# act will use the image below.
+-P ubuntu-latest=ghcr.io/catthehacker/ubuntu:full-latest
 
 # Add extra Linux capabilities to the container.
 # 'SYS_ADMIN' allows some privileged operations (needed for certain builds, mounts, or tools).
@@ -10,6 +10,10 @@
 # Force the container to run as amd64 architecture.
 # Useful if your host is ARM (like M1/M2 Mac) but workflows expect x86_64 binaries.
 --container-architecture linux/amd64
+
+# Load an intentionally empty env file instead of act's default .env.
+# This keeps workflow env values, such as DATABASE_URL, in control locally.
+--env-file .github/act/e2e.env
 
 # Set an environment variable inside the container.
 # DRY_RUN=1 is used because in the release.yml I check this env key

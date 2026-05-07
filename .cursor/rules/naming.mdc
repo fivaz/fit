@@ -23,6 +23,12 @@ alwaysApply: false
 - Use `is/has/can/should` prefixes for booleans (for example: `isLoading`, `hasAccess`).
 - Name async functions as actions and return typed results.
 
+## Package Script Naming
+
+- Name workflow test commands as `act:X` (for example: `act:e2e`, `act:release`).
+- Name database operation commands as `db:X` (for example: `db:reset`, `db:deploy`).
+- Name test-related commands as `test:X` (for example: `test:e2e`).
+
 ## Do
 
 - Keep acronyms readable (`userId` instead of `userID` if repo style prefers `Id`).
