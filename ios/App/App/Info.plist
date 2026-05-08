@@ -24,6 +24,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Fit Tracker lets you choose or capture an optional profile image during registration.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Fit Tracker lets you choose an optional profile image during registration.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
