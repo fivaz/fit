@@ -9,7 +9,7 @@
 		"build": "next build",
 		"build:static": "node scripts/build-static.mjs",
 		"export:static": "pnpm run build:static",
-		"ios:build": "pnpm run build:static && pnpm exec cap sync ios",
+		"ios:build": "pnpm run generate-ios-assets && pnpm run build:static && pnpm exec cap sync ios",
 		"ios:copy": "pnpm exec cap copy ios",
 		"ios:open": "pnpm exec cap open ios",
 		"ios:sync": "pnpm exec cap sync ios",
@@ -29,6 +29,7 @@
 		"act:e2e": "act -W .github/workflows/e2e.yml",
 		"act:prune-cache": "rm -rf .act-cache",
 		"exercises-seed": "tsx scripts/exercises-seed.ts",
+		"generate-ios-assets": "node scripts/generate-ios-assets.mjs",
 		"generate-pwa-assets": "pwa-assets-generator",
 		"test:e2e": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
 		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e"

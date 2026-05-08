@@ -140,6 +140,12 @@ Build and sync the static web bundle into the native project:
 pnpm run ios:build
 ```
 
+This regenerates the iOS app icon and splash catalog from `public/favicon.svg` before running the static export and Capacitor sync, so native branding stays aligned with the PWA asset source. To refresh only the native image catalog, run:
+
+```bash
+pnpm run generate-ios-assets
+```
+
 Open the generated Xcode workspace:
 
 ```bash
@@ -251,6 +257,7 @@ Common commands:
 - `pnpm run build:static` - static export build for mobile/native bundles
 - `pnpm run ios:build` - build the static bundle and sync it into the iOS project
 - `pnpm run ios:open` - open the Capacitor iOS workspace in Xcode
+- `pnpm run generate-ios-assets` - regenerate iOS icon/splash assets from `public/favicon.svg`
 - `pnpm run lint` - lint checks
 - `pnpm run format` - format + lint fixes
 - `pnpm run db:reset` - reset DB + seed
