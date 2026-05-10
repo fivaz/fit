@@ -11,12 +11,17 @@ import { ExercisesProvider } from "@/hooks/exercise/store";
 import { useExerciseFilters } from "@/hooks/exercise/use-exercise-filters";
 import { ExerciseUI } from "@/lib/exercise/type";
 import { ALL_MUSCLES } from "@/lib/muscle/type";
+import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 
 type ExerciseLibraryListProps = {
 	initialExercises: ExerciseUI[];
 };
 
 export function ExerciseLibraryList({ initialExercises }: ExerciseLibraryListProps) {
+	useEffect(() => {
+		offlineDataAdapters.setExercisesLocal(initialExercises);
+	}, [initialExercises]);
+
 	return (
 		<ExercisesProvider initialItems={initialExercises}>
 			<div className="absolute top-0 right-0">

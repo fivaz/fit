@@ -1,17 +1,20 @@
-import React from "react";
-import { redirect } from "next/navigation";
+"use client";
+
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { ROUTES } from "@/lib/consts";
-import { getUserId } from "@/lib/utils-server";
-import { getActiveWorkout } from "@/lib/workout/service";
+import { getActiveWorkout } from "@/lib/workout/api";
 
-export default async function HomePage() {
-	const userId = await getUserId();
-	const activeWorkout = await getActiveWorkout(userId);
+export default function HomePage() {
+	const router = useRouter();
 
-	if (activeWorkout) {
-		redirect(`${ROUTES.WORKOUT}/${activeWorkout.id}`);
-	}
+	useEffect(() => {
+		void getActiveWorkout().then((activeWorkout) => {
+			if (!activeWorkout) return;
+			router.replace(`${ROUTES.WORKOUT}/${activeWorkout.id}`);
+		});
+	}, [router]);
 
 	return (
 		<div className="relative flex w-full flex-col">

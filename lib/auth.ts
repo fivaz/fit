@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { bearer } from "better-auth/plugins";
 
 // If your Prisma file is located elsewhere, you can change the path
 import { prisma } from "@/lib/prisma";
@@ -47,6 +48,7 @@ export const auth = betterAuth({
 			// Send an email to the user with a link to reset their password
 		},
 	},
+	plugins: [bearer()],
 	socialProviders: {
 		google: {
 			clientId: process.env.GOOGLE_CLIENT_ID!,

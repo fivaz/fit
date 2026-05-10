@@ -6,42 +6,60 @@ import { prisma } from "@/lib/prisma";
 
 import "server-only";
 
-export async function getBodyMetrics(userId: string): Promise<BodyMetricsUI> {
-	const metrics = await prisma.bodyMetric.findFirst({
-		where: { userId },
-		orderBy: { date: "desc" },
-		...latestBodyMetric,
-	});
-
-	return metrics ?? getEmptyBodyMetrics();
+export interface BodyMetricsRepository {
+	findLatest(userId: string): Promise<BodyMetricsUI | null>;
+	upsertForDate(userId: string, date: Date, metrics: BodyMetricsUI): Promise<void>;
 }
 
-export async function saveBodyMetrics(metrics: BodyMetricsUI, userId: string) {
-	const today = new Date();
-	today.setUTCHours(0, 0, 0, 0);
+const prismaBodyMetricsRepository: BodyMetricsRepository = {
+	async findLatest(userId) {
+		return prisma.bodyMetric.findFirst({
+			where: { userId },
+			orderBy: { date: "desc" },
+			...latestBodyMetric,
+		});
+	},
 
-	await prisma.bodyMetric.upsert({
-		where: {
-			userId_date: {
-				userId,
-				date: today,
+	async upsertForDate(userId, date, metrics) {
+		await prisma.bodyMetric.upsert({
+			where: { userId_date: { userId, date } },
+			update: {
+				weight: metrics.weight,
+				bodyFat: metrics.bodyFat,
+				muscleMass: metrics.muscleMass,
+				visceralFat: metrics.visceralFat,
 			},
-		},
-		update: {
-			weight: metrics.weight,
-			bodyFat: metrics.bodyFat,
-			muscleMass: metrics.muscleMass,
-			visceralFat: metrics.visceralFat,
-		},
-		create: {
-			userId,
-			date: today,
-			weight: metrics.weight,
-			bodyFat: metrics.bodyFat,
-			muscleMass: metrics.muscleMass,
-			visceralFat: metrics.visceralFat,
-		},
-	});
+			create: {
+				userId,
+				date,
+				weight: metrics.weight,
+				bodyFat: metrics.bodyFat,
+				muscleMass: metrics.muscleMass,
+				visceralFat: metrics.visceralFat,
+			},
+		});
+	},
+};
 
-	revalidatePath(ROUTES.SETTINGS);
+export function createBodyMetricsService(repository: BodyMetricsRepository) {
+	return {
+		async getBodyMetrics(userId: string): Promise<BodyMetricsUI> {
+			const metrics = await repository.findLatest(userId);
+
+			return metrics ?? getEmptyBodyMetrics();
+		},
+
+		async saveBodyMetrics(metrics: BodyMetricsUI, userId: string) {
+			const today = new Date();
+			today.setUTCHours(0, 0, 0, 0);
+
+			await repository.upsertForDate(userId, today, metrics);
+			revalidatePath(ROUTES.SETTINGS);
+		},
+	};
 }
+
+const bodyMetricsService = createBodyMetricsService(prismaBodyMetricsRepository);
+
+export const getBodyMetrics = bodyMetricsService.getBodyMetrics;
+export const saveBodyMetrics = bodyMetricsService.saveBodyMetrics;

@@ -2,6 +2,13 @@ type JsonRequestInit = Omit<RequestInit, "body"> & {
 	body?: unknown;
 };
 
+function resolveApiUrl(input: string): string {
+	const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+	if (!baseUrl) return input;
+	if (!input.startsWith("/")) return input;
+	return `${baseUrl.replace(/\/$/, "")}${input}`;
+}
+
 export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Promise<T> {
 	const headers = new Headers(init.headers);
 	const hasBody = init.body !== undefined;
@@ -11,7 +18,7 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 		headers.set("Content-Type", "application/json");
 	}
 
-	const response = await fetch(input, {
+	const response = await fetch(resolveApiUrl(input), {
 		...init,
 		headers,
 		body: hasBody ? JSON.stringify(init.body) : undefined,

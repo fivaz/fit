@@ -7,6 +7,8 @@
 		"dev": "next dev",
 		"dev:e2e": "NEXT_DIST_DIR=.next-e2e-dev next dev --port 3001",
 		"build": "next build",
+		"build:static": "node scripts/build-static.mjs",
+		"export:static": "pnpm run build:static",
 		"start": "next start",
 		"lint": "eslint",
 		"format": "prettier --write . && eslint --fix .",
@@ -28,6 +30,7 @@
 		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e"
 	},
 	"dependencies": {
+		"@aparajita/capacitor-secure-storage": "^8.0.0",
 		"@dnd-kit/helpers": "^0.2.1",
 		"@dnd-kit/react": "^0.2.1",
 		"@prisma/adapter-pg": "^7.2.0",

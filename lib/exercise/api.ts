@@ -1,7 +1,7 @@
-import { apiFetch } from "@/lib/api-client";
 import { PAGE_SIZE } from "@/lib/consts";
 import { ExerciseUI } from "@/lib/exercise/type";
 import { MuscleGroup } from "@/lib/generated/prisma/client";
+import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 
 export function getExercises({
 	page = 1,
@@ -10,12 +10,10 @@ export function getExercises({
 	page?: number;
 	pageSize?: number;
 } = {}) {
-	const params = new URLSearchParams({
-		page: String(page),
-		pageSize: String(pageSize),
+	return offlineDataAdapters.getExercisesSearch({
+		page,
+		pageSize,
 	});
-
-	return apiFetch<ExerciseUI[]>(`/api/exercises?${params.toString()}`);
 }
 
 export function getExercisesSearch({
@@ -29,36 +27,22 @@ export function getExercisesSearch({
 	page: number;
 	pageSize?: number;
 }) {
-	const params = new URLSearchParams({
-		page: String(page),
-		pageSize: String(pageSize),
+	return offlineDataAdapters.getExercisesSearch({
+		search,
+		muscles,
+		page,
+		pageSize,
 	});
-
-	if (search) {
-		params.set("search", search);
-	}
-
-	muscles?.forEach((muscle) => params.append("muscles", muscle));
-
-	return apiFetch<ExerciseUI[]>(`/api/exercises?${params.toString()}`);
 }
 
 export function saveExercise(exercise: ExerciseUI) {
-	return apiFetch<void>("/api/exercises", {
-		method: "POST",
-		body: exercise,
-	});
+	return offlineDataAdapters.saveExercise(exercise);
 }
 
 export function deleteExercise(id: string) {
-	return apiFetch<void>(`/api/exercises/${id}`, {
-		method: "DELETE",
-	});
+	return offlineDataAdapters.deleteExercise(id);
 }
 
 export function reorderProgramExercises(programId: string, exerciseIds: string[]) {
-	return apiFetch<void>(`/api/programs/${programId}/exercises/reorder`, {
-		method: "PATCH",
-		body: { exerciseIds },
-	});
+	return offlineDataAdapters.reorderProgramExercises(programId, exerciseIds);
 }

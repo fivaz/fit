@@ -1,12 +1,18 @@
+"use client";
+
 import * as React from "react";
+import { useEffect, useState } from "react";
 
 import { ExerciseLibraryList } from "@/app/(dashboard)/exercises/_components/exercise-library-list";
-import { getExercises } from "@/lib/exercise/service";
-import { getUserId } from "@/lib/utils-server";
+import { getExercises } from "@/lib/exercise/api";
+import { ExerciseUI } from "@/lib/exercise/type";
 
-export default async function ExercisesPage() {
-	const userId = await getUserId();
-	const exercises = await getExercises(userId);
+export default function ExercisesPage() {
+	const [exercises, setExercises] = useState<ExerciseUI[]>([]);
+
+	useEffect(() => {
+		void getExercises().then(setExercises);
+	}, []);
 
 	return (
 		<div className="relative flex w-full flex-col">

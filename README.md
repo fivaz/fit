@@ -115,6 +115,24 @@ pnpm run db:reset
 pnpm run dev
 ```
 
+## Static export build path (iOS/Capacitor)
+
+Use the dedicated static target when preparing a bundle for Capacitor:
+
+```bash
+pnpm run build:static
+```
+
+This enables `output: "export"` in Next.js and generates an exportable web bundle while keeping the default `pnpm run build` behavior unchanged for server-backed web deployment.
+
+### Static/mobile environment variables
+
+For regular web deployment, leave these unset to use same-origin `/api` and auth routes.
+For static export/mobile runtime, set both to your hosted backend origin:
+
+- `NEXT_PUBLIC_API_BASE_URL` (used by `lib/api-client.ts`)
+- `NEXT_PUBLIC_AUTH_BASE_URL` (used by `lib/auth-client.ts`)
+
 ## Running tests
 
 ### E2E suite
@@ -141,6 +159,48 @@ Playwright configuration: `playwright.config.ts`.
   - executes E2E tests
   - uploads `playwright-report/` and `test-results/` artifacts
 - Release workflow: `.github/workflows/release.yml` (semantic-release)
+
+## iOS v1 scope (static-first)
+
+To support the planned static/offline-first iOS delivery, v1 intentionally focuses on email/password auth and core tracking flows while deferring server-coupled or advanced features.
+
+### Included in iOS v1
+
+- Authentication: email/password sign up and sign in
+- Exercise library: create, edit, delete, and browse exercises
+- Programs: create, edit, reorder, and assign exercises
+- Workout sessions: start, log sets, update sets, finish workout
+- Body metrics: create and update body metric entries
+
+### Deferred from iOS v1
+
+- Social login providers
+- Advanced analytics and non-core dashboard enhancements
+- Any feature that requires tight server rendering/runtime coupling
+
+### Offline capability matrix
+
+- `Auth (email/password)` - Included
+  - Offline behavior: existing local session is reusable for app startup
+  - Online requirement: first sign in and credential validation require network
+- `Exercise CRUD` - Included
+  - Offline behavior: full create/read/update/delete against local store
+  - Online requirement: sync runs when network is available
+- `Program CRUD + ordering` - Included
+  - Offline behavior: full local create/edit/reorder/delete
+  - Online requirement: sync runs when network is available
+- `Workout session logging` - Included
+  - Offline behavior: start/log/finish fully offline with local persistence
+  - Online requirement: sync runs when network is available
+- `Body metrics` - Included
+  - Offline behavior: create/update entries offline
+  - Online requirement: sync runs when network is available
+- `Social auth` - Deferred
+  - Offline behavior: not available in iOS v1
+  - Online requirement: n/a
+- `Advanced analytics` - Deferred
+  - Offline behavior: not available in iOS v1
+  - Online requirement: n/a
 
 ## Current status and roadmap
 

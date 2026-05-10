@@ -10,6 +10,7 @@ import { ProgramEmptyState } from "@/app/(dashboard)/programs/_components/progra
 import { ProgramRow } from "@/app/(dashboard)/programs/_components/program-row";
 import { ProgramFormButton } from "@/components/program/program-form-button";
 import { ProgramsProvider, useProgramMutations, useProgramsStore } from "@/hooks/program/store";
+import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { reorderPrograms } from "@/lib/program/api";
 import { ProgramUI } from "@/lib/program/type";
 import { sameOrder } from "@/lib/utils";
@@ -19,6 +20,10 @@ type ProgramsListProps = {
 };
 
 export function ProgramList({ initialPrograms }: ProgramsListProps) {
+	React.useEffect(() => {
+		offlineDataAdapters.setProgramsLocal(initialPrograms);
+	}, [initialPrograms]);
+
 	return (
 		<ProgramsProvider initialItems={initialPrograms}>
 			<div className="absolute top-0 right-0">
