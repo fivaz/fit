@@ -1,3 +1,21 @@
+## [1.22.0](https://github.com/fivaz/fit-v2/compare/v1.21.1...v1.22.0) (2026-05-10)
+
+### ✨ Features
+
+* add local-first offline adapters with queued sync for core fitness entities ([2a1d0ec](https://github.com/fivaz/fit-v2/commit/2a1d0ec68d51421cc8b3fea1edccdfdb6d0fc2f3))
+* add static build target and mobile runtime endpoint configuration ([a2663c0](https://github.com/fivaz/fit-v2/commit/a2663c05618a54342d699c5ee18322a6538d9178))
+* **auth:** add mobile bearer auth with secure token persistence ([8b5d43f](https://github.com/fivaz/fit-v2/commit/8b5d43f3b0ccbb300afc800803afe22ad5bfe2b8))
+
+### 🧹 Chores
+
+* add ios migration plan to the repo ([10a69f2](https://github.com/fivaz/fit-v2/commit/10a69f2b5c023cf35984d8bf3e33f0c5eebfe22f))
+* define iOS v1 scope and commit workflow rules ([b8eb88a](https://github.com/fivaz/fit-v2/commit/b8eb88a8927a250d80c6764fbbba8823e95213e9))
+
+### 🔨 Code Refactoring
+
+* extract repository boundaries from domain services ([d5fbcf2](https://github.com/fivaz/fit-v2/commit/d5fbcf264ce8ca0ef4e46ba1c9258826710be239))
+* make app into a SPA before capacitor migration ([0b47730](https://github.com/fivaz/fit-v2/commit/0b47730c239278daf6405a43d0fb865e1f93fb8e))
+
 ## [1.21.1](https://github.com/fivaz/fit-v2/compare/v1.21.0...v1.21.1) (2026-05-07)
 
 ### 🐛 Bug Fixes
