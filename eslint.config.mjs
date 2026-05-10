@@ -14,7 +14,6 @@ const eslintConfig = defineConfig(
 		...storybook.configs["flat/recommended"],
 		globalIgnores([
 			".next/**",
-			".next-e2e-dev/**",
 			".next-static/**",
 			"out/**",
 			"build/**",

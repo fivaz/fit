@@ -31,8 +31,7 @@ const nextConfig: NextConfig = {
 	images: {
 		unoptimized: process.env.NEXT_BUILD_TARGET === "static",
 	},
-	// Separate output dir when NEXT_DIST_DIR is set (e.g. E2E on :3001) so a second `next dev`
-	// does not fight `.next/dev/lock` with the main dev server on :3000.
+	// `build-static.mjs` sets NEXT_DIST_DIR=.next-static for the mobile export build.
 	distDir: process.env.NEXT_DIST_DIR ?? ".next",
 	env: {
 		NEXT_PUBLIC_APP_VERSION: pkg.version,

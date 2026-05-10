@@ -18,7 +18,6 @@
 
 # next.js
 /.next/
-/.next-e2e-dev/
 /.next-static/
 /out/
 .static-build-tmp/

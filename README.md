@@ -172,6 +172,14 @@ For static export/mobile runtime, set both to your hosted backend origin:
 
 ### E2E suite
 
+Use `pnpm run test` so port **3000** is freed first (stops a stray `pnpm dev`), then Playwright starts its own `next dev` on that port.
+
+```bash
+pnpm run test
+```
+
+To run Playwright directly, stop anything on port 3000 first (or run `pnpm run pretest`), then:
+
 ```bash
 pnpm exec playwright test tests/e2e
 ```
@@ -179,7 +187,7 @@ pnpm exec playwright test tests/e2e
 ### Single E2E file (headed)
 
 ```bash
-pnpm exec playwright test tests/e2e/settings/sign-out.spec.ts --headed
+pnpm run pretest && pnpm exec playwright test tests/e2e/settings/sign-out.spec.ts --headed
 ```
 
 Playwright configuration: `playwright.config.ts`.
@@ -262,7 +270,7 @@ Common commands:
 - `pnpm run format` - format + lint fixes
 - `pnpm run db:reset` - reset DB + seed
 - `pnpm run db:deploy` - apply migrations (CI/prod style)
-- `pnpm exec playwright test tests/e2e` - run E2E suite
+- `pnpm run test` - run E2E suite (frees port 3000, then Playwright starts dev)
 
 ---
 
