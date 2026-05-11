@@ -10,12 +10,21 @@ const trustedOriginsFromEnv = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
 	.map((origin) => origin.trim())
 	.filter(Boolean);
 
-const trustedOrigins =
+/** Capacitor / Ionic WebView `Origin` values (Better Auth CSRF allowlist). */
+const MOBILE_WEBVIEW_ORIGINS = [
+	"capacitor://localhost",
+	"ionic://localhost",
+	"http://localhost",
+] as const;
+
+const trustedOriginsBase =
 	trustedOriginsFromEnv.length > 0
 		? trustedOriginsFromEnv
 		: process.env.NODE_ENV === "production"
 			? []
 			: ["http://localhost:3000"];
+
+const trustedOrigins = [...new Set([...trustedOriginsBase, ...MOBILE_WEBVIEW_ORIGINS])];
 
 export const auth = betterAuth({
 	/** if no database is provided, the user data will be stored in memory.
