@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/hooks/confirm/confirm-provider";
 import { APP_NAME } from "@/lib/consts";
+import { CapacitorSplashDismiss } from "@/lib/mobile/capacitor-splash-dismiss";
 import { cn } from "@/lib/utils";
 
 const APP_DEFAULT_TITLE = APP_NAME;
@@ -83,6 +84,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
+				<CapacitorSplashDismiss />
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="system"
