@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, rename } from "node:fs/promises";
+import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -9,6 +9,25 @@ const appApiDir = path.resolve("app/api");
 const appApiBackupDir = path.resolve(".static-build-tmp/app-api");
 async function ensureTmpDir() {
 	await mkdir(buildTmpDir, { recursive: true });
+}
+
+/**
+ * If a previous run was killed after moving `app/api` away, the backup is left behind.
+ * Restore `app/api` when it is missing, or drop a stale backup when `app/api` already exists.
+ */
+async function reconcileStaleApiBackup() {
+	if (!existsSync(appApiBackupDir)) return;
+	if (!existsSync(appApiDir)) {
+		console.warn(
+			`[build-static] Restoring app/api from interrupted build backup at ${appApiBackupDir}`,
+		);
+		await rename(appApiBackupDir, appApiDir);
+		return;
+	}
+	console.warn(
+		`[build-static] Removing stale API backup (app/api already present): ${appApiBackupDir}`,
+	);
+	await rm(appApiBackupDir, { recursive: true, force: true });
 }
 
 async function moveApiRoutesOutOfBuild() {
@@ -59,6 +78,7 @@ function runNextBuild() {
 }
 
 try {
+	await reconcileStaleApiBackup();
 	movedApiRoutes = await moveApiRoutesOutOfBuild();
 	await runNextBuild();
 } finally {
