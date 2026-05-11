@@ -31,8 +31,8 @@
 		"exercises-seed": "tsx scripts/exercises-seed.ts",
 		"generate-ios-assets": "node scripts/generate-ios-assets.mjs",
 		"generate-pwa-assets": "pwa-assets-generator",
-		"pretest": "node scripts/free-e2e-port.mjs",
-		"test:e2e": "node scripts/free-e2e-port.mjs && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
+		"pretest": "node scripts/free-dev-server-port.mjs",
+		"test:e2e": "pnpm run pretest && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
 		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e"
 	},
 	"dependencies": {

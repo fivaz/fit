@@ -2,14 +2,14 @@ import { execSync } from "node:child_process";
 import process from "node:process";
 
 /**
- * Stops whatever is listening on the E2E dev port so Playwright can start `next dev`.
- * `pnpm test` / `pnpm run test:e2e` run this before Playwright; raw `pnpm exec playwright test` does not.
+ * Stops whatever is listening on the default Next dev port so you can start a fresh `next dev`.
+ * Used before E2E (Playwright starts its own dev server) or any workflow that needs port 3000 free.
  */
-const port = process.env.E2E_DEV_PORT ?? "3000";
+const port = process.env.DEV_SERVER_PORT ?? process.env.E2E_DEV_PORT ?? "3000";
 
 if (process.platform === "win32") {
 	console.warn(
-		`free-e2e-port: skipped on Windows — close anything using port ${port} before running E2E.`,
+		`free-dev-server-port: skipped on Windows — close anything using port ${port} before starting the dev server.`,
 	);
 	process.exit(0);
 }
@@ -35,5 +35,5 @@ for (const pid of pids) {
 }
 
 if (pids.length) {
-	console.log(`free-e2e-port: freed port ${port} (PIDs: ${pids.join(", ")})`);
+	console.log(`free-dev-server-port: freed port ${port} (PIDs: ${pids.join(", ")})`);
 }
