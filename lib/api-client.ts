@@ -1,3 +1,5 @@
+import { getMobileAuthTokenSync, hydrateMobileAuthToken } from "@/lib/mobile/auth-token-store";
+
 type JsonRequestInit = Omit<RequestInit, "body"> & {
 	body?: unknown;
 };
@@ -10,12 +12,21 @@ function resolveApiUrl(input: string): string {
 }
 
 export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Promise<T> {
+	if (typeof window !== "undefined") {
+		await hydrateMobileAuthToken();
+	}
+
 	const headers = new Headers(init.headers);
 	const hasBody = init.body !== undefined;
 	const method = init.method?.toUpperCase() ?? "GET";
 
 	if (hasBody && !headers.has("Content-Type")) {
 		headers.set("Content-Type", "application/json");
+	}
+
+	const token = getMobileAuthTokenSync();
+	if (token && !headers.has("Authorization")) {
+		headers.set("Authorization", `Bearer ${token}`);
 	}
 
 	const response = await fetch(resolveApiUrl(input), {
