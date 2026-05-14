@@ -144,7 +144,7 @@ export function createWorkoutService(repository: WorkoutRepository) {
 			);
 
 			await repository.replaceWorkoutSets(workoutId, userId, allSets);
-			revalidatePath(`${ROUTES.WORKOUT}/${workoutId}`);
+			revalidatePath(ROUTES.HOME);
 			return exerciseSetsMap;
 		},
 

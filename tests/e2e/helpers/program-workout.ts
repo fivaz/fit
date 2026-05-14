@@ -1,5 +1,7 @@
 import { expect, type Page, type Response } from "@playwright/test";
 
+import { ROUTES } from "@/lib/consts";
+
 export async function openProgramFromList(page: Page, programName: string) {
 	await page.getByRole("button", { name: `Open program ${programName}` }).click();
 	await expect(page.getByRole("heading", { name: programName })).toBeVisible();
@@ -29,7 +31,7 @@ export async function associateExercisesWithProgram(
 
 export async function startWorkoutFromProgramPage(page: Page, programName: string) {
 	await page.getByRole("button", { name: "Start Workout" }).click();
-	await expect(page).toHaveURL(/\/workout\/.+/);
+	await expect(page).toHaveURL(ROUTES.HOME);
 	await expect(page.getByRole("heading", { name: programName })).toBeVisible();
 }
 

@@ -1,3 +1,4 @@
+import { ROUTES } from "@/lib/consts";
 import { expect, test } from "@/tests/e2e/fixtures";
 import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
 import { createExercise, createProgram } from "@/tests/e2e/helpers/entities";
@@ -35,8 +36,7 @@ test.describe("Workout Logging", () => {
 
 		await test.step("Start workout and log set values", async () => {
 			await page.getByRole("button", { name: "Start Workout" }).click();
-			// `toHaveURL(/\/workout\/.+/)` accepts any generated workout id path (e.g., `/workout/abc123`) and rejects non-workout or empty-id paths (e.g., `/workouts/abc123`, `/workout/`).
-			await expect(page).toHaveURL(/\/workout\/.+/);
+			await expect(page).toHaveURL(ROUTES.HOME);
 			await expect(page.getByRole("heading", { name: programName })).toBeVisible();
 
 			const repsInput = page.getByRole("spinbutton").first();

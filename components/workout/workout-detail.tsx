@@ -12,6 +12,7 @@ import { WorkoutTimer } from "@/components/timer";
 import { Button } from "@/components/ui/button";
 import { ExerciseCard } from "@/components/workout/workout-exercise-row";
 import { useConfirm } from "@/hooks/confirm/use-confirm";
+import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
 import { finishWorkout, syncWorkoutSets } from "@/lib/workout/api";
@@ -29,6 +30,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	const isFirstRender = useRef(true);
 	const confirm = useConfirm();
 	const router = useRouter();
+	const { refreshActiveWorkout } = useActiveWorkoutHome();
 
 	useEffect(() => {
 		if (isFirstRender.current) {
@@ -69,6 +71,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 
 		try {
 			await finishWorkout(initialWorkout.id);
+			refreshActiveWorkout();
 			toast.success(`Workout finished on ${format(new Date(), "PPpp")}`);
 			router.push(ROUTES.PROGRESS);
 		} catch (error) {

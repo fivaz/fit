@@ -54,23 +54,12 @@ test.describe("Bottom navigation", () => {
 });
 
 test.describe("Not found routes", () => {
-	test("Invalid program and workout ids show not-found UI when authenticated", async ({
-		page,
-		request,
-	}) => {
+	test("Invalid program id shows not-found UI when authenticated", async ({ page, request }) => {
 		await signUpAndLoginTestUser(page, request, "not-found-routes");
 
-		await test.step("Unknown program", async () => {
-			await page.goto(`${ROUTES.PROGRAMS}/program-id-that-does-not-exist-0000`);
-			await expect(page).toHaveURL(/\/programs\/program-id-that-does-not-exist-0000$/);
-			await expect(page.getByText("Program not found")).toBeVisible();
-			await expect(page.getByRole("button", { name: "Go Back" })).toBeVisible();
-		});
-
-		await test.step("Unknown workout", async () => {
-			await page.goto(`${ROUTES.WORKOUT}/workout-id-that-does-not-exist-0000`);
-			await expect(page.getByText("Workout not found")).toBeVisible();
-			await expect(page.getByRole("button", { name: "Go Back" })).toBeVisible();
-		});
+		await page.goto(`${ROUTES.PROGRAMS}/program-id-that-does-not-exist-0000`);
+		await expect(page).toHaveURL(/\/programs\/program-id-that-does-not-exist-0000$/);
+		await expect(page.getByText("Program not found")).toBeVisible();
+		await expect(page.getByRole("button", { name: "Go Back" })).toBeVisible();
 	});
 });
