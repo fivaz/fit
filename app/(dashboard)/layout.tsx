@@ -1,12 +1,16 @@
 "use client";
 
-import { ReactNode } from "react";
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { AppLayout } from "@/components/app-layout";
+import { NetworkSync } from "@/components/network-sync";
 import { TimezoneProvider } from "@/components/timezone-sync";
-import { authClient } from "@/lib/auth-client";
+import {
+	ActiveWorkoutHomeProvider,
+	useActiveWorkoutHome,
+} from "@/hooks/workout/active-workout-home";
+import { authClient, bootstrapMobileAuthBeforeSession } from "@/lib/auth-client";
 import { ROUTES } from "@/lib/consts";
 import { cn } from "@/lib/utils";
 
@@ -15,32 +19,62 @@ type DashboardLayoutType = {
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutType) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const { data: session, isPending } = authClient.useSession();
+	return (
+		<ActiveWorkoutHomeProvider>
+			<DashboardLayoutContent>{children}</DashboardLayoutContent>
+		</ActiveWorkoutHomeProvider>
+	);
+}
 
-	const isWorkoutPage = pathname?.startsWith(ROUTES.WORKOUT);
+function DashboardLayoutContent({ children }: DashboardLayoutType) {
+	const router = useRouter();
+	const { isActiveWorkoutVisible } = useActiveWorkoutHome();
+	const { data: session, isPending, refetch } = authClient.useSession();
+	const [authBootstrapReady, setAuthBootstrapReady] = useState(false);
+	const refetchSessionRef = useRef(refetch);
 
 	useEffect(() => {
+		refetchSessionRef.current = refetch;
+	});
+
+	useEffect(() => {
+		let cancelled = false;
+
+		void bootstrapMobileAuthBeforeSession(() => refetchSessionRef.current()).finally(() => {
+			if (!cancelled) setAuthBootstrapReady(true);
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!authBootstrapReady) return;
 		if (isPending) return;
 		if (session) return;
 		router.replace(ROUTES.LOGIN);
-	}, [isPending, router, session]);
+	}, [authBootstrapReady, isPending, router, session]);
+
+	const sessionLoading = !authBootstrapReady || isPending;
+
+	const appLayoutClassName = cn(isActiveWorkoutVisible ? undefined : "px-5 pt-12");
 
 	if (!session) {
 		return (
-			<AppLayout className={cn({ "px-5 pt-12": !isWorkoutPage })}>
+			<AppLayout className={appLayoutClassName}>
 				<TimezoneProvider />
 				<div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
-					{isPending ? "Loading session..." : "Redirecting to login..."}
+					{sessionLoading ? "Loading session..." : "Redirecting to login..."}
 				</div>
 			</AppLayout>
 		);
 	}
 
 	return (
-		<AppLayout className={cn({ "px-5 pt-12": !isWorkoutPage })}>
+		<AppLayout className={appLayoutClassName}>
 			<TimezoneProvider />
+			<NetworkSync />
 			{children}
 		</AppLayout>
 	);

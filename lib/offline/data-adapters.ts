@@ -1,6 +1,8 @@
 import { apiFetch } from "@/lib/api-client";
 import { BodyMetricsUI } from "@/lib/body-metrics/type";
 import { ExerciseUI } from "@/lib/exercise/type";
+import { isNetworkAvailable } from "@/lib/mobile/network";
+import { isOfflineEnabled } from "@/lib/offline/config";
 import { ProgramUI } from "@/lib/program/type";
 import { ProgramWithExercises } from "@/lib/program/type";
 import { WorkoutSetMap } from "@/lib/workout/type";
@@ -41,7 +43,7 @@ function isBrowser() {
 }
 
 function readStore(): OfflineStore {
-	if (!isBrowser()) return emptyStore;
+	if (!isOfflineEnabled() || !isBrowser()) return emptyStore;
 
 	try {
 		const raw = window.localStorage.getItem(OFFLINE_STORE_KEY);
@@ -61,7 +63,7 @@ function readStore(): OfflineStore {
 }
 
 function writeStore(store: OfflineStore) {
-	if (!isBrowser()) return;
+	if (!isOfflineEnabled() || !isBrowser()) return;
 	window.localStorage.setItem(OFFLINE_STORE_KEY, JSON.stringify(store));
 }
 
@@ -85,10 +87,12 @@ function enqueueOperation(operation: Omit<PendingOperation, "id" | "createdAt">)
 }
 
 async function flushPendingOperations() {
-	if (!isBrowser() || isSyncingQueue) return;
+	if (!isOfflineEnabled() || !isBrowser() || isSyncingQueue) return;
 
 	isSyncingQueue = true;
 	try {
+		if (!(await isNetworkAvailable())) return;
+
 		const store = readStore();
 		const remaining: PendingOperation[] = [];
 
@@ -125,12 +129,20 @@ function removeById<T extends { id: string }>(items: T[], id: string): T[] {
 }
 
 async function runOrQueue(operation: Omit<PendingOperation, "id" | "createdAt">) {
+	if (!isOfflineEnabled()) {
+		await apiFetch<void>(operation.url, {
+			method: operation.method,
+			body: operation.body,
+		});
+		return;
+	}
 	enqueueOperation(operation);
 	await flushPendingOperations();
 }
 
 export const offlineDataAdapters = {
 	async syncNow() {
+		if (!isOfflineEnabled()) return;
 		await flushPendingOperations();
 	},
 
@@ -139,6 +151,9 @@ export const offlineDataAdapters = {
 	},
 
 	async getPrograms() {
+		if (!isOfflineEnabled()) {
+			return apiFetch<ProgramUI[]>("/api/programs");
+		}
 		await flushPendingOperations();
 		try {
 			const programs = await apiFetch<ProgramUI[]>("/api/programs");
@@ -150,6 +165,9 @@ export const offlineDataAdapters = {
 	},
 
 	async getProgramById(programId: string): Promise<ProgramWithExercises | null> {
+		if (!isOfflineEnabled()) {
+			return apiFetch<ProgramWithExercises>(`/api/programs/${programId}`);
+		}
 		await flushPendingOperations();
 		try {
 			const program = await apiFetch<ProgramWithExercises>(`/api/programs/${programId}`);
@@ -171,10 +189,15 @@ export const offlineDataAdapters = {
 	},
 
 	setProgramsLocal(programs: ProgramUI[]) {
+		if (!isOfflineEnabled()) return;
 		updateStore((store) => ({ ...store, programs }));
 	},
 
 	async saveProgram(program: ProgramUI) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>("/api/programs", { method: "POST", body: program });
+			return;
+		}
 		updateStore((store) => ({
 			...store,
 			programs: upsertById(store.programs, program),
@@ -187,6 +210,13 @@ export const offlineDataAdapters = {
 	},
 
 	async reorderPrograms(sortedIds: string[]) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>("/api/programs/reorder", {
+				method: "PATCH",
+				body: { sortedIds },
+			});
+			return;
+		}
 		updateStore((store) => ({
 			...store,
 			programs: store.programs
@@ -201,6 +231,10 @@ export const offlineDataAdapters = {
 	},
 
 	async deleteProgram(id: string) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>(`/api/programs/${id}`, { method: "DELETE" });
+			return;
+		}
 		updateStore((store) => ({
 			...store,
 			programs: removeById(store.programs, id),
@@ -224,6 +258,7 @@ export const offlineDataAdapters = {
 	},
 
 	setExercisesLocal(exercises: ExerciseUI[]) {
+		if (!isOfflineEnabled()) return;
 		updateStore((store) => ({ ...store, exercises }));
 	},
 
@@ -233,7 +268,6 @@ export const offlineDataAdapters = {
 		page: number;
 		pageSize: number;
 	}): Promise<ExerciseUI[]> {
-		await flushPendingOperations();
 		const query = new URLSearchParams({
 			page: String(params.page),
 			pageSize: String(params.pageSize),
@@ -242,6 +276,11 @@ export const offlineDataAdapters = {
 		if (params.search) query.set("search", params.search);
 		params.muscles?.forEach((muscle) => query.append("muscles", muscle));
 
+		if (!isOfflineEnabled()) {
+			return apiFetch<ExerciseUI[]>(`/api/exercises?${query.toString()}`);
+		}
+
+		await flushPendingOperations();
 		try {
 			const exercises = await apiFetch<ExerciseUI[]>(`/api/exercises?${query.toString()}`);
 			updateStore((store) => {
@@ -272,6 +311,10 @@ export const offlineDataAdapters = {
 	},
 
 	async saveExercise(exercise: ExerciseUI) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>("/api/exercises", { method: "POST", body: exercise });
+			return;
+		}
 		updateStore((store) => ({
 			...store,
 			exercises: upsertById(store.exercises, exercise),
@@ -284,6 +327,10 @@ export const offlineDataAdapters = {
 	},
 
 	async deleteExercise(id: string) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>(`/api/exercises/${id}`, { method: "DELETE" });
+			return;
+		}
 		updateStore((store) => ({
 			...store,
 			exercises: removeById(store.exercises, id),
@@ -307,6 +354,9 @@ export const offlineDataAdapters = {
 	},
 
 	async getBodyMetrics() {
+		if (!isOfflineEnabled()) {
+			return apiFetch<BodyMetricsUI>("/api/body-metrics");
+		}
 		await flushPendingOperations();
 		try {
 			const metrics = await apiFetch<BodyMetricsUI>("/api/body-metrics");
@@ -318,6 +368,7 @@ export const offlineDataAdapters = {
 	},
 
 	setBodyMetricsLocal(metrics: BodyMetricsUI) {
+		if (!isOfflineEnabled()) return;
 		updateStore((store) => ({
 			...store,
 			bodyMetrics: metrics,
@@ -325,6 +376,10 @@ export const offlineDataAdapters = {
 	},
 
 	async saveBodyMetrics(metrics: BodyMetricsUI) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>("/api/body-metrics", { method: "PUT", body: metrics });
+			return;
+		}
 		updateStore((store) => ({
 			...store,
 			bodyMetrics: metrics,
@@ -341,6 +396,13 @@ export const offlineDataAdapters = {
 	},
 
 	async syncWorkoutSets(workoutId: string, exerciseSetsMap: WorkoutSetMap) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>(`/api/workouts/${workoutId}/sets`, {
+				method: "PUT",
+				body: { exerciseSetsMap },
+			});
+			return exerciseSetsMap;
+		}
 		updateStore((store) => ({
 			...store,
 			workoutSetsByWorkoutId: {
@@ -357,6 +419,9 @@ export const offlineDataAdapters = {
 	},
 
 	async getWorkoutById(workoutId: string): Promise<WorkoutWithMappedSets | null> {
+		if (!isOfflineEnabled()) {
+			return apiFetch<WorkoutWithMappedSets>(`/api/workouts/${workoutId}`);
+		}
 		await flushPendingOperations();
 		try {
 			const workout = await apiFetch<WorkoutWithMappedSets>(`/api/workouts/${workoutId}`);
@@ -374,6 +439,9 @@ export const offlineDataAdapters = {
 	},
 
 	async getActiveWorkout(): Promise<{ id: string } | null> {
+		if (!isOfflineEnabled()) {
+			return apiFetch<{ id: string } | null>("/api/workouts/active");
+		}
 		await flushPendingOperations();
 		try {
 			return await apiFetch<{ id: string } | null>("/api/workouts/active");
@@ -383,6 +451,12 @@ export const offlineDataAdapters = {
 	},
 
 	async startWorkout(programId: string) {
+		if (!isOfflineEnabled()) {
+			return apiFetch<{ id: string }>("/api/workouts", {
+				method: "POST",
+				body: { programId },
+			});
+		}
 		await flushPendingOperations();
 		return apiFetch<{ id: string }>("/api/workouts", {
 			method: "POST",

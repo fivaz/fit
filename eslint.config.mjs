@@ -12,7 +12,19 @@ const eslintConfig = defineConfig(
 		...nextTs,
 		prettier,
 		...storybook.configs["flat/recommended"],
-		globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+		globalIgnores([
+			".next/**",
+			".next-static/**",
+			"out/**",
+			"build/**",
+			"ios/App/App/capacitor.config.json",
+			"ios/App/App/config.xml",
+			"ios/App/App/public/**",
+			"ios/App/build/**",
+			"ios/App/Pods/**",
+			"ios/capacitor-cordova-ios-plugins/**",
+			"next-env.d.ts",
+		]),
 	],
 	{
 		plugins: {

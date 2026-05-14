@@ -4,6 +4,10 @@ import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
 import { dragToTarget, waitForLabeledItem } from "@/tests/e2e/helpers/dnd";
 import { createProgram } from "@/tests/e2e/helpers/entities";
 
+function programRowDragHandle(page: import("@playwright/test").Page, programName: string) {
+	return page.getByRole("button", { name: `Drag ${programName} to reorder` });
+}
+
 test.describe("Program Reorder", () => {
 	test("Authenticated user can reorder programs", async ({ page, request }) => {
 		await test.step("Authenticate user", async () => {
@@ -17,12 +21,12 @@ test.describe("Program Reorder", () => {
 			await createProgram(page, firstProgram);
 			await createProgram(page, secondProgram);
 			await page.goto(ROUTES.PROGRAMS);
-			await waitForLabeledItem(page, "link", /Open program /, firstProgram);
-			await waitForLabeledItem(page, "link", /Open program /, secondProgram);
+			await waitForLabeledItem(page, "button", /Open program /, firstProgram);
+			await waitForLabeledItem(page, "button", /Open program /, secondProgram);
 		});
 
-		const programLinks = page.getByRole("link", { name: /Open program / });
-		const beforeOrder = await programLinks.evaluateAll((elements) =>
+		const programOpenButtons = page.getByRole("button", { name: /Open program / });
+		const beforeOrder = await programOpenButtons.evaluateAll((elements) =>
 			elements.map((element) => element.getAttribute("aria-label") ?? ""),
 		);
 		const beforeFirstIndex = beforeOrder.findIndex((text) => text.includes(firstProgram));
@@ -32,14 +36,8 @@ test.describe("Program Reorder", () => {
 		expect(beforeSecondIndex).toBeGreaterThanOrEqual(0);
 		expect(beforeFirstIndex).not.toBe(beforeSecondIndex);
 
-		const firstProgramHandle = page
-			.getByRole("link", { name: `Open program ${firstProgram}` })
-			.getByRole("button", { name: "Drag to reorder" })
-			.first();
-		const secondProgramHandle = page
-			.getByRole("link", { name: `Open program ${secondProgram}` })
-			.getByRole("button", { name: "Drag to reorder" })
-			.first();
+		const firstProgramHandle = programRowDragHandle(page, firstProgram);
+		const secondProgramHandle = programRowDragHandle(page, secondProgram);
 
 		await test.step("Reorder programs and verify persisted order", async () => {
 			await dragToTarget(page, firstProgramHandle, secondProgramHandle);
@@ -47,12 +45,12 @@ test.describe("Program Reorder", () => {
 				timeout: 15_000,
 			});
 			await page.reload();
-			await waitForLabeledItem(page, "link", /Open program /, firstProgram);
-			await waitForLabeledItem(page, "link", /Open program /, secondProgram);
+			await waitForLabeledItem(page, "button", /Open program /, firstProgram);
+			await waitForLabeledItem(page, "button", /Open program /, secondProgram);
 		});
 
 		const afterOrder = await page
-			.getByRole("link", { name: /Open program / })
+			.getByRole("button", { name: /Open program / })
 			.evaluateAll((elements) =>
 				elements.map((element) => element.getAttribute("aria-label") ?? ""),
 			);

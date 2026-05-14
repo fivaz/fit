@@ -28,7 +28,7 @@ export function ExerciseLibraryList({ initialExercises }: ExerciseLibraryListPro
 				<ExerciseFormButton size="icon-lg" />
 			</div>
 
-			<div className="space-y-4">
+			<div className="space-y-4 pb-6">
 				<LibraryInternal />
 			</div>
 		</ExercisesProvider>

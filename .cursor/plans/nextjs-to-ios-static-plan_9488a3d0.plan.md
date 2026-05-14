@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: capacitor-ios
     content: Integrate Capacitor, generate iOS project, and wire build/sync scripts
-    status: pending
+    status: completed
   - id: qa-release
     content: Run iOS lifecycle/offline QA and complete App Store readiness checklist
     status: pending

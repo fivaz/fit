@@ -1,21 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { WorkoutDetail } from "@/components/workout/workout-detail";
+import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
 
-import { ROUTES } from "@/lib/consts";
-import { getActiveWorkout } from "@/lib/workout/api";
-
-export default function HomePage() {
-	const router = useRouter();
-
-	useEffect(() => {
-		void getActiveWorkout().then((activeWorkout) => {
-			if (!activeWorkout) return;
-			router.replace(`${ROUTES.WORKOUT}/${activeWorkout.id}`);
-		});
-	}, [router]);
-
+function HomePlaceholder() {
 	return (
 		<div className="relative flex w-full flex-col">
 			<div className="flex items-start justify-between pb-4">
@@ -26,4 +14,18 @@ export default function HomePage() {
 			</div>
 		</div>
 	);
+}
+
+export default function HomePage() {
+	const { activeWorkout } = useActiveWorkoutHome();
+
+	if (activeWorkout === undefined) {
+		return <div className="py-8 text-sm text-gray-500">Loading...</div>;
+	}
+
+	if (activeWorkout) {
+		return <WorkoutDetail initialWorkout={activeWorkout} />;
+	}
+
+	return <HomePlaceholder />;
 }

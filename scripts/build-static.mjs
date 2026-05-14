@@ -7,11 +7,27 @@ import process from "node:process";
 const buildTmpDir = path.resolve(".static-build-tmp");
 const appApiDir = path.resolve("app/api");
 const appApiBackupDir = path.resolve(".static-build-tmp/app-api");
-const e2eDistDir = path.resolve(".next-e2e-dev");
-const e2eDistBackupDir = path.resolve(".static-build-tmp/next-e2e-dev");
-
 async function ensureTmpDir() {
 	await mkdir(buildTmpDir, { recursive: true });
+}
+
+/**
+ * If a previous run was killed after moving `app/api` away, the backup is left behind.
+ * Restore `app/api` when it is missing, or drop a stale backup when `app/api` already exists.
+ */
+async function reconcileStaleApiBackup() {
+	if (!existsSync(appApiBackupDir)) return;
+	if (!existsSync(appApiDir)) {
+		console.warn(
+			`[build-static] Restoring app/api from interrupted build backup at ${appApiBackupDir}`,
+		);
+		await rename(appApiBackupDir, appApiDir);
+		return;
+	}
+	console.warn(
+		`[build-static] Removing stale API backup (app/api already present): ${appApiBackupDir}`,
+	);
+	await rm(appApiBackupDir, { recursive: true, force: true });
 }
 
 async function moveApiRoutesOutOfBuild() {
@@ -36,28 +52,7 @@ async function restoreApiRoutes(moved) {
 	await rename(appApiBackupDir, appApiDir);
 }
 
-async function moveE2eDistOutOfBuild() {
-	if (!existsSync(e2eDistDir)) return false;
-	await ensureTmpDir();
-	if (existsSync(e2eDistBackupDir)) {
-		throw new Error(
-			`Cannot run static build because E2E backup directory already exists: ${e2eDistBackupDir}`,
-		);
-	}
-	await rename(e2eDistDir, e2eDistBackupDir);
-	return true;
-}
-
-async function restoreE2eDist(moved) {
-	if (!moved) return;
-	if (existsSync(e2eDistDir)) {
-		await rm(e2eDistDir, { recursive: true, force: true });
-	}
-	await rename(e2eDistBackupDir, e2eDistDir);
-}
-
 let movedApiRoutes = false;
-let movedE2eDist = false;
 
 function runNextBuild() {
 	return new Promise((resolve, reject) => {
@@ -83,9 +78,9 @@ function runNextBuild() {
 }
 
 try {
+	await reconcileStaleApiBackup();
 	movedApiRoutes = await moveApiRoutesOutOfBuild();
-	movedE2eDist = await moveE2eDistOutOfBuild();
 	await runNextBuild();
 } finally {
-	await Promise.all([restoreApiRoutes(movedApiRoutes), restoreE2eDist(movedE2eDist)]);
+	await restoreApiRoutes(movedApiRoutes);
 }

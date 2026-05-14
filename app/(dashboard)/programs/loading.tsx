@@ -14,6 +14,7 @@ export default function ProgramsPageLoading() {
 						<Skeleton className="h-6 w-10 bg-gray-400/20 dark:bg-white/20" /> workout programs
 					</div>
 				</div>
+				<ProgramFormButton size="icon-lg" disabled />
 			</div>
 			<ProgramListLoading />
 		</div>
@@ -22,19 +23,13 @@ export default function ProgramsPageLoading() {
 
 function ProgramListLoading() {
 	return (
-		<>
-			<div className="absolute top-0 right-0">
-				<ProgramFormButton size="icon-lg" disabled />
+		<div className="space-y-4 pb-6">
+			<div className="flex flex-col gap-4">
+				{Array.from({ length: 5 }).map((_, i) => (
+					<ProgramRowSkeleton key={i} />
+				))}
 			</div>
-
-			<div className="space-y-4">
-				<div className="flex flex-col gap-4">
-					{Array.from({ length: 5 }).map((_, i) => (
-						<ProgramRowSkeleton key={i} />
-					))}
-				</div>
-			</div>
-		</>
+		</div>
 	);
 }
 

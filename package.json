@@ -5,10 +5,14 @@
 	"packageManager": "pnpm@10.28.0",
 	"scripts": {
 		"dev": "next dev",
-		"dev:e2e": "NEXT_DIST_DIR=.next-e2e-dev next dev --port 3001",
 		"build": "next build",
 		"build:static": "node scripts/build-static.mjs",
 		"export:static": "pnpm run build:static",
+		"ios:build": "pnpm run generate-ios-assets && pnpm run build:static && pnpm exec cap sync ios",
+		"ios:copy": "pnpm exec cap copy ios",
+		"ios:open": "pnpm exec cap open ios",
+		"ios:readiness": "node scripts/ios-readiness-check.mjs",
+		"ios:sync": "pnpm exec cap sync ios",
 		"start": "next start",
 		"lint": "eslint",
 		"format": "prettier --write . && eslint --fix .",
@@ -25,12 +29,21 @@
 		"act:e2e": "act -W .github/workflows/e2e.yml",
 		"act:prune-cache": "rm -rf .act-cache",
 		"exercises-seed": "tsx scripts/exercises-seed.ts",
+		"generate-ios-assets": "node scripts/generate-ios-assets.mjs",
 		"generate-pwa-assets": "pwa-assets-generator",
-		"test:e2e": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
-		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e"
+		"pretest": "node scripts/free-dev-server-port.mjs",
+		"test:e2e": "pnpm run pretest && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
+		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e",
+		"agent": "agent worker start"
 	},
 	"dependencies": {
 		"@aparajita/capacitor-secure-storage": "^8.0.0",
+		"@capacitor/app": "^8.1.0",
+		"@capacitor/core": "^8.3.2",
+		"@capacitor/keyboard": "^8.0.3",
+		"@capacitor/network": "^8.0.1",
+		"@capacitor/splash-screen": "^8.0.1",
+		"@capacitor/status-bar": "^8.0.2",
 		"@dnd-kit/helpers": "^0.2.1",
 		"@dnd-kit/react": "^0.2.1",
 		"@prisma/adapter-pg": "^7.2.0",
@@ -71,6 +84,8 @@
 		"zod": "^4.3.5"
 	},
 	"devDependencies": {
+		"@capacitor/cli": "^8.3.2",
+		"@capacitor/ios": "^8.3.2",
 		"@commitlint/cli": "^20.2.0",
 		"@commitlint/config-conventional": "^20.2.0",
 		"@playwright/test": "^1.59.1",

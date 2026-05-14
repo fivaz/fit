@@ -19,7 +19,7 @@ test.describe("Program Associations", () => {
 		});
 
 		await test.step("Open program details", async () => {
-			await page.getByRole("link", { name: `Open program ${programName}` }).click();
+			await page.getByRole("button", { name: `Open program ${programName}` }).click();
 			await expect(page.getByRole("heading", { name: programName })).toBeVisible();
 		});
 

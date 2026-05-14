@@ -24,8 +24,8 @@ export function StartWorkoutButton({ programId }: StartWorkoutButtonProps) {
 	const handleStart = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		startTransition(async () => {
-			const workout = await startWorkout(programId);
-			router.push(`${ROUTES.WORKOUT}/${workout.id}`);
+			await startWorkout(programId);
+			router.push(ROUTES.HOME);
 		});
 	};
 

@@ -4,11 +4,12 @@ import { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { ModeToggle } from "@/components/mode-toggle";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/hooks/confirm/confirm-provider";
 import { APP_NAME } from "@/lib/consts";
+import { CapacitorSplashDismiss } from "@/lib/mobile/capacitor-splash-dismiss";
+import { CapacitorStatusBarSync } from "@/lib/mobile/capacitor-status-bar";
 import { cn } from "@/lib/utils";
 
 const APP_DEFAULT_TITLE = APP_NAME;
@@ -59,6 +60,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+	viewportFit: "cover",
 	themeColor: [
 		{ media: "(prefers-color-scheme: light)", color: "oklch(85.2% 0.199 91.936)" },
 		{ media: "(prefers-color-scheme: dark)", color: "oklch(82.8% 0.189 84.429)" },
@@ -83,18 +85,16 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
+				<CapacitorSplashDismiss />
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="system"
 					enableSystem
 					disableTransitionOnChange
 				>
+					<CapacitorStatusBarSync />
 					<ConfirmProvider>
 						<div className="mx-auto min-h-svh max-w-md border bg-gray-50 dark:bg-gray-900">
-							{/* Main Content Area */}
-							<div className="absolute right-0 p-5">
-								<ModeToggle />
-							</div>
 							{children}
 						</div>
 					</ConfirmProvider>

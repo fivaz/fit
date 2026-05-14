@@ -58,7 +58,7 @@ function ExerciseListLoading() {
 				</Button>
 			</div>
 
-			<div className="space-y-4">
+			<div className="space-y-4 pb-6">
 				<ExerciseFilterSkeleton />
 				<div className="flex flex-col gap-4">
 					{Array.from({ length: 5 }).map((_, i) => (
