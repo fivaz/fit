@@ -13,8 +13,9 @@ test.describe("Program CRUD", () => {
 
 		await test.step("Create and open program", async () => {
 			await createProgram(page, programName);
-			await expect(page.getByRole("link", { name: `Open program ${programName}` })).toBeVisible();
-			await page.getByRole("link", { name: `Open program ${programName}` }).click();
+			await expect(page.getByRole("button", { name: `Open program ${programName}` })).toBeVisible();
+			await page.getByRole("button", { name: `Open program ${programName}` }).click();
+			await expect(page).toHaveURL(/\/programs\/[^/?#]+$/);
 			await expect(page.getByRole("heading", { name: programName })).toBeVisible();
 		});
 
@@ -35,7 +36,7 @@ test.describe("Program CRUD", () => {
 			await expect(page.getByText("Program deleted successfully.")).toBeVisible();
 			await expect(page).toHaveURL(ROUTES.PROGRAMS);
 			await expect(
-				page.getByRole("link", { name: `Open program ${updatedProgramName}` }),
+				page.getByRole("button", { name: `Open program ${updatedProgramName}` }),
 			).toHaveCount(0);
 		});
 	});

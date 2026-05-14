@@ -17,7 +17,7 @@ test.describe("Program Exercise Reorder", () => {
 			await createExercise(page, exerciseOne);
 			await createExercise(page, exerciseTwo);
 			await createProgram(page, programName);
-			await page.getByRole("link", { name: `Open program ${programName}` }).click();
+			await page.getByRole("button", { name: `Open program ${programName}` }).click();
 		});
 
 		await test.step("Associate both exercises", async () => {

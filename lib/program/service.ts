@@ -129,7 +129,7 @@ export function createProgramService(repository: ProgramRepository) {
 				const hasProgram = await repository.hasOwnedProgram(programId, userId);
 				if (!hasProgram) throw new Error("Program not found or not owned by user");
 				await repository.replaceProgramExercises(programId, exerciseIds);
-				revalidatePath(`${ROUTES.PROGRAMS}/${programId}`);
+				revalidatePath(ROUTES.PROGRAMS);
 			} catch (error) {
 				logError(error, "updateProgramExercises", {
 					extra: { programId, exerciseIds, userId },

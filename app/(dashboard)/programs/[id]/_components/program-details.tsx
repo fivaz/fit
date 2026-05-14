@@ -27,9 +27,10 @@ import { ProgramWithExercises } from "@/lib/program/type";
 
 type ProgramDetailProps = {
 	program: ProgramWithExercises;
+	onClose?: () => void;
 };
 
-export function ProgramDetails({ program }: ProgramDetailProps) {
+export function ProgramDetails({ program, onClose }: ProgramDetailProps) {
 	useEffect(() => {
 		offlineDataAdapters.setProgramsLocal([program]);
 		offlineDataAdapters.setExercisesLocal(program.exercises);
@@ -37,20 +38,26 @@ export function ProgramDetails({ program }: ProgramDetailProps) {
 
 	return (
 		<ProgramsProvider initialItems={[program]}>
-			<ProgramDetailsInternal />
+			<ProgramDetailsInternal onClose={onClose} />
 		</ProgramsProvider>
 	);
 }
 
-export function ProgramDetailsInternal() {
+export function ProgramDetailsInternal({
+	program: programProp,
+	onClose,
+}: {
+	program?: ProgramWithExercises;
+	onClose?: () => void;
+}) {
 	const { firstItem } = useProgramsStore();
 	const { deleteItem } = useProgramMutations();
 	const confirm = useConfirm();
 	const [showProgramForm, setShowProgramForm] = useState(false);
 	const [showAddExerciseForm, setShowAddExerciseForm] = useState(false);
 	const router = useRouter();
-	if (!firstItem) return null;
-	const program = firstItem as ProgramWithExercises;
+	const program = programProp ?? (firstItem as ProgramWithExercises | undefined);
+	if (!program) return null;
 
 	const handleDelete = async () => {
 		const confirmed = await confirm({
@@ -64,7 +71,8 @@ export function ProgramDetailsInternal() {
 			persist: () => deleteProgram(program.id),
 			onSuccess: () => {
 				toast.success("Program deleted successfully.");
-				router.push(ROUTES.PROGRAMS);
+				if (onClose) onClose();
+				else router.push(ROUTES.PROGRAMS);
 			},
 			onError: () => toast.error("Failed to delete program."),
 		});

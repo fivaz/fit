@@ -18,7 +18,7 @@ test.describe("Workout Logging", () => {
 		});
 
 		await test.step("Associate exercise with program", async () => {
-			await page.getByRole("link", { name: `Open program ${programName}` }).click();
+			await page.getByRole("button", { name: `Open program ${programName}` }).click();
 			await expect(page.getByRole("heading", { name: programName })).toBeVisible();
 
 			await page.getByRole("button", { name: "Program actions" }).click();

@@ -9,9 +9,30 @@ import {
 	persistMobileAuthToken,
 } from "@/lib/mobile/auth-token-store";
 
+function isLoopbackHost(hostname: string) {
+	return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+function resolveAuthBaseURL() {
+	const configuredBaseURL = process.env.NEXT_PUBLIC_AUTH_BASE_URL?.trim();
+	if (!configuredBaseURL) return undefined;
+	if (typeof window === "undefined") return configuredBaseURL;
+
+	const currentURL = new URL(window.location.origin);
+	const configuredURL = new URL(configuredBaseURL);
+	const isSameOrigin = currentURL.origin === configuredURL.origin;
+	const isEquivalentLoopback =
+		currentURL.protocol === configuredURL.protocol &&
+		currentURL.port === configuredURL.port &&
+		isLoopbackHost(currentURL.hostname) &&
+		isLoopbackHost(configuredURL.hostname);
+
+	return isSameOrigin || isEquivalentLoopback ? undefined : configuredBaseURL;
+}
+
 export const authClient = createAuthClient({
 	plugins: [inferAdditionalFields<typeof auth>()],
-	baseURL: process.env.NEXT_PUBLIC_AUTH_BASE_URL || undefined,
+	baseURL: resolveAuthBaseURL(),
 	fetchOptions: {
 		auth: {
 			type: "Bearer",

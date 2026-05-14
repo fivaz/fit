@@ -15,7 +15,19 @@ export function WorkoutPageClient({ workoutId }: WorkoutPageClientProps) {
 	const [workout, setWorkout] = useState<WorkoutWithMappedSets | null | undefined>(undefined);
 
 	useEffect(() => {
-		void getWorkoutById(workoutId).then(setWorkout);
+		let isCurrent = true;
+
+		void getWorkoutById(workoutId)
+			.then((loadedWorkout) => {
+				if (isCurrent) setWorkout(loadedWorkout);
+			})
+			.catch(() => {
+				if (isCurrent) setWorkout(null);
+			});
+
+		return () => {
+			isCurrent = false;
+		};
 	}, [workoutId]);
 
 	if (workout === undefined) {
