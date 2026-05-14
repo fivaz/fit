@@ -58,9 +58,11 @@ function DashboardLayoutContent({ children }: DashboardLayoutType) {
 
 	const sessionLoading = !authBootstrapReady || isPending;
 
+	const appLayoutClassName = cn(isActiveWorkoutVisible ? undefined : "px-5 pt-12");
+
 	if (!session) {
 		return (
-			<AppLayout className={cn({ "px-5 pt-12": !isActiveWorkoutVisible })}>
+			<AppLayout className={appLayoutClassName}>
 				<TimezoneProvider />
 				<div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
 					{sessionLoading ? "Loading session..." : "Redirecting to login..."}
@@ -70,7 +72,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutType) {
 	}
 
 	return (
-		<AppLayout className={cn({ "px-5 pt-12": !isActiveWorkoutVisible })}>
+		<AppLayout className={appLayoutClassName}>
 			<TimezoneProvider />
 			<NetworkSync />
 			{children}

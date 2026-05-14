@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 import { ProgramEmptyState } from "@/app/(dashboard)/programs/_components/program-empty-state";
 import { ProgramRow } from "@/app/(dashboard)/programs/_components/program-row";
-import { ProgramFormButton } from "@/components/program/program-form-button";
 import { useProgramMutations, useProgramsStore } from "@/hooks/program/store";
 import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { reorderPrograms } from "@/lib/program/api";
@@ -27,11 +26,7 @@ export function ProgramList({ onOpenProgram }: ProgramsListProps) {
 
 	return (
 		<>
-			<div className="absolute top-0 right-0">
-				<ProgramFormButton size="icon-lg" />
-			</div>
-
-			<div className="space-y-4">
+			<div className="space-y-4 pb-6">
 				<ProgramsListInternal onOpenProgram={onOpenProgram} />
 			</div>
 		</>

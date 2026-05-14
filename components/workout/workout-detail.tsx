@@ -84,30 +84,33 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 
 	return (
 		<>
-			<header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 px-5 py-4 backdrop-blur-md dark:border-gray-700 dark:bg-gray-800/80">
-				<div className="flex items-center justify-between">
-					<div>
-						<div className="flex items-center gap-2">
-							<h1 className="text-lg font-bold">{initialWorkout.program?.name}</h1>
-							{isSyncing ? (
-								<CloudUpload
-									aria-label="syncing-icon"
-									className="h-4 w-4 animate-pulse text-orange-500"
-								/>
-							) : (
-								<CloudCheck aria-label="synced-icon" className="h-4 w-4 text-green-500" />
-							)}
+			<header className="sticky top-0 z-10">
+				<div aria-hidden className="pt-12" />
+				<div className="border-b border-gray-200 bg-white/80 px-5 pb-4 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
+					<div className="flex items-start justify-between">
+						<div>
+							<div className="flex items-center gap-2">
+								<h1 className="text-lg font-bold">{initialWorkout.program?.name}</h1>
+								{isSyncing ? (
+									<CloudUpload
+										aria-label="syncing-icon"
+										className="h-4 w-4 animate-pulse text-orange-500"
+									/>
+								) : (
+									<CloudCheck aria-label="synced-icon" className="h-4 w-4 text-green-500" />
+								)}
+							</div>
+							<div className="flex items-center gap-2 text-sm">
+								<span className="text-gray-500">{initialWorkout.exercises.length} exercises</span>
+								<span>•</span>
+								<WorkoutTimer startDate={initialWorkout.startDate} />
+							</div>
 						</div>
-						<div className="flex items-center gap-2 text-sm">
-							<span className="text-gray-500">{initialWorkout.exercises.length} exercises</span>
-							<span>•</span>
-							<WorkoutTimer startDate={initialWorkout.startDate} />
-						</div>
+						<Button variant="outline" disabled={isFinishing} onClick={handleFinish}>
+							{isFinishing ? <Loader2Icon className="animate-spin" /> : <CheckCircle />}
+							Finish
+						</Button>
 					</div>
-					<Button variant="outline" disabled={isFinishing} onClick={handleFinish}>
-						{isFinishing ? <Loader2Icon className="animate-spin" /> : <CheckCircle />}
-						Finish
-					</Button>
 				</div>
 			</header>
 

@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 import { ProgramDetailPanel } from "@/app/(dashboard)/programs/_components/program-detail-panel";
 import { ProgramList } from "@/app/(dashboard)/programs/_components/program-list";
+import { ProgramFormButton } from "@/components/program/program-form-button";
 import { ProgramsProvider, useProgramsStore } from "@/hooks/program/store";
 import { getPrograms } from "@/lib/program/api";
 import { ProgramUI } from "@/lib/program/type";
@@ -19,6 +20,7 @@ function ProgramsHeader() {
 				<h1 className="text-foreground text-2xl font-bold">Programs</h1>
 				<p className="text-muted-foreground mt-1 text-sm">{programs.length} workout programs</p>
 			</div>
+			<ProgramFormButton size="icon-lg" />
 		</div>
 	);
 }
