@@ -1,4 +1,5 @@
 import { getMobileAuthTokenSync, hydrateMobileAuthToken } from "@/lib/mobile/auth-token-store";
+import { clientDebug, isClientDebugEnabled } from "@/lib/mobile/client-debug";
 
 type JsonRequestInit = Omit<RequestInit, "body"> & {
 	body?: unknown;
@@ -29,7 +30,16 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 		headers.set("Authorization", `Bearer ${token}`);
 	}
 
-	const response = await fetch(resolveApiUrl(input), {
+	const url = resolveApiUrl(input);
+	if (isClientDebugEnabled()) {
+		clientDebug("apiFetch", "request", {
+			method,
+			url,
+			hasBearer: Boolean(token),
+		});
+	}
+
+	const response = await fetch(url, {
 		...init,
 		headers,
 		body: hasBody ? JSON.stringify(init.body) : undefined,
@@ -37,7 +47,25 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 	});
 
 	if (!response.ok) {
-		throw new Error(await getErrorMessage(response));
+		const errText = await getErrorMessage(response);
+		// Capacitor / static bundles almost always set `NEXT_PUBLIC_API_BASE_URL`; surface failures without extra env.
+		const logMobileApi =
+			Boolean(process.env.NEXT_PUBLIC_API_BASE_URL?.trim()) || isClientDebugEnabled();
+		if (logMobileApi) {
+			console.warn("[FitClient:apiFetch]", {
+				method,
+				url,
+				status: response.status,
+				statusText: response.statusText,
+				error: errText,
+				hasBearer: Boolean(token),
+			});
+		}
+		throw new Error(errText);
+	}
+
+	if (isClientDebugEnabled()) {
+		clientDebug("apiFetch", "ok", { method, url, status: response.status });
 	}
 
 	if (response.status === 204) {
