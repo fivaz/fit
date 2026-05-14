@@ -25,6 +25,8 @@ const allowedDevOrigins: string[] = [
 
 const nextConfig: NextConfig = {
 	/* config options here */
+	// Avoid emitting browser source maps that Capacitor/Safari then tries (and often fails) to load as separate `.js.map` files.
+	productionBrowserSourceMaps: false,
 	allowedDevOrigins,
 	// `output: "export"` is only enabled for the dedicated static bundle build path.
 	output: process.env.NEXT_BUILD_TARGET === "static" ? "export" : undefined,

@@ -154,7 +154,13 @@ The Simulator reaches your Mac at **loopback** (`http://127.0.0.1:3000` is the s
 
 Free port **3000** before Playwright or a clean `pnpm dev`: `pnpm run pretest` or `node scripts/free-dev-server-port.mjs` (optional `DEV_SERVER_PORT` / `E2E_DEV_PORT`).
 
-Safari Web Inspector may log missing `__next._tree.txt` against a dev server while you run a **static** shell; that noise is unrelated to API **401**s if auth/env above are correct.
+Safari Web Inspector may log missing `__next._tree.txt` or **`*.js.map`** files while you run a **static** shell or with source maps disabled; that noise is usually **devtools** trying to load maps, not your app logic failing.
+
+**Clearer runtime logs**
+
+- With `NEXT_PUBLIC_API_BASE_URL` set (typical Capacitor), failed `fetch` calls from `lib/api-client.ts` log **`[FitClient:apiFetch]`** with `url`, `status`, and `error` (no extra env).
+- Missing program after navigation logs **`[FitClient:ProgramPage]`** with `programId`.
+- Optional verbose traces: set **`NEXT_PUBLIC_CLIENT_DEBUG=1`** in `.env.local` and rebuild the static bundle, **or** in the Web Inspector console run `localStorage.setItem("fit:client-debug","1")` and reload (uses `lib/mobile/client-debug.ts`).
 
 Example `.env.local` for Simulator (same host for all three; change port if needed):
 
@@ -176,6 +182,7 @@ For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for those thre
 | `BETTER_AUTH_URL`             | Server (`pnpm dev` / `pnpm start`) | Public URL / cookie context; keep origin aligned with the two `NEXT_PUBLIC_*` values.                              |
 | `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                           | Extra origins for Better Auth CSRF checks (comma-separated). Capacitor shell origins are built into `lib/auth.ts`. |
 | `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for `/api/*` CORS (`lib/cors.ts`).                                                   |
+| `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs (`offline`, `apiFetch` when successful, etc.).                           |
 
 See `.env.example` for commented templates (hosted API, local Simulator, physical device).
 
