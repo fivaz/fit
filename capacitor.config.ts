@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
 			showSpinner: false,
 		},
 		StatusBar: {
-			style: "DARK",
+			style: "DEFAULT",
 		},
 	},
 };
