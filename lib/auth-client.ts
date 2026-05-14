@@ -31,6 +31,14 @@ if (typeof window !== "undefined") {
 
 export const { signIn, signUp, useSession } = authClient;
 
+/** Load persisted bearer token, then refresh Better Auth session (needed after Capacitor full page loads). */
+export async function bootstrapMobileAuthBeforeSession(
+	refetchSession: () => Promise<void>,
+): Promise<void> {
+	await hydrateMobileAuthToken();
+	await refetchSession();
+}
+
 type SignOutOptions = Parameters<typeof authClient.signOut>[0];
 
 export async function signOut(options?: SignOutOptions) {
