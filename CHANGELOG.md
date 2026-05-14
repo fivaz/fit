@@ -1,3 +1,38 @@
+## [1.23.0](https://github.com/fivaz/fit-v2/compare/v1.22.0...v1.23.0) (2026-05-14)
+
+### ✨ Features
+
+* add debug for capacitor ([dbfc634](https://github.com/fivaz/fit-v2/commit/dbfc63439df647f07523784f5f3a80ba6e962061))
+* add splash screen ([3a7974c](https://github.com/fivaz/fit-v2/commit/3a7974ce4986481a60365d1a597320605c232929))
+* integrate capacitor ios shell ([fed826e](https://github.com/fivaz/fit-v2/commit/fed826e5276e0e4a48dc7ad6d4826036f1b85f89))
+* **offline:** add NEXT_PUBLIC_OFFLINE_ENABLED kill switch for iOS testing ([729a2fa](https://github.com/fivaz/fit-v2/commit/729a2facbe25f29c8569a826e0e17c5f0cd594df))
+* show detailed messages on app and global error pages ([358bc28](https://github.com/fivaz/fit-v2/commit/358bc288be3ab4f284c6130f11eb0e271d180955))
+* use SPA routing to deliver /programs and /programs/id pages ([f63910d](https://github.com/fivaz/fit-v2/commit/f63910d48ce151acfc067131541c6e1431433734))
+
+### 🐛 Bug Fixes
+
+* align workout header top spacing with other pages ([41574b6](https://github.com/fivaz/fit-v2/commit/41574b6fdc8db6070867052508d3c1230eaeb8ac))
+* **api:** restore CORS for /api in proxy for Capacitor origins ([fbb81b2](https://github.com/fivaz/fit-v2/commit/fbb81b2d70c9ed151e0753305a957324b28bdafd))
+* **api:** send Bearer token from apiFetch for mobile session ([89638c7](https://github.com/fivaz/fit-v2/commit/89638c7803168d7d10ff4e228c54d198131a84b7))
+* **build-static:** add recover from interrupted static build API backup ([71b59af](https://github.com/fivaz/fit-v2/commit/71b59af235bbd88da472ed184707629220ed8df5))
+* invert Capacitor status bar style for iOS theme contrast ([c407863](https://github.com/fivaz/fit-v2/commit/c4078633f9430638bc1fc280a6a55e31bb8498f9))
+* **mobile:** hydrate bearer before dashboard session gate on cold load ([5861f94](https://github.com/fivaz/fit-v2/commit/5861f943082508783588fd183c5cb2dceed85fc5))
+* render active workout on home ([a3694a6](https://github.com/fivaz/fit-v2/commit/a3694a64f76c7b0cd457bba9258635e3f5e6c660))
+
+### 🧹 Chores
+
+* add script to check ios readiness of app ([a4c7859](https://github.com/fivaz/fit-v2/commit/a4c785946aaef5ddc7dc27abd8585e558fc515c2))
+* add start worker command to package scripts ([605bf3f](https://github.com/fivaz/fit-v2/commit/605bf3f6280e14137d6209ae288db939fad44c78))
+* align ios assets with pwa branding ([7c260cd](https://github.com/fivaz/fit-v2/commit/7c260cd7748d30ec075a7727f969b56dee8eab9c))
+* ignore generated capacitor assets in lint ([6eb511a](https://github.com/fivaz/fit-v2/commit/6eb511a8b3b4c0bebee4691da7f40a6857ad4e85))
+* ignore generated e2e build assets in lint ([d4b8d87](https://github.com/fivaz/fit-v2/commit/d4b8d87b4ec4d4fd01421e0c634ecb0acc9f5815))
+* rename free-e2e-port to free-dev-server-port ([eb685de](https://github.com/fivaz/fit-v2/commit/eb685dec31608fa195cb455bbf12fcfb9261fc67))
+* update ios scripts to better evaluate the readiness of the app ([54c3933](https://github.com/fivaz/fit-v2/commit/54c3933ed3d47812dc39ec925a67be8ed11c54b7))
+
+### 🔨 Code Refactoring
+
+* **e2e:** single dev server on :3000; free port before tests ([3e7f077](https://github.com/fivaz/fit-v2/commit/3e7f077389fe0dd495e4a65b303e37758159dabc))
+
 ## [1.22.0](https://github.com/fivaz/fit-v2/compare/v1.21.1...v1.22.0) (2026-05-10)
 
 ### ✨ Features
