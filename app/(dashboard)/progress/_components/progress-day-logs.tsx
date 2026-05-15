@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Dumbbell, Loader2, Plus } from "lucide-react";
+import { Dumbbell, Loader2 } from "lucide-react";
 
 import { ProgressWorkoutLogCard } from "@/app/(dashboard)/progress/_components/progress-workout-log-card";
 import {
@@ -9,19 +9,13 @@ import {
 	MOCK_PROGRESS_LOGS,
 	MOCK_PROGRESS_PROGRAMS,
 } from "@/app/(dashboard)/progress/_lib/mock-workout-logs";
-import { Button } from "@/components/ui/button";
 
 type ProgressDayLogsProps = {
 	selectedDate: Date;
-	onLogWorkout: () => void;
 	isLoading?: boolean;
 };
 
-export function ProgressDayLogs({
-	selectedDate,
-	onLogWorkout,
-	isLoading = false,
-}: ProgressDayLogsProps) {
+export function ProgressDayLogs({ selectedDate, isLoading = false }: ProgressDayLogsProps) {
 	const logsForDay = getLogsForDay(MOCK_PROGRESS_LOGS, selectedDate);
 
 	return (
@@ -35,7 +29,7 @@ export function ProgressDayLogs({
 					<Loader2 className="h-6 w-6 animate-spin text-orange-500" />
 				</div>
 			) : logsForDay.length === 0 ? (
-				<ProgressDayLogsEmpty onLogWorkout={onLogWorkout} />
+				<ProgressDayLogsEmpty />
 			) : (
 				<ul className="space-y-3">
 					{logsForDay.map((log) => {
@@ -55,15 +49,11 @@ export function ProgressDayLogs({
 	);
 }
 
-function ProgressDayLogsEmpty({ onLogWorkout }: { onLogWorkout: () => void }) {
+function ProgressDayLogsEmpty() {
 	return (
 		<div className="rounded-2xl bg-white py-8 text-center dark:bg-gray-800">
 			<Dumbbell className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" aria-hidden />
-			<p className="mb-4 text-gray-500 dark:text-gray-400">No workouts logged</p>
-			<Button onClick={onLogWorkout} className="bg-orange-500 text-white hover:bg-orange-600">
-				<Plus className="mr-2 h-4 w-4" />
-				Log Workout
-			</Button>
+			<p className="text-gray-500 dark:text-gray-400">No workouts logged</p>
 		</div>
 	);
 }

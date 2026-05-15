@@ -15,10 +15,6 @@ export default function ProgressPage() {
 	const [selectedDate, setSelectedDate] = useState(new Date());
 	const [weekOffset, setWeekOffset] = useState(0);
 
-	const handleLogWorkout = useCallback(() => {
-		// Log workout modal — not implemented yet
-	}, []);
-
 	const checkWorkoutOnDay = useCallback(
 		(day: Date) => hasWorkoutOnDay(MOCK_PROGRESS_LOGS, day),
 		[],
@@ -27,7 +23,7 @@ export default function ProgressPage() {
 	return (
 		<>
 			<div className="pb-6">
-				<ProgressHeader onLogWorkout={handleLogWorkout} />
+				<ProgressHeader />
 				<ProgressStatsGrid />
 				<ProgressWeekCalendar
 					weekOffset={weekOffset}
@@ -38,7 +34,7 @@ export default function ProgressPage() {
 				/>
 			</div>
 
-			<ProgressDayLogs selectedDate={selectedDate} onLogWorkout={handleLogWorkout} />
+			<ProgressDayLogs selectedDate={selectedDate} />
 		</>
 	);
 }
