@@ -6,8 +6,14 @@ import { ProgressStatCard } from "@/app/(dashboard)/progress/_components/progres
 import { useProgressStats } from "@/app/(dashboard)/progress/_hooks/use-progress-stats";
 import { formatRestDuration } from "@/lib/progress/calculate-stats";
 
-export function ProgressStatsGrid() {
-	const { stats, isLoading } = useProgressStats();
+type ProgressStatsGridProps = {
+	weekStart: Date;
+	weekEnd: Date;
+	periodAriaLabel: string;
+};
+
+export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: ProgressStatsGridProps) {
+	const { stats, isLoading } = useProgressStats(weekStart, weekEnd);
 
 	if (isLoading) {
 		return (
@@ -22,7 +28,7 @@ export function ProgressStatsGrid() {
 	return (
 		<div className="mb-6 grid grid-cols-2 gap-3">
 			<ProgressStatCard
-				regionLabel="Workouts in the last 7 days"
+				regionLabel={`Workouts in ${periodAriaLabel}`}
 				valueLabel="Workout count value"
 				value={stats.workoutCount}
 				caption="Workouts"
@@ -30,7 +36,7 @@ export function ProgressStatsGrid() {
 				variant="primary"
 			/>
 			<ProgressStatCard
-				regionLabel="Average workout duration in the last 7 days"
+				regionLabel={`Average workout duration in ${periodAriaLabel}`}
 				valueLabel="Average workout minutes value"
 				value={stats.avgWorkoutMinutes}
 				caption="Avg min"
@@ -39,7 +45,7 @@ export function ProgressStatsGrid() {
 				animationDelay={0.05}
 			/>
 			<ProgressStatCard
-				regionLabel="Average workout volume in the last 7 days"
+				regionLabel={`Average workout volume in ${periodAriaLabel}`}
 				valueLabel="Average workout volume value"
 				value={stats.avgWorkoutVolume.toLocaleString()}
 				caption="Avg volume"
@@ -48,7 +54,7 @@ export function ProgressStatsGrid() {
 				animationDelay={0.1}
 			/>
 			<ProgressStatCard
-				regionLabel="Average rest between sets in the last 7 days"
+				regionLabel={`Average rest between sets in ${periodAriaLabel}`}
 				valueLabel="Average rest between sets value"
 				value={formatRestDuration(stats.avgRestSeconds)}
 				caption="Avg rest"

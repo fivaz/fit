@@ -1,12 +1,26 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { requireApiUserId, routeErrorResponse } from "@/lib/api/server";
+import { ApiError, requireApiUserId, routeErrorResponse } from "@/lib/api/server";
 import { getProgressStats } from "@/lib/progress/service";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
 	try {
 		const userId = await requireApiUserId();
-		const stats = await getProgressStats(userId);
+		const fromParam = request.nextUrl.searchParams.get("from");
+		const toParam = request.nextUrl.searchParams.get("to");
+
+		if (!fromParam || !toParam) {
+			throw new ApiError("from and to query parameters are required", 400);
+		}
+
+		const from = new Date(fromParam);
+		const to = new Date(toParam);
+
+		if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+			throw new ApiError("Invalid from or to date", 400);
+		}
+
+		const stats = await getProgressStats(userId, from, to);
 
 		return NextResponse.json(stats);
 	} catch (error) {

@@ -1,5 +1,3 @@
-import { subDays } from "date-fns";
-
 import { prisma } from "@/lib/prisma";
 import {
 	calculateProgressStats,
@@ -10,15 +8,15 @@ import { ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
 
 import "server-only";
 
-const LOOKBACK_DAYS = 7;
-
-export async function getProgressStats(userId: string): Promise<ProgressStatsUI> {
-	const since = subDays(new Date(), LOOKBACK_DAYS);
-
+export async function getProgressStats(
+	userId: string,
+	from: Date,
+	to: Date,
+): Promise<ProgressStatsUI> {
 	const workouts = await prisma.workout.findMany({
 		where: {
 			userId,
-			endDate: { not: null, gte: since },
+			endDate: { not: null, gte: from, lte: to },
 		},
 		select: {
 			startDate: true,
