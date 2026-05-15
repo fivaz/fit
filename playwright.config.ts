@@ -18,7 +18,7 @@ export default defineConfig({
 	webServer: {
 		command: "node ./node_modules/next/dist/bin/next dev --port 3000",
 		port: 3000,
-		reuseExistingServer: false,
+		reuseExistingServer: !process.env.CI,
 		timeout: 120_000,
 		stdout: "pipe",
 		stderr: "pipe",

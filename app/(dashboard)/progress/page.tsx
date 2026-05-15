@@ -138,51 +138,66 @@ export default function Progress() {
 						</div>
 					) : (
 						<>
-							<motion.div
+							<motion.section
+								aria-label="Workouts in the last 7 days"
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								className="rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-4 text-white"
 							>
 								<Dumbbell className="mb-2 h-6 w-6 opacity-80" />
-								<p className="text-3xl font-bold">{stats.workoutCount}</p>
+								<p aria-label="Workout count value" className="text-3xl font-bold">
+									{stats.workoutCount}
+								</p>
 								<p className="text-sm text-white/70">Workouts</p>
-							</motion.div>
-							<motion.div
+							</motion.section>
+							<motion.section
+								aria-label="Average workout duration in the last 7 days"
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.05 }}
 								className="rounded-2xl bg-white p-4 dark:bg-gray-800"
 							>
 								<Clock className="mb-2 h-6 w-6 text-blue-500" />
-								<p className="text-3xl font-bold text-gray-900 dark:text-white">
+								<p
+									aria-label="Average workout minutes value"
+									className="text-3xl font-bold text-gray-900 dark:text-white"
+								>
 									{stats.avgWorkoutMinutes}
 								</p>
 								<p className="text-sm text-gray-500 dark:text-gray-400">Avg min</p>
-							</motion.div>
-							<motion.div
+							</motion.section>
+							<motion.section
+								aria-label="Average workout volume in the last 7 days"
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.1 }}
 								className="rounded-2xl bg-white p-4 dark:bg-gray-800"
 							>
 								<Weight className="mb-2 h-6 w-6 text-red-500" />
-								<p className="text-3xl font-bold text-gray-900 dark:text-white">
+								<p
+									aria-label="Average workout volume value"
+									className="text-3xl font-bold text-gray-900 dark:text-white"
+								>
 									{stats.avgWorkoutVolume.toLocaleString()}
 								</p>
 								<p className="text-sm text-gray-500 dark:text-gray-400">Avg volume</p>
-							</motion.div>
-							<motion.div
+							</motion.section>
+							<motion.section
+								aria-label="Average rest between sets in the last 7 days"
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.15 }}
 								className="rounded-2xl bg-white p-4 dark:bg-gray-800"
 							>
 								<Timer className="mb-2 h-6 w-6 text-green-500" />
-								<p className="text-3xl font-bold text-gray-900 dark:text-white">
+								<p
+									aria-label="Average rest between sets value"
+									className="text-3xl font-bold text-gray-900 dark:text-white"
+								>
 									{formatRestDuration(stats.avgRestSeconds)}
 								</p>
 								<p className="text-sm text-gray-500 dark:text-gray-400">Avg rest</p>
-							</motion.div>
+							</motion.section>
 						</>
 					)}
 				</div>
