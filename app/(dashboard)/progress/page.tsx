@@ -17,10 +17,7 @@ export default function ProgressPage() {
 	const { weekStart, weekEnd } = useProgressWeekRange(weekOffset);
 	const { logs, isLoading } = useProgressLogs(weekStart, weekEnd);
 
-	const logsForSelectedDay = useMemo(
-		() => getLogsForDay(logs, selectedDate),
-		[logs, selectedDate],
-	);
+	const logsForSelectedDay = useMemo(() => getLogsForDay(logs, selectedDate), [logs, selectedDate]);
 
 	const checkWorkoutOnDay = useCallback((day: Date) => hasWorkoutOnDay(logs, day), [logs]);
 
