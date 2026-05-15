@@ -5,7 +5,7 @@ import { HomeProgramsSection } from "@/app/(dashboard)/_components/home/home-pro
 import { HomeWeekStats } from "@/app/(dashboard)/_components/home/home-week-stats";
 import { HomeWelcomeHero } from "@/app/(dashboard)/_components/home/home-welcome-hero";
 
-/** Placeholder home shell; section components hold template/mock data until wired to real sources. */
+/** Home shell; hero/programs/library sections still use template data; week stats use live progress stats. */
 export function HomePageTemplate() {
 	return (
 		<div className="flex w-full flex-col">
