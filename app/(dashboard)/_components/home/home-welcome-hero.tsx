@@ -1,13 +1,36 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 
-const MOCK_USER = { full_name: "Alex Thompson" };
+function getHomeGreetingName(
+	session: {
+		user: { name?: string | null; email?: string | null };
+	} | null,
+): string {
+	const name = session?.user?.name?.trim();
+	if (name) {
+		const first = name.split(/\s+/)[0];
+		if (first) return first;
+	}
+	const email = session?.user?.email?.trim();
+	if (email) {
+		const local = email.split("@")[0]?.trim();
+		if (local) return local;
+	}
+	return "there";
+}
 
 export function HomeWelcomeHero() {
+	const { data: session, isPending } = authClient.useSession();
+
+	const greetingName = useMemo(() => getHomeGreetingName(session), [session]);
+
 	return (
 		<div className="relative pb-8">
 			<motion.div
@@ -16,9 +39,15 @@ export function HomeWelcomeHero() {
 				className="space-y-1"
 			>
 				<p className="text-gray-500 dark:text-gray-400">Welcome back,</p>
-				<h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-					{MOCK_USER.full_name.split(" ")[0]}
-				</h1>
+				{isPending ? (
+					<div
+						className="h-9 max-w-[12rem] animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"
+						aria-busy
+						aria-label="Loading name"
+					/>
+				) : (
+					<h1 className="text-3xl font-bold text-gray-900 dark:text-white">{greetingName}</h1>
+				)}
 			</motion.div>
 
 			<motion.div
