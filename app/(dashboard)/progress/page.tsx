@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { eachDayOfInterval, endOfWeek, format, isSameDay, startOfWeek, subDays } from "date-fns";
 import { motion } from "framer-motion";
@@ -11,15 +11,40 @@ import {
 	Flame,
 	Loader2,
 	Plus,
-	TrendingUp,
+	Timer,
+	Weight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { getProgressStats } from "@/lib/progress/api";
+import { formatRestDuration } from "@/lib/progress/calculate-stats";
+import { emptyProgressStats, ProgressStatsUI } from "@/lib/progress/type";
 
 export default function Progress() {
 	const [showLogModal, setShowLogModal] = useState(false);
 	const [selectedDate, setSelectedDate] = useState(new Date());
 	const [weekOffset, setWeekOffset] = useState(0);
+	const [stats, setStats] = useState<ProgressStatsUI>(emptyProgressStats);
+	const [statsLoading, setStatsLoading] = useState(true);
+
+	useEffect(() => {
+		let cancelled = false;
+
+		void getProgressStats()
+			.then((loadedStats) => {
+				if (!cancelled) setStats(loadedStats);
+			})
+			.catch(() => {
+				if (!cancelled) setStats(emptyProgressStats);
+			})
+			.finally(() => {
+				if (!cancelled) setStatsLoading(false);
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	// Form state
 	const [formData, setFormData] = useState({
@@ -83,14 +108,6 @@ export default function Progress() {
 		return logs.filter((log) => isSameDay(log.date, day));
 	}
 
-	// Weekly stats mock
-	const weeklyStats = {
-		workouts: 4,
-		totalMinutes: 155,
-		totalCalories: 1280,
-		avgDuration: 39,
-	};
-
 	const selectedDateLogs = getLogsForDay(selectedDate);
 
 	return (
@@ -100,9 +117,8 @@ export default function Progress() {
 				<div className="mb-6 flex items-center justify-between">
 					<div>
 						<h1 className="text-2xl font-bold text-gray-900 dark:text-white">Progress</h1>
-						<small className="text-red-500">(not implemented yet)</small>
 						<p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-							Track your fitness journey
+							Last 7 days · track your fitness journey
 						</p>
 					</div>
 					<Button
@@ -114,53 +130,61 @@ export default function Progress() {
 					</Button>
 				</div>
 
-				{/* Weekly Stats */}
+				{/* Last 7 days stats */}
 				<div className="mb-6 grid grid-cols-2 gap-3">
-					<motion.div
-						initial={{ opacity: 0, y: 10 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-4 text-white"
-					>
-						<Dumbbell className="mb-2 h-6 w-6 opacity-80" />
-						<p className="text-3xl font-bold">{weeklyStats.workouts}</p>
-						<p className="text-sm text-white/70">Workouts</p>
-					</motion.div>
-					<motion.div
-						initial={{ opacity: 0, y: 10 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ delay: 0.05 }}
-						className="rounded-2xl bg-white p-4 dark:bg-gray-800"
-					>
-						<Clock className="mb-2 h-6 w-6 text-blue-500" />
-						<p className="text-3xl font-bold text-gray-900 dark:text-white">
-							{weeklyStats.totalMinutes}
-						</p>
-						<p className="text-sm text-gray-500 dark:text-gray-400">Minutes</p>
-					</motion.div>
-					<motion.div
-						initial={{ opacity: 0, y: 10 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ delay: 0.1 }}
-						className="rounded-2xl bg-white p-4 dark:bg-gray-800"
-					>
-						<Flame className="mb-2 h-6 w-6 text-red-500" />
-						<p className="text-3xl font-bold text-gray-900 dark:text-white">
-							{weeklyStats.totalCalories}
-						</p>
-						<p className="text-sm text-gray-500 dark:text-gray-400">Calories</p>
-					</motion.div>
-					<motion.div
-						initial={{ opacity: 0, y: 10 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ delay: 0.15 }}
-						className="rounded-2xl bg-white p-4 dark:bg-gray-800"
-					>
-						<TrendingUp className="mb-2 h-6 w-6 text-green-500" />
-						<p className="text-3xl font-bold text-gray-900 dark:text-white">
-							{weeklyStats.avgDuration}
-						</p>
-						<p className="text-sm text-gray-500 dark:text-gray-400">Avg min</p>
-					</motion.div>
+					{statsLoading ? (
+						<div className="col-span-2 flex justify-center py-8">
+							<Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+						</div>
+					) : (
+						<>
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								className="rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 p-4 text-white"
+							>
+								<Dumbbell className="mb-2 h-6 w-6 opacity-80" />
+								<p className="text-3xl font-bold">{stats.workoutCount}</p>
+								<p className="text-sm text-white/70">Workouts</p>
+							</motion.div>
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ delay: 0.05 }}
+								className="rounded-2xl bg-white p-4 dark:bg-gray-800"
+							>
+								<Clock className="mb-2 h-6 w-6 text-blue-500" />
+								<p className="text-3xl font-bold text-gray-900 dark:text-white">
+									{stats.avgWorkoutMinutes}
+								</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">Avg min</p>
+							</motion.div>
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ delay: 0.1 }}
+								className="rounded-2xl bg-white p-4 dark:bg-gray-800"
+							>
+								<Weight className="mb-2 h-6 w-6 text-red-500" />
+								<p className="text-3xl font-bold text-gray-900 dark:text-white">
+									{stats.avgWorkoutVolume.toLocaleString()}
+								</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">Avg volume</p>
+							</motion.div>
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ delay: 0.15 }}
+								className="rounded-2xl bg-white p-4 dark:bg-gray-800"
+							>
+								<Timer className="mb-2 h-6 w-6 text-green-500" />
+								<p className="text-3xl font-bold text-gray-900 dark:text-white">
+									{formatRestDuration(stats.avgRestSeconds)}
+								</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">Avg rest</p>
+							</motion.div>
+						</>
+					)}
 				</div>
 
 				{/* Week Navigation */}
