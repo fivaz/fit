@@ -1,24 +1,28 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { ProgressDayLogs } from "@/app/(dashboard)/progress/_components/progress-day-logs";
 import { ProgressHeader } from "@/app/(dashboard)/progress/_components/progress-header";
 import { ProgressStatsGrid } from "@/app/(dashboard)/progress/_components/progress-stats-grid";
 import { ProgressWeekCalendar } from "@/app/(dashboard)/progress/_components/progress-week-calendar";
-import {
-	hasWorkoutOnDay,
-	MOCK_PROGRESS_LOGS,
-} from "@/app/(dashboard)/progress/_lib/mock-workout-logs";
+import { useProgressLogs } from "@/app/(dashboard)/progress/_hooks/use-progress-logs";
+import { useProgressWeekRange } from "@/app/(dashboard)/progress/_hooks/use-progress-week-range";
+import { getLogsForDay, hasWorkoutOnDay } from "@/lib/progress/utils";
 
 export default function ProgressPage() {
 	const [selectedDate, setSelectedDate] = useState(new Date());
 	const [weekOffset, setWeekOffset] = useState(0);
 
-	const checkWorkoutOnDay = useCallback(
-		(day: Date) => hasWorkoutOnDay(MOCK_PROGRESS_LOGS, day),
-		[],
+	const { weekStart, weekEnd } = useProgressWeekRange(weekOffset);
+	const { logs, isLoading } = useProgressLogs(weekStart, weekEnd);
+
+	const logsForSelectedDay = useMemo(
+		() => getLogsForDay(logs, selectedDate),
+		[logs, selectedDate],
 	);
+
+	const checkWorkoutOnDay = useCallback((day: Date) => hasWorkoutOnDay(logs, day), [logs]);
 
 	return (
 		<>
@@ -34,7 +38,11 @@ export default function ProgressPage() {
 				/>
 			</div>
 
-			<ProgressDayLogs selectedDate={selectedDate} />
+			<ProgressDayLogs
+				selectedDate={selectedDate}
+				logs={logsForSelectedDay}
+				isLoading={isLoading}
+			/>
 		</>
 	);
 }

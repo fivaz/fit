@@ -11,3 +11,12 @@ export const emptyProgressStats: ProgressStatsUI = {
 	avgWorkoutVolume: 0,
 	avgRestSeconds: 0,
 };
+
+export type ProgressWorkoutLogUI = {
+	id: string;
+	endDate: string;
+	programName: string;
+	exerciseCount: number;
+	durationMinutes: number;
+	volume: number;
+};

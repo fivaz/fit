@@ -79,11 +79,19 @@ test.describe("Progress stats cards", () => {
 					response.ok(),
 				{ timeout: 12_000 },
 			);
+			const logsResponse = page.waitForResponse(
+				(response) =>
+					response.url().includes("/api/progress/logs") &&
+					response.request().method() === "GET" &&
+					response.ok(),
+				{ timeout: 12_000 },
+			);
 			await page.getByRole("button", { name: "Yes, finish" }).click();
 			await expect(page).toHaveURL(
 				new RegExp(`${ROUTES.PROGRESS.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
 			);
 			await statsResponse;
+			await logsResponse;
 		});
 
 		await test.step("Verify all four stat cards reflect the finished workout", async () => {
@@ -95,6 +103,12 @@ test.describe("Progress stats cards", () => {
 			const avgMinutes = Number(await page.getByLabel("Average workout minutes value").innerText());
 			expect(avgMinutes).toBeGreaterThanOrEqual(0);
 			expect(avgMinutes).toBeLessThanOrEqual(5);
+		});
+
+		await test.step("Verify finished workout appears in the day log list", async () => {
+			await expect(page.getByRole("heading", { name: programName, level: 4 })).toBeVisible();
+			await expect(page.getByText("900 vol")).toBeVisible();
+			await expect(page.getByText("1 exercise")).toBeVisible();
 		});
 	});
 });

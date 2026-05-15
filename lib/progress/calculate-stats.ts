@@ -17,7 +17,9 @@ function average(values: number[]): number {
 	return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-export function calculateWorkoutVolume(sets: SetForStats[]): number {
+type SetForVolume = Pick<SetForStats, "reps" | "weight">;
+
+export function calculateWorkoutVolume(sets: SetForVolume[]): number {
 	return sets.reduce((sum, set) => sum + (set.weight ?? 0) * set.reps, 0);
 }
 

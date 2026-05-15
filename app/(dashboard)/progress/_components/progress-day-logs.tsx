@@ -4,20 +4,15 @@ import { format } from "date-fns";
 import { Dumbbell, Loader2 } from "lucide-react";
 
 import { ProgressWorkoutLogCard } from "@/app/(dashboard)/progress/_components/progress-workout-log-card";
-import {
-	getLogsForDay,
-	MOCK_PROGRESS_LOGS,
-	MOCK_PROGRESS_PROGRAMS,
-} from "@/app/(dashboard)/progress/_lib/mock-workout-logs";
+import { ProgressWorkoutLogUI } from "@/lib/progress/type";
 
 type ProgressDayLogsProps = {
 	selectedDate: Date;
-	isLoading?: boolean;
+	logs: ProgressWorkoutLogUI[];
+	isLoading: boolean;
 };
 
-export function ProgressDayLogs({ selectedDate, isLoading = false }: ProgressDayLogsProps) {
-	const logsForDay = getLogsForDay(MOCK_PROGRESS_LOGS, selectedDate);
-
+export function ProgressDayLogs({ selectedDate, logs, isLoading }: ProgressDayLogsProps) {
 	return (
 		<section aria-label="Workouts for selected day">
 			<h3 className="mb-3 text-sm font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
@@ -28,21 +23,15 @@ export function ProgressDayLogs({ selectedDate, isLoading = false }: ProgressDay
 				<div className="flex justify-center py-8">
 					<Loader2 className="h-6 w-6 animate-spin text-orange-500" />
 				</div>
-			) : logsForDay.length === 0 ? (
+			) : logs.length === 0 ? (
 				<ProgressDayLogsEmpty />
 			) : (
 				<ul className="space-y-3">
-					{logsForDay.map((log) => {
-						const program = MOCK_PROGRESS_PROGRAMS.find((p) => p.id === log.programId);
-						return (
-							<li key={log.id}>
-								<ProgressWorkoutLogCard
-									log={log}
-									programName={program?.name ?? "General Workout"}
-								/>
-							</li>
-						);
-					})}
+					{logs.map((log) => (
+						<li key={log.id}>
+							<ProgressWorkoutLogCard log={log} />
+						</li>
+					))}
 				</ul>
 			)}
 		</section>
