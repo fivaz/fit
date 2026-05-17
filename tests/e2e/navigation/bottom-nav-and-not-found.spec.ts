@@ -1,6 +1,7 @@
 import { ROUTES } from "@/lib/consts";
 import { expect, test } from "@/tests/e2e/fixtures";
 import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
+import { expectHomePageVisible } from "@/tests/e2e/helpers/home";
 
 test.describe("Bottom navigation", () => {
 	test("Authenticated user can reach main tabs from the bottom nav", async ({ page, request }) => {
@@ -8,7 +9,7 @@ test.describe("Bottom navigation", () => {
 
 		await test.step("Home", async () => {
 			await page.getByRole("link", { name: "Home" }).click();
-			await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+			await expectHomePageVisible(page);
 			await expect(page.getByRole("link", { name: "Home" })).toHaveAttribute(
 				"aria-current",
 				"page",
