@@ -4,7 +4,7 @@ import {
 	calculateWorkoutDurationMinutes,
 	calculateWorkoutVolume,
 } from "@/lib/progress/calculate-stats";
-import { ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
+import { HomeRecentWorkoutUI, ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
 
 import "server-only";
 
@@ -84,6 +84,58 @@ export async function getProgressWorkoutLogs(
 			exerciseCount: workout.exercises.length,
 			durationMinutes: Math.round(calculateWorkoutDurationMinutes(workout.startDate, endDate)),
 			volume: Math.round(calculateWorkoutVolume(sets)),
+		};
+	});
+}
+
+export async function getRecentWorkoutsForHome(
+	userId: string,
+	limit: number,
+): Promise<HomeRecentWorkoutUI[]> {
+	const workouts = await prisma.workout.findMany({
+		where: {
+			userId,
+			endDate: { not: null },
+		},
+		orderBy: { endDate: "desc" },
+		take: limit,
+		select: {
+			id: true,
+			startDate: true,
+			endDate: true,
+			program: {
+				select: {
+					name: true,
+					muscles: true,
+					imageUrl: true,
+				},
+			},
+			exercises: {
+				select: {
+					sets: {
+						select: {
+							reps: true,
+							weight: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	return workouts.map((workout) => {
+		const endDate = workout.endDate!;
+		const sets = workout.exercises.flatMap((exercise) => exercise.sets);
+
+		return {
+			id: workout.id,
+			endDate: endDate.toISOString(),
+			programName: workout.program?.name ?? "Workout",
+			exerciseCount: workout.exercises.length,
+			durationMinutes: Math.round(calculateWorkoutDurationMinutes(workout.startDate, endDate)),
+			volume: Math.round(calculateWorkoutVolume(sets)),
+			programMuscles: workout.program?.muscles ?? [],
+			programImageUrl: workout.program?.imageUrl ?? null,
 		};
 	});
 }

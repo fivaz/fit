@@ -1,4 +1,4 @@
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, isToday, isYesterday } from "date-fns";
 
 import { ProgressWorkoutLogUI } from "@/lib/progress/type";
 
@@ -31,4 +31,11 @@ export function getLogsForDay(logs: ProgressWorkoutLogUI[], day: Date) {
 
 export function hasWorkoutOnDay(logs: ProgressWorkoutLogUI[], day: Date) {
 	return getLogsForDay(logs, day).length > 0;
+}
+
+/** Compact label for when a workout ended (e.g. home recent list, top-right). */
+export function formatWorkoutEndedCaption(date: Date): string {
+	if (isToday(date)) return `Today · ${format(date, "h:mm a")}`;
+	if (isYesterday(date)) return `Yesterday · ${format(date, "h:mm a")}`;
+	return `${format(date, "MMM d")} · ${format(date, "h:mm a")}`;
 }

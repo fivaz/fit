@@ -1,6 +1,7 @@
 import { ROUTES } from "@/lib/consts";
 import { expect, test } from "@/tests/e2e/fixtures";
 import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
+import { expectHomePageVisible } from "@/tests/e2e/helpers/home";
 import { registerTestUserEmail } from "@/tests/e2e/helpers/test-user-cleanup";
 
 test.describe("Auth", () => {
@@ -21,7 +22,7 @@ test.describe("Auth", () => {
 			await expect(page.getByText("Account created successfully!")).toBeVisible();
 			registerTestUserEmail(credential);
 			await expect(page).toHaveURL(/\/$|\/workout\/.*/);
-			await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+			await expectHomePageVisible(page);
 		});
 	});
 
@@ -31,7 +32,7 @@ test.describe("Auth", () => {
 		});
 		await test.step("Verify dashboard is shown", async () => {
 			await expect(page).toHaveURL(/^(?!.*\/login$).*/);
-			await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+			await expectHomePageVisible(page);
 		});
 	});
 });

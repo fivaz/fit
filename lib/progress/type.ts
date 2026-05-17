@@ -20,3 +20,15 @@ export type ProgressWorkoutLogUI = {
 	durationMinutes: number;
 	volume: number;
 };
+
+/** Finished workout row for home (program snapshot + completion time). */
+export type HomeRecentWorkoutUI = {
+	id: string;
+	endDate: string;
+	programName: string;
+	exerciseCount: number;
+	durationMinutes: number;
+	volume: number;
+	programMuscles: string[];
+	programImageUrl: string | null;
+};

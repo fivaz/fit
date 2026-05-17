@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api-client";
-import { ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
+import { HomeRecentWorkoutUI, ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
 
 export function getProgressStats(from: Date, to: Date) {
 	const params = new URLSearchParams({
@@ -17,4 +17,12 @@ export function getProgressWorkoutLogs(from: Date, to: Date) {
 	});
 
 	return apiFetch<ProgressWorkoutLogUI[]>(`/api/progress/logs?${params.toString()}`);
+}
+
+export function getHomeRecentWorkouts(limit: number) {
+	const params = new URLSearchParams({
+		limit: String(limit),
+	});
+
+	return apiFetch<HomeRecentWorkoutUI[]>(`/api/home/recent-workouts?${params.toString()}`);
 }

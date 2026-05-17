@@ -1,20 +1,8 @@
 "use client";
 
+import { HomePageTemplate } from "@/app/(dashboard)/_components/home/home-page-template";
 import { WorkoutDetail } from "@/components/workout/workout-detail";
 import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
-
-function HomePlaceholder() {
-	return (
-		<div className="relative flex w-full flex-col">
-			<div className="flex items-start justify-between pb-4">
-				<div>
-					<h1 className="text-foreground text-2xl font-bold">Home</h1>
-					<small className="mt-1 text-red-500">(not implemented yet)</small>
-				</div>
-			</div>
-		</div>
-	);
-}
 
 export default function HomePage() {
 	const { activeWorkout } = useActiveWorkoutHome();
@@ -27,5 +15,5 @@ export default function HomePage() {
 		return <WorkoutDetail initialWorkout={activeWorkout} />;
 	}
 
-	return <HomePlaceholder />;
+	return <HomePageTemplate />;
 }
