@@ -1,3 +1,24 @@
+## [1.24.0](https://github.com/fivaz/fit-v2/compare/v1.23.0...v1.24.0) (2026-05-17)
+
+### ✨ Features
+
+* **progress:** load last-7-days stats for summary cards ([2a58601](https://github.com/fivaz/fit-v2/commit/2a586016a29e111b38da21c70c67c3516460d2c6))
+* **progress:** load workout logs from database for calendar and day view ([6ea188e](https://github.com/fivaz/fit-v2/commit/6ea188ecebe71c88c2b6e4bf62286a29feaff2df))
+* **progress:** tie stat cards and subtitle to selected calendar week ([b2abd17](https://github.com/fivaz/fit-v2/commit/b2abd1767e570d6373d595ba617bd73a2b56c42f))
+
+### 🧹 Chores
+
+* **rules:** add rules for complexity tradeoffs, core and validation ([277d321](https://github.com/fivaz/fit-v2/commit/277d3218f451221bca34228fd504ff3926531831))
+
+### 🔨 Code Refactoring
+
+* **progress:** remove manual log workout actions ([0b6145e](https://github.com/fivaz/fit-v2/commit/0b6145eeda3adfe90c2307ec0213234a3e01ea03))
+* **progress:** split page into focused components ([79015e0](https://github.com/fivaz/fit-v2/commit/79015e09838f25b828c441c9fe442b26335a3c16))
+
+### ✅ Tests
+
+* **progress:** add e2e coverage for last-7-days stat cards ([de4b738](https://github.com/fivaz/fit-v2/commit/de4b7387809726ceffc68d2bf9dd4fc8d3d85dd3))
+
 ## [1.23.0](https://github.com/fivaz/fit-v2/compare/v1.22.0...v1.23.0) (2026-05-14)
 
 ### ✨ Features
