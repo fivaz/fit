@@ -17,6 +17,10 @@ type ExerciseSearchParams = {
 	pageSize?: number;
 };
 
+function exerciseLibraryWhere(userId: string): Prisma.ExerciseWhereInput {
+	return { OR: [{ userId }, { userId: null }] };
+}
+
 export interface ExerciseRepository {
 	findExercises(
 		userId: string,
@@ -24,6 +28,7 @@ export interface ExerciseRepository {
 		skip: number,
 		take: number,
 	): Promise<ExerciseRaw[]>;
+	countExercises(userId: string, filter?: Prisma.ExerciseWhereInput): Promise<number>;
 	upsertExercise(
 		exercise: Pick<ExerciseUI, "id" | "name" | "muscles" | "imageUrl">,
 		userId: string,
@@ -34,10 +39,18 @@ export interface ExerciseRepository {
 }
 
 const prismaExerciseRepository: ExerciseRepository = {
+	async countExercises(userId, filter) {
+		return prisma.exercise.count({
+			where: {
+				...exerciseLibraryWhere(userId),
+				...filter,
+			},
+		});
+	},
 	async findExercises(userId, filter, skip, take) {
 		return prisma.exercise.findMany({
 			where: {
-				OR: [{ userId }, { userId: null }],
+				...exerciseLibraryWhere(userId),
 				...filter,
 			},
 			...exerciseUIArgs,
@@ -107,6 +120,10 @@ export function createExerciseService(repository: ExerciseRepository) {
 			return exercises.map(mapExerciseToUI);
 		},
 
+		async countExerciseLibrary(userId: string): Promise<number> {
+			return repository.countExercises(userId);
+		},
+
 		async saveExercise({ id, name, muscles, imageUrl }: ExerciseUI, userId: string) {
 			try {
 				await repository.upsertExercise({ id, name, muscles, imageUrl }, userId);
@@ -149,6 +166,7 @@ const exerciseService = createExerciseService(prismaExerciseRepository);
 
 export const getExercisesSearch = exerciseService.getExercisesSearch.bind(exerciseService);
 export const getExercises = exerciseService.getExercises.bind(exerciseService);
+export const countExerciseLibrary = exerciseService.countExerciseLibrary.bind(exerciseService);
 export const saveExercise = exerciseService.saveExercise;
 export const deleteExercise = exerciseService.deleteExercise;
 export const reorderProgramExercises = exerciseService.reorderProgramExercises;
