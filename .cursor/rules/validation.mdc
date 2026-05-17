@@ -1,0 +1,46 @@
+---
+description: Run ESLint and TypeScript checks to validate code changes before finishing
+alwaysApply: true
+---
+
+# Static validation
+
+When you change application code, run the relevant static checks before treating the task as complete. Run them yourself in the terminal; do not only suggest the user run them.
+
+## When to run what
+
+| Change | Validate with |
+|--------|----------------|
+| `.ts`, `.tsx`, `.js`, `.jsx` (logic, types, hooks, components, API routes) | **Both** `tsc` and `eslint` on touched paths (or project-wide if the diff is small) |
+| React hooks, imports, or patterns covered by ESLint plugins | `eslint` |
+| Types-only or Prisma/schema changes that affect TS types | `tsc` (and `eslint` if `.ts` files changed) |
+| Markdown, images, `.env.example`, or config with no TS/JS impact | Skip unless types or lint are clearly affected |
+
+## Commands
+
+Use non-watch TypeScript check:
+
+```bash
+pnpm exec tsc --noEmit
+```
+
+Lint changed files (prefer scoped paths for speed):
+
+```bash
+pnpm exec eslint -- path/to/changed-file.ts path/to/other.tsx
+```
+
+For a broad refactor, `pnpm run lint` is acceptable.
+
+Do **not** use `pnpm run tsc` for one-off validation — that script runs `tsc --watch`.
+
+## Workflow
+
+1. After implementing or fixing TS/TSX/JS changes, run the checks that apply.
+2. Fix reported errors; re-run until clean for your changes.
+3. If failures are pre-existing and unrelated, say so explicitly — do not ignore new errors you introduced.
+
+## Don't
+
+- Skip validation because e2e or unit tests were not part of the task when you edited typed application code.
+- Leave `react-hooks/set-state-in-effect`, type errors, or lint violations for the user to discover in pre-commit hooks.

@@ -1,0 +1,89 @@
+import { prisma } from "@/lib/prisma";
+import {
+	calculateProgressStats,
+	calculateWorkoutDurationMinutes,
+	calculateWorkoutVolume,
+} from "@/lib/progress/calculate-stats";
+import { ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
+
+import "server-only";
+
+export async function getProgressStats(
+	userId: string,
+	from: Date,
+	to: Date,
+): Promise<ProgressStatsUI> {
+	const workouts = await prisma.workout.findMany({
+		where: {
+			userId,
+			endDate: { not: null, gte: from, lte: to },
+		},
+		select: {
+			startDate: true,
+			endDate: true,
+			exercises: {
+				select: {
+					sets: {
+						select: {
+							reps: true,
+							weight: true,
+							time: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	return calculateProgressStats(
+		workouts.map((workout) => ({
+			startDate: workout.startDate,
+			endDate: workout.endDate,
+			sets: workout.exercises.flatMap((exercise) => exercise.sets),
+		})),
+	);
+}
+
+export async function getProgressWorkoutLogs(
+	userId: string,
+	from: Date,
+	to: Date,
+): Promise<ProgressWorkoutLogUI[]> {
+	const workouts = await prisma.workout.findMany({
+		where: {
+			userId,
+			endDate: { not: null, gte: from, lte: to },
+		},
+		orderBy: { endDate: "desc" },
+		select: {
+			id: true,
+			startDate: true,
+			endDate: true,
+			program: { select: { name: true } },
+			exercises: {
+				select: {
+					sets: {
+						select: {
+							reps: true,
+							weight: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	return workouts.map((workout) => {
+		const endDate = workout.endDate!;
+		const sets = workout.exercises.flatMap((exercise) => exercise.sets);
+
+		return {
+			id: workout.id,
+			endDate: endDate.toISOString(),
+			programName: workout.program?.name ?? "Workout",
+			exerciseCount: workout.exercises.length,
+			durationMinutes: Math.round(calculateWorkoutDurationMinutes(workout.startDate, endDate)),
+			volume: Math.round(calculateWorkoutVolume(sets)),
+		};
+	});
+}

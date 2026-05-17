@@ -17,6 +17,8 @@ alwaysApply: true
 - Keep changes focused on the requested scope.
 - Explain non-obvious trade-offs in concise comments when needed.
 - Validate changes against the existing test suite and treat passing existing tests as a completion requirement.
+- For TypeScript/JavaScript changes, run ESLint and/or `tsc` when relevant — see `validation.mdc`.
+- When a simpler approach is swapped for a more complex one only to fix a problem, document why in a brief comment — see `complexity-tradeoffs.mdc`.
 - When introducing an environment variable that users must set, add it to `.env.example` and document it in `README.md`.
 - When adding a command expected to be run repeatedly (for example `act` workflow checks), add a dedicated `package.json` script so users can run it quickly and consistently.
 
