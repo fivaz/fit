@@ -1,3 +1,25 @@
+## [1.25.0](https://github.com/fivaz/fit-v2/compare/v1.24.0...v1.25.0) (2026-05-17)
+
+### ✨ Features
+
+* **home:** align week stats cards with progress metrics ([12a91e0](https://github.com/fivaz/fit-v2/commit/12a91e001e8ce7417490fc1f96c68adad1427fbe))
+* **home:** drive welcome hero from session user ([e3b5e75](https://github.com/fivaz/fit-v2/commit/e3b5e75aa2c304c7dd449ce128d392ca3e59dd45))
+* **home:** load exercise count from DB and simplify welcome hero ([32190aa](https://github.com/fivaz/fit-v2/commit/32190aa4f7ad6fddaf5009fd65ffad28eebaa86d))
+* **home:** load week stats from progress API for current week ([8e171e0](https://github.com/fivaz/fit-v2/commit/8e171e0e5c2f46bd62fdc63c18d01ae8e63b3b67))
+* **home:** show recent workouts with program info and ended-at time ([e663b58](https://github.com/fivaz/fit-v2/commit/e663b58be4ff1c9253c8e9a43a52a91e84441b7c))
+
+### 🧹 Chores
+
+* wip - add home template ([0b2b2a5](https://github.com/fivaz/fit-v2/commit/0b2b2a50c593a8e5ab0c97432c2f6af9269c420d))
+
+### 🔨 Code Refactoring
+
+* **home:** extract dashboard home template into route components ([c9cada9](https://github.com/fivaz/fit-v2/commit/c9cada968056768ce0ba1fd2c725dbd81cdc82b6))
+
+### ✅ Tests
+
+* **e2e:** assert home via welcome hero instead of Home heading ([4fd492b](https://github.com/fivaz/fit-v2/commit/4fd492b1c4064e3b2b4d59a0b7a316393ecbbe4d))
+
 ## [1.24.0](https://github.com/fivaz/fit-v2/compare/v1.23.0...v1.24.0) (2026-05-17)
 
 ### ✨ Features
