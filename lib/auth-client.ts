@@ -8,6 +8,9 @@ import {
 	hydrateMobileAuthToken,
 	persistMobileAuthToken,
 } from "@/lib/mobile/auth-token-store";
+import { clientDebug } from "@/lib/mobile/client-debug";
+
+const SESSION_REFETCH_TIMEOUT_MS = 10_000;
 
 function isLoopbackHost(hostname: string) {
 	return hostname === "localhost" || hostname === "127.0.0.1";
@@ -54,10 +57,24 @@ export const { signIn, signUp, useSession } = authClient;
 
 /** Load persisted bearer token, then refresh Better Auth session (needed after Capacitor full page loads). */
 export async function bootstrapMobileAuthBeforeSession(
-	refetchSession: () => Promise<void>,
+	refetchSession: () => Promise<unknown>,
 ): Promise<void> {
 	await hydrateMobileAuthToken();
-	await refetchSession();
+
+	try {
+		await Promise.race([
+			Promise.resolve(refetchSession()),
+			new Promise<never>((_, reject) => {
+				setTimeout(() => reject(new Error("Session refetch timeout")), SESSION_REFETCH_TIMEOUT_MS);
+			}),
+		]);
+	} catch (error) {
+		clientDebug("auth", "bootstrap refetch failed", {
+			error: error instanceof Error ? error.message : String(error),
+			hasBearerToken: Boolean(getMobileAuthTokenSync()),
+			authBaseURL: resolveAuthBaseURL() ?? "(same origin)",
+		});
+	}
 }
 
 type SignOutOptions = Parameters<typeof authClient.signOut>[0];
