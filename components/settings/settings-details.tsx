@@ -12,7 +12,7 @@ import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { UserForm } from "@/components/settings/user-form";
 import { Button } from "@/components/ui/button";
 import { BodyMetricsProvider, useBodyMetricsStore } from "@/hooks/body-metrics/store";
-import { authClient } from "@/lib/auth-client";
+import { authClient, signOut } from "@/lib/auth-client";
 import { BodyMetricsUI } from "@/lib/body-metrics/type";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
@@ -49,7 +49,7 @@ export function SettingsDetailsInternal() {
 	const handleSignOut = async () => {
 		setIsPendingSignOut(true);
 		try {
-			await authClient.signOut();
+			await signOut();
 			router.push(ROUTES.LOGIN);
 		} catch (error) {
 			logError(error, "SettingsDetails#handleSignOut");
