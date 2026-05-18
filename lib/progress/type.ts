@@ -24,6 +24,7 @@ export type ProgressWorkoutLogUI = {
 /** Finished workout row for home (program snapshot + completion time). */
 export type HomeRecentWorkoutUI = {
 	id: string;
+	programId: string | null;
 	endDate: string;
 	programName: string;
 	exerciseCount: number;

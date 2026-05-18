@@ -7,6 +7,7 @@ import { ChevronRight, Dumbbell, Loader2 } from "lucide-react";
 
 import { useHomeRecentWorkouts } from "@/app/(dashboard)/_components/home/use-home-recent-workouts";
 import { ROUTES } from "@/lib/consts";
+import { programsDetailUrl } from "@/lib/programs/navigation";
 import { formatWorkoutEndedCaption } from "@/lib/progress/utils";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +25,7 @@ export function HomeRecentWorkoutsSection() {
 					Recent workouts
 				</h3>
 				<Link
-					href={ROUTES.PROGRESS}
+					href={ROUTES.PROGRAMS}
 					className="flex items-center text-sm font-medium text-orange-500"
 				>
 					See all <ChevronRight className="h-4 w-4" aria-hidden />
@@ -52,45 +53,64 @@ export function HomeRecentWorkoutsSection() {
 								? formatMuscleLine(workout.programMuscles)
 								: `${workout.exerciseCount} ${workout.exerciseCount === 1 ? "exercise" : "exercises"}`;
 
+						const cardClassName =
+							"relative flex items-center gap-4 rounded-2xl bg-white p-4 pr-12 shadow-sm transition-shadow hover:shadow-md dark:bg-gray-800";
+
+						const motionProps = {
+							initial: { opacity: 0, x: -20 },
+							animate: { opacity: 1, x: 0 },
+							transition: { delay: 0.05 + index * 0.05 },
+							className: cardClassName,
+						};
+
+						const cardInner = (
+							<>
+								<time
+									dateTime={workout.endDate}
+									className="absolute top-3 right-11 max-w-[calc(100%-8rem)] truncate text-right text-xs font-medium text-gray-500 dark:text-gray-400"
+								>
+									{formatWorkoutEndedCaption(endedAt)}
+								</time>
+								<div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl">
+									<img
+										src={workout.programImageUrl || "/exercise.jpg"}
+										alt=""
+										className="h-full w-full object-cover"
+									/>
+								</div>
+								<div className="min-w-0 flex-1 pt-1">
+									<h4 className="truncate pr-2 font-semibold text-gray-900 dark:text-white">
+										{workout.programName}
+									</h4>
+									<p
+										className={cn(
+											"text-sm text-gray-500 dark:text-gray-400",
+											workout.programMuscles.length > 0 && "capitalize",
+										)}
+									>
+										{subtitle}
+									</p>
+								</div>
+								<ChevronRight
+									className="absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-gray-400"
+									aria-hidden
+								/>
+							</>
+						);
+
 						return (
 							<li key={workout.id}>
-								<motion.article
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ delay: 0.05 + index * 0.05 }}
-									className="relative flex items-center gap-4 rounded-2xl bg-white p-4 pr-12 shadow-sm dark:bg-gray-800"
-								>
-									<time
-										dateTime={workout.endDate}
-										className="absolute top-3 right-11 max-w-[calc(100%-8rem)] truncate text-right text-xs font-medium text-gray-500 dark:text-gray-400"
+								{workout.programId ? (
+									<Link
+										href={programsDetailUrl(workout.programId)}
+										className="block"
+										aria-label={`Open program ${workout.programName}`}
 									>
-										{formatWorkoutEndedCaption(endedAt)}
-									</time>
-									<div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl">
-										<img
-											src={workout.programImageUrl || "/exercise.jpg"}
-											alt=""
-											className="h-full w-full object-cover"
-										/>
-									</div>
-									<div className="min-w-0 flex-1 pt-1">
-										<h4 className="truncate pr-2 font-semibold text-gray-900 dark:text-white">
-											{workout.programName}
-										</h4>
-										<p
-											className={cn(
-												"text-sm text-gray-500 dark:text-gray-400",
-												workout.programMuscles.length > 0 && "capitalize",
-											)}
-										>
-											{subtitle}
-										</p>
-									</div>
-									<ChevronRight
-										className="absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-gray-400"
-										aria-hidden
-									/>
-								</motion.article>
+										<motion.article {...motionProps}>{cardInner}</motion.article>
+									</Link>
+								) : (
+									<motion.article {...motionProps}>{cardInner}</motion.article>
+								)}
 							</li>
 						);
 					})}
