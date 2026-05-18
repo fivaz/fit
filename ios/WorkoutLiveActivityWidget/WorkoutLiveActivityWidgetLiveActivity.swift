@@ -111,7 +111,9 @@ private struct WorkoutDumbbellProgressBar: View {
     let setsDone: Int
 
     private let trackHeight: CGFloat = 10
-    private let iconSize: CGFloat = 22
+    private let iconSize: CGFloat = 30
+    private let progressOrange = Color(red: 1, green: 0.38, blue: 0)
+    private let progressHighlight = Color(red: 1, green: 0.66, blue: 0.12)
 
     var body: some View {
         GeometryReader { geometry in
@@ -120,25 +122,33 @@ private struct WorkoutDumbbellProgressBar: View {
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.orange.opacity(0.22))
+                    .fill(progressOrange.opacity(0.24))
                     .frame(height: trackHeight)
                     .padding(.horizontal, iconSize / 2)
 
                 Capsule()
-                    .fill(Color.orange.opacity(0.55))
+                    .fill(
+                        LinearGradient(
+                            colors: [progressHighlight, progressOrange],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(
                         width: max(iconOffset + iconSize / 2, setsDone > 0 ? iconSize / 2 : 0),
                         height: trackHeight
                     )
                     .padding(.leading, iconSize / 2)
+                    .shadow(color: progressOrange.opacity(0.65), radius: 6, y: 0)
 
                 ZStack {
                     Circle()
                         .fill(Color(uiColor: .systemBackground))
+                        .shadow(color: progressOrange.opacity(0.55), radius: 6, y: 0)
                         .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
                     Image(systemName: "dumbbell.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.orange)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(progressOrange)
                 }
                 .frame(width: iconSize, height: iconSize)
                 .offset(x: iconOffset)
