@@ -2,16 +2,20 @@
 	"$schema": "./ios-deploy.config.schema.json",
 	"enabled": true,
 	"deviceId": "",
+	"preferWireless": true,
+	"installTool": "auto",
 	"xcodeProject": "ios/App/App.xcodeproj",
 	"scheme": "App",
 	"configuration": "Debug",
 	"derivedDataPath": "ios/build",
 	"bundleId": "com.fivaz.fittracker",
 	"iosDeploy": {
-		"justLaunch": true,
+		"justLaunch": false,
+		"noStart": true,
 		"uninstall": false,
-		"timeout": 60,
+		"timeout": 120,
 		"noWifi": false,
+		"usbOnly": false,
 		"verbose": false
 	}
 }
