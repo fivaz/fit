@@ -11,8 +11,10 @@ import { useDebounceValue } from "usehooks-ts";
 import { WorkoutTimer } from "@/components/timer";
 import { Button } from "@/components/ui/button";
 import { ExerciseCard } from "@/components/workout/workout-exercise-row";
+import { WorkoutProgressFlash } from "@/components/workout/workout-progress-flash";
 import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
+import { useWorkoutSetCompletionFlash } from "@/hooks/workout/use-workout-set-completion-flash";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
 import {
@@ -35,6 +37,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	const confirm = useConfirm();
 	const router = useRouter();
 	const { refreshActiveWorkout, setLiveActivityExerciseSets } = useActiveWorkoutHome();
+	const { flash } = useWorkoutSetCompletionFlash(initialWorkout, exerciseSets);
 
 	useEffect(() => {
 		setLiveActivityExerciseSets(exerciseSets);
@@ -96,6 +99,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 
 	return (
 		<>
+			<WorkoutProgressFlash flash={flash} />
 			<header className="sticky top-0 z-10">
 				<div aria-hidden className="pt-12" />
 				<div className="border-b border-gray-200 bg-white/80 px-5 pb-4 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">

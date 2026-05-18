@@ -4,9 +4,8 @@ import { LiveActivity } from "capacitor-live-activity";
 
 import { logError } from "@/lib/logger";
 import { isNativeMobileRuntime } from "@/lib/mobile/runtime";
-import { formatWorkoutElapsed } from "@/lib/workout/elapsed";
-import { getWorkoutExerciseProgress, getWorkoutSetProgress } from "@/lib/workout/exercise-progress";
 import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
+import { buildWorkoutProgressDisplay } from "@/lib/workout/workout-progress-display";
 
 export const WORKOUT_LIVE_ACTIVITY_ID = "active-workout";
 
@@ -32,17 +31,23 @@ export function buildWorkoutLiveActivityPayload(
 }
 
 function buildContentState(payload: WorkoutLiveActivityPayload): Record<string, string> {
-	const exercises = getWorkoutExerciseProgress(payload.exerciseIds, payload.exerciseSets);
-	const sets = getWorkoutSetProgress(payload.exerciseIds, payload.exerciseSets);
+	const display = buildWorkoutProgressDisplay(
+		{
+			program: { name: payload.programName },
+			startDate: payload.startDate,
+			exercises: payload.exerciseIds.map((id) => ({ id })),
+		},
+		payload.exerciseSets,
+	);
 
 	return {
-		programName: payload.programName,
-		elapsed: formatWorkoutElapsed(payload.startDate),
-		exercisesDone: String(exercises.done),
-		exercisesLeft: String(exercises.left),
-		setsDone: String(sets.done),
-		setsTotal: String(sets.total),
-		setsProgress: String(sets.progress),
+		programName: display.programName,
+		elapsed: display.elapsed,
+		exercisesDone: String(display.exercisesDone),
+		exercisesLeft: String(display.exercisesLeft),
+		setsDone: String(display.setsDone),
+		setsTotal: String(display.setsTotal),
+		setsProgress: String(display.progress),
 	};
 }
 
