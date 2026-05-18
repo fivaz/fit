@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { authClient, bootstrapMobileAuthBeforeSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { ROUTES } from "@/lib/consts";
+import { clearMobileAuthToken } from "@/lib/mobile/auth-token-store";
+import { canTrustAuthenticatedRedirect, runSessionBootstrap } from "@/lib/mobile/session-bootstrap";
 import { SESSION_GATE_TIMEOUT_MS } from "@/lib/mobile/session-gate";
 
 type UseMobileAuthBootstrapOptions = {
@@ -21,6 +23,7 @@ export function useMobileAuthBootstrap(options: UseMobileAuthBootstrapOptions = 
 	const router = useRouter();
 	const { data: session, isPending, refetch } = authClient.useSession();
 	const [bootstrapReady, setBootstrapReady] = useState(false);
+	const [bootstrapRefetchOk, setBootstrapRefetchOk] = useState(false);
 	const [gateTimedOut, setGateTimedOut] = useState(false);
 	const refetchSessionRef = useRef(refetch);
 
@@ -31,8 +34,10 @@ export function useMobileAuthBootstrap(options: UseMobileAuthBootstrapOptions = 
 	useEffect(() => {
 		let cancelled = false;
 
-		void bootstrapMobileAuthBeforeSession(() => refetchSessionRef.current()).finally(() => {
-			if (!cancelled) setBootstrapReady(true);
+		void runSessionBootstrap(() => refetchSessionRef.current()).then((ok) => {
+			if (cancelled) return;
+			setBootstrapRefetchOk(ok);
+			setBootstrapReady(true);
 		});
 
 		return () => {
@@ -47,18 +52,27 @@ export function useMobileAuthBootstrap(options: UseMobileAuthBootstrapOptions = 
 	}, [bootstrapReady]);
 
 	useEffect(() => {
-		if (!bootstrapReady) return;
-		if (isPending && !gateTimedOut) return;
-		if (!session || !redirectIfAuthenticated) return;
-		router.replace(ROUTES.HOME);
-	}, [bootstrapReady, gateTimedOut, isPending, redirectIfAuthenticated, router, session]);
+		if (!bootstrapReady || !redirectIfAuthenticated) return;
+
+		if (canTrustAuthenticatedRedirect(session, bootstrapRefetchOk)) {
+			router.replace(ROUTES.HOME);
+			return;
+		}
+
+		// Stale React Query session after a failed refetch — drop it so login does not loop.
+		if (bootstrapRefetchOk || !session) return;
+
+		void clearMobileAuthToken().then(() => refetchSessionRef.current());
+	}, [bootstrapReady, bootstrapRefetchOk, redirectIfAuthenticated, router, session]);
 
 	const sessionLoading = !bootstrapReady || (isPending && !gateTimedOut);
+	const isAuthenticated = canTrustAuthenticatedRedirect(session, bootstrapRefetchOk);
 
 	return {
 		bootstrapReady,
+		bootstrapRefetchOk,
 		session,
 		sessionLoading,
-		isAuthenticated: Boolean(session),
+		isAuthenticated,
 	};
 }

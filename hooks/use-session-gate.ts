@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { authClient, bootstrapMobileAuthBeforeSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { clearMobileAuthToken } from "@/lib/mobile/auth-token-store";
 import { clientDebug } from "@/lib/mobile/client-debug";
+import { runSessionBootstrap } from "@/lib/mobile/session-bootstrap";
 
 /** Stop waiting on `useSession().isPending` so Capacitor users are not stuck forever on network hangs. */
 export const SESSION_GATE_TIMEOUT_MS = 12_000;
@@ -29,7 +30,7 @@ export function useSessionGate(): UseSessionGateResult {
 	useEffect(() => {
 		let cancelled = false;
 
-		void bootstrapMobileAuthBeforeSession(() => refetchSessionRef.current()).finally(() => {
+		void runSessionBootstrap(() => refetchSessionRef.current()).finally(() => {
 			if (!cancelled) setBootstrapReady(true);
 		});
 

@@ -58,7 +58,7 @@ export const { signIn, signUp, useSession } = authClient;
 /** Load persisted bearer token, then refresh Better Auth session (needed after Capacitor full page loads). */
 export async function bootstrapMobileAuthBeforeSession(
 	refetchSession: () => Promise<unknown>,
-): Promise<void> {
+): Promise<boolean> {
 	await hydrateMobileAuthToken();
 
 	try {
@@ -68,12 +68,14 @@ export async function bootstrapMobileAuthBeforeSession(
 				setTimeout(() => reject(new Error("Session refetch timeout")), SESSION_REFETCH_TIMEOUT_MS);
 			}),
 		]);
+		return true;
 	} catch (error) {
 		clientDebug("auth", "bootstrap refetch failed", {
 			error: error instanceof Error ? error.message : String(error),
 			hasBearerToken: Boolean(getMobileAuthTokenSync()),
 			authBaseURL: resolveAuthBaseURL() ?? "(same origin)",
 		});
+		return false;
 	}
 }
 
