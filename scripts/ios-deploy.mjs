@@ -100,7 +100,7 @@ function main() {
 
 	const config = loadConfig();
 	if (!config.enabled) {
-		console.log("ios-deploy: skipped (enabled: false in config)");
+		console.log("ios-deploy: skipped (enabled: false in ios-deploy.config.json)");
 		return;
 	}
 
