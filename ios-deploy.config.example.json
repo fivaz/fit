@@ -1,0 +1,17 @@
+{
+	"$schema": "./ios-deploy.config.schema.json",
+	"enabled": true,
+	"deviceId": "",
+	"xcodeProject": "ios/App/App.xcodeproj",
+	"scheme": "App",
+	"configuration": "Debug",
+	"derivedDataPath": "ios/build",
+	"bundleId": "com.fivaz.fittracker",
+	"iosDeploy": {
+		"justLaunch": true,
+		"uninstall": false,
+		"timeout": 60,
+		"noWifi": false,
+		"verbose": false
+	}
+}

@@ -8,8 +8,12 @@ const rootDir = process.cwd();
 
 const requiredFiles = [
 	"capacitor.config.ts",
+	"ios-deploy.config.example.json",
+	"scripts/ios-deploy.mjs",
 	"ios/App/App.xcodeproj/project.pbxproj",
 	"ios/App/App/Info.plist",
+	"ios/WorkoutLiveActivityWidget/WorkoutLiveActivityWidgetLiveActivity.swift",
+	"ios/WorkoutLiveActivityWidget/GenericAttributes.swift",
 	"ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png",
 	"ios/App/App/Assets.xcassets/Splash.imageset/splash-2732x2732.png",
 	"docs/ios-qa-release-checklist.md",
@@ -77,7 +81,7 @@ for (const script of requiredPackageScripts) {
 }
 
 const infoPlist = await readFile(path.join(rootDir, "ios/App/App/Info.plist"), "utf8");
-for (const key of ["NSCameraUsageDescription", "NSPhotoLibraryUsageDescription"]) {
+for (const key of ["NSSupportsLiveActivities", "NSCameraUsageDescription", "NSPhotoLibraryUsageDescription"]) {
 	if (infoPlist.includes(`<key>${key}</key>`)) {
 		pass(`Info.plist declares ${key}`);
 	} else {

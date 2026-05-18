@@ -1,0 +1,30 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "ios-deploy config",
+	"type": "object",
+	"properties": {
+		"enabled": {
+			"type": "boolean",
+			"description": "Set false to skip deploy when running pnpm ios:build"
+		},
+		"deviceId": {
+			"type": "string",
+			"description": "Physical device UDID. Leave empty to auto-select the first connected device."
+		},
+		"xcodeProject": { "type": "string" },
+		"scheme": { "type": "string" },
+		"configuration": { "type": "string", "enum": ["Debug", "Release"] },
+		"derivedDataPath": { "type": "string" },
+		"bundleId": { "type": "string" },
+		"iosDeploy": {
+			"type": "object",
+			"properties": {
+				"justLaunch": { "type": "boolean" },
+				"uninstall": { "type": "boolean" },
+				"timeout": { "type": "number" },
+				"noWifi": { "type": "boolean" },
+				"verbose": { "type": "boolean" }
+			}
+		}
+	}
+}

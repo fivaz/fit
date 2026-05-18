@@ -15,6 +15,10 @@ import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
+import {
+	buildWorkoutLiveActivityPayload,
+	dismissWorkoutLiveActivity,
+} from "@/lib/mobile/workout-live-activity";
 import { finishWorkout, syncWorkoutSets } from "@/lib/workout/api";
 import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
 
@@ -30,7 +34,12 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	const isFirstRender = useRef(true);
 	const confirm = useConfirm();
 	const router = useRouter();
-	const { refreshActiveWorkout } = useActiveWorkoutHome();
+	const { refreshActiveWorkout, setLiveActivityExerciseSets } = useActiveWorkoutHome();
+
+	useEffect(() => {
+		setLiveActivityExerciseSets(exerciseSets);
+		return () => setLiveActivityExerciseSets(null);
+	}, [exerciseSets, setLiveActivityExerciseSets]);
 
 	useEffect(() => {
 		if (isFirstRender.current) {
@@ -71,6 +80,9 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 
 		try {
 			await finishWorkout(initialWorkout.id);
+			await dismissWorkoutLiveActivity(
+				buildWorkoutLiveActivityPayload(initialWorkout, exerciseSets),
+			);
 			refreshActiveWorkout();
 			toast.success(`Workout finished on ${format(new Date(), "PPpp")}`);
 			router.push(ROUTES.PROGRESS);
