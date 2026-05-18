@@ -12,6 +12,7 @@
 		"ios:build": "pnpm run generate-ios-assets && pnpm run build:static && pnpm exec cap sync ios",
 		"ios:build:deploy": "pnpm run ios:build && node scripts/ios-deploy.mjs",
 		"ios:deploy": "node scripts/ios-deploy.mjs",
+		"tunnel:dev": "cloudflared tunnel run fit-dev",
 		"ios:copy": "pnpm exec cap copy ios",
 		"ios:open": "pnpm exec cap open ios",
 		"ios:readiness": "node scripts/ios-readiness-check.mjs",

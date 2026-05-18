@@ -26,13 +26,27 @@ function parseAllowedDevOriginsFromEnv(): string[] {
 		.filter(Boolean);
 }
 
+/** Hostname from `MOBILE_DEV_URL` so Cloudflare Tunnel HMR (`/_next/webpack-hmr`) is allowed. */
+function allowedDevOriginFromMobileDevUrl(): string[] {
+	const raw = process.env.MOBILE_DEV_URL?.trim();
+	if (!raw) return [];
+	try {
+		return [new URL(raw).hostname];
+	} catch {
+		return [];
+	}
+}
+
 // When set (including defaults below), dev uses block mode for disallowed origins instead of warn-only.
 // Wildcards follow Next’s `isCsrfOriginAllowed` rules (dot-separated segments; `*` per segment).
 const allowedDevOrigins: string[] = [
-	...parseAllowedDevOriginsFromEnv(),
-	"127.0.0.1",
-	"192.168.*.*",
-	"10.*.*.*",
+	...new Set([
+		...parseAllowedDevOriginsFromEnv(),
+		...allowedDevOriginFromMobileDevUrl(),
+		"127.0.0.1",
+		"192.168.*.*",
+		"10.*.*.*",
+	]),
 ];
 
 const nextConfig: NextConfig = {
