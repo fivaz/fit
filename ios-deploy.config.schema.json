@@ -31,7 +31,7 @@
 				"justLaunch": { "type": "boolean" },
 				"noStart": {
 					"type": "boolean",
-					"description": "Install only; do not start the app (recommended)"
+					"description": "When true, install only and do not launch the app on the device."
 				},
 				"uninstall": { "type": "boolean" },
 				"timeout": { "type": "number" },

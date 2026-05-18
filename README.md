@@ -168,7 +168,7 @@ ios-deploy -c
 | `installTool`       | `"auto"`      | `"devicectl"` (Xcode wireless stack), `"ios-deploy"`, or `"auto"` (devicectl, then ios-deploy). |
 | `configuration`     | `"Debug"`     | Xcode build configuration.                                                                      |
 | `derivedDataPath`   | `"ios/build"` | Where `App.app` is produced.                                                                    |
-| `iosDeploy.noStart` | `true`        | Install only; do not launch the app (avoids common launch/support-image errors).                |
+| `iosDeploy.noStart` | `false`       | When `true`, install only and do not launch the app on the device.                              |
 | `iosDeploy.usbOnly` | `false`       | When using the ios-deploy fallback, pass `--no-wifi` (USB only).                                |
 
 **Environment overrides** (see `.env.example`):
@@ -218,9 +218,7 @@ To load the app from a running dev server instead of the bundled `.next-static/`
 
 1. Start the dev server: `pnpm run dev`.
 2. Start a tunnel, e.g. `cloudflared tunnel --url http://localhost:3000`, and copy the HTTPS URL.
-3. Set in `.env` (read by `capacitor.config.ts` on sync):
-   - `CAPACITOR_SERVER_URL` — tunnel origin (WebView loads this URL).
-   - Align `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_URL` with the **same** origin so auth and API calls work.
+3. Set **`MOBILE_DEV_URL`** in `.env` to your tunnel HTTPS origin (or set each var individually). It applies to `CAPACITOR_SERVER_URL`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_TRUSTED_ORIGINS` when those are unset.
 4. Run `pnpm run ios:sync` (or `ios:build`) and reopen the app on the device.
 
 Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick tunnels get a new URL on each restart.
@@ -236,6 +234,7 @@ Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick tunn
 | `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                           | Extra origins for Better Auth CSRF checks (comma-separated). Capacitor shell origins are built into `lib/auth.ts`. |
 | `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for `/api/*` CORS (`lib/cors.ts`).                                                   |
 | `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs (`offline`, `apiFetch` when successful, etc.).                           |
+| `MOBILE_DEV_URL`              | Optional (tunnel / LAN dev)        | Single origin; fills the Capacitor/auth/API vars below when each is unset (`lib/env/mobile-dev-url.ts`).           |
 | `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `.next-static/`; run `ios:sync` after changing.                      |
 | `IOS_DEPLOY_DEVICE_ID`        | Optional (CLI deploy)              | Override iPhone UDID for `ios:build:deploy` / `ios:deploy`.                                                        |
 | `IOS_DEPLOY_REQUIRED`         | Optional (CLI deploy)              | `1` → fail deploy when no paired device is reachable; default skips install.                                       |

@@ -1,3 +1,4 @@
+import { resolvePublicApiBaseUrl } from "@/lib/env/mobile-dev-url";
 import { getMobileAuthTokenSync, hydrateMobileAuthToken } from "@/lib/mobile/auth-token-store";
 import { clientDebug, isClientDebugEnabled } from "@/lib/mobile/client-debug";
 
@@ -6,7 +7,7 @@ type JsonRequestInit = Omit<RequestInit, "body"> & {
 };
 
 function resolveApiUrl(input: string): string {
-	const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+	const baseUrl = resolvePublicApiBaseUrl();
 	if (!baseUrl) return input;
 	if (!input.startsWith("/")) return input;
 	return `${baseUrl.replace(/\/$/, "")}${input}`;
@@ -49,8 +50,7 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 	if (!response.ok) {
 		const errText = await getErrorMessage(response);
 		// Capacitor / static bundles almost always set `NEXT_PUBLIC_API_BASE_URL`; surface failures without extra env.
-		const logMobileApi =
-			Boolean(process.env.NEXT_PUBLIC_API_BASE_URL?.trim()) || isClientDebugEnabled();
+		const logMobileApi = Boolean(resolvePublicApiBaseUrl()) || isClientDebugEnabled();
 		if (logMobileApi) {
 			console.warn("[FitClient:apiFetch]", {
 				method,

@@ -3,15 +3,22 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { bearer } from "better-auth/plugins";
 
 // If your Prisma file is located elsewhere, you can change the path
+import {
+	applyMobileDevUrlEnv,
+	resolveBetterAuthTrustedOriginsRaw,
+	resolveBetterAuthUrl,
+} from "@/lib/env/mobile-dev-url";
 import { prisma } from "@/lib/prisma";
 
-const trustedOriginsFromEnv = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
+applyMobileDevUrlEnv();
+
+const trustedOriginsFromEnv = resolveBetterAuthTrustedOriginsRaw()
 	.split(",")
 	.map((origin) => origin.trim())
 	.filter(Boolean);
 
 function trustedOriginFromBetterAuthUrl(): string | null {
-	const raw = process.env.BETTER_AUTH_URL?.trim();
+	const raw = resolveBetterAuthUrl();
 	if (!raw) return null;
 	try {
 		return new URL(raw).origin;

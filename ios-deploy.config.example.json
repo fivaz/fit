@@ -11,7 +11,7 @@
 	"bundleId": "com.fivaz.fittracker",
 	"iosDeploy": {
 		"justLaunch": false,
-		"noStart": true,
+		"noStart": false,
 		"uninstall": false,
 		"timeout": 120,
 		"noWifi": false,

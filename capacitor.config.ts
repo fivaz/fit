@@ -2,7 +2,9 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 import "dotenv/config";
 
-const tunnelUrl = process.env.CAPACITOR_SERVER_URL?.trim();
+import { resolveCapacitorServerUrl } from "./lib/env/mobile-dev-url";
+
+const tunnelUrl = resolveCapacitorServerUrl();
 
 const config: CapacitorConfig = {
 	appId: "com.fivaz.fittracker",

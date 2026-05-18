@@ -100,9 +100,8 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	return (
 		<>
 			<WorkoutProgressFlash flash={flash} />
-			<header className="sticky top-0 z-10">
-				<div aria-hidden className="pt-12" />
-				<div className="border-b border-gray-200 bg-white/80 px-5 pb-4 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
+			<header className="sticky top-0 isolate z-20 border-b border-gray-200 bg-white pt-[max(3rem,env(safe-area-inset-top))] shadow-sm dark:border-gray-700 dark:bg-gray-900">
+				<div className="px-5 pb-4">
 					<div className="flex items-start justify-between">
 						<div>
 							<div className="flex items-center gap-2">

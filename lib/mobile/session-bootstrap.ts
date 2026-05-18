@@ -1,6 +1,7 @@
 "use client";
 
 import { bootstrapMobileAuthBeforeSession } from "@/lib/auth-client";
+import { resolvePublicAuthBaseUrl } from "@/lib/env/mobile-dev-url";
 import { getMobileAuthTokenSync } from "@/lib/mobile/auth-token-store";
 
 export async function runSessionBootstrap(
@@ -13,7 +14,7 @@ export async function runSessionBootstrap(
 export function canTrustAuthenticatedRedirect(session: unknown, bootstrapRefetchOk: boolean) {
 	if (!session || !bootstrapRefetchOk) return false;
 
-	const authBaseURL = process.env.NEXT_PUBLIC_AUTH_BASE_URL?.trim();
+	const authBaseURL = resolvePublicAuthBaseUrl();
 	if (!authBaseURL) return true;
 
 	if (typeof window === "undefined") return true;

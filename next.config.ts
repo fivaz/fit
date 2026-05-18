@@ -2,7 +2,19 @@ import type { NextConfig } from "next";
 
 import { withSentryConfig } from "@sentry/nextjs";
 
+import "dotenv/config";
+
+import { resolvePublicApiBaseUrl, resolvePublicAuthBaseUrl } from "./lib/env/mobile-dev-url";
 import pkg from "./package.json";
+
+function resolvedMobilePublicEnv(): Record<string, string> {
+	const env: Record<string, string> = {};
+	const apiBaseUrl = resolvePublicApiBaseUrl();
+	const authBaseUrl = resolvePublicAuthBaseUrl();
+	if (apiBaseUrl) env.NEXT_PUBLIC_API_BASE_URL = apiBaseUrl;
+	if (authBaseUrl) env.NEXT_PUBLIC_AUTH_BASE_URL = authBaseUrl;
+	return env;
+}
 
 /** Hostnames (and `a.b.*.*`-style patterns per Next.js) allowed to hit `/_next/*` in dev. Comma-separated. */
 function parseAllowedDevOriginsFromEnv(): string[] {
@@ -37,6 +49,7 @@ const nextConfig: NextConfig = {
 	distDir: process.env.NEXT_DIST_DIR ?? ".next",
 	env: {
 		NEXT_PUBLIC_APP_VERSION: pkg.version,
+		...resolvedMobilePublicEnv(),
 	},
 };
 

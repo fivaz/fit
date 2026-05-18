@@ -2,6 +2,7 @@ import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
 import type { auth } from "@/lib/auth";
+import { resolvePublicAuthBaseUrl } from "@/lib/env/mobile-dev-url";
 import {
 	clearMobileAuthToken,
 	getMobileAuthTokenSync,
@@ -17,7 +18,7 @@ function isLoopbackHost(hostname: string) {
 }
 
 function resolveAuthBaseURL() {
-	const configuredBaseURL = process.env.NEXT_PUBLIC_AUTH_BASE_URL?.trim();
+	const configuredBaseURL = resolvePublicAuthBaseUrl();
 	if (!configuredBaseURL) return undefined;
 	if (typeof window === "undefined") return configuredBaseURL;
 

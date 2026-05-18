@@ -31,7 +31,7 @@ const DEFAULT_CONFIG = {
 	bundleId: "com.fivaz.fittracker",
 	iosDeploy: {
 		justLaunch: false,
-		noStart: true,
+		noStart: false,
 		uninstall: false,
 		timeout: 60,
 		noWifi: false,
@@ -298,6 +298,24 @@ function runXcodeBuild(target) {
 	}
 }
 
+function runDevicectlLaunch(deviceRef, bundleId, timeoutSec) {
+	console.log("ios-deploy: launching app via devicectl…");
+	const args = [
+		"devicectl",
+		"device",
+		"process",
+		"launch",
+		"--device",
+		deviceRef,
+		bundleId,
+	];
+	if (timeoutSec > 0) {
+		args.push("--timeout", String(timeoutSec));
+	}
+	const result = run("xcrun", args, { stdio: "inherit" });
+	return result.status === 0;
+}
+
 function runDevicectlInstall(deviceRef, appPath, timeoutSec) {
 	console.log("ios-deploy: installing via devicectl (Xcode wireless stack)…");
 	const args = [
@@ -353,10 +371,23 @@ function installApp(target, appPath) {
 		const ok = runDevicectlInstall(deviceRef, appPath, timeout);
 		if (ok) {
 			console.log("ios-deploy: install succeeded (devicectl).");
-			if (config.iosDeploy?.noStart !== false) {
+			if (config.iosDeploy?.noStart) {
 				console.log(
 					"ios-deploy: app installed; open it on your iPhone (install-only mode).",
 				);
+			} else {
+				const launched = runDevicectlLaunch(
+					deviceRef,
+					config.bundleId,
+					timeout,
+				);
+				if (launched) {
+					console.log("ios-deploy: app launched.");
+				} else {
+					console.warn(
+						"ios-deploy: install OK but launch failed — open the app on your iPhone.",
+					);
+				}
 			}
 			return;
 		}
