@@ -11,8 +11,8 @@
  * Env: IOS_DEPLOY_DEVICE_ID, IOS_DEPLOY_REQUIRED=1
  */
 
-import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 

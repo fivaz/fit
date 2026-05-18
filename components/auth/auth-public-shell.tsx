@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 
+import { AuthPageLayout } from "@/components/auth/auth-page-layout";
 import { useMobileAuthBootstrap } from "@/hooks/use-mobile-auth-bootstrap";
 
 type AuthPublicShellProps = {
@@ -13,17 +14,17 @@ export function AuthPublicShell({ children }: AuthPublicShellProps) {
 
 	if (sessionLoading) {
 		return (
-			<div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-				<p className="text-muted-foreground text-sm">Loading session...</p>
-			</div>
+			<AuthPageLayout>
+				<p className="text-muted-foreground text-center text-sm">Loading session...</p>
+			</AuthPageLayout>
 		);
 	}
 
 	if (isAuthenticated) {
 		return (
-			<div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-				<p className="text-muted-foreground text-sm">Redirecting...</p>
-			</div>
+			<AuthPageLayout>
+				<p className="text-muted-foreground text-center text-sm">Redirecting...</p>
+			</AuthPageLayout>
 		);
 	}
 

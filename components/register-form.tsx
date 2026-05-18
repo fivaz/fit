@@ -1,12 +1,16 @@
 "use client";
 
-import { ChangeEvent, ComponentProps, FormEvent, useState } from "react";
+import { ChangeEvent, ComponentProps, FormEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+	scrollAuthFieldIntoView,
+	scrollAuthPrimaryActionIntoView,
+} from "@/components/auth/auth-page-layout";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/logo";
@@ -37,8 +41,20 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 	const [loading, setLoading] = useState(false);
 	const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
 	const router = useRouter();
+	const submitRef = useRef<HTMLButtonElement>(null);
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const hideSocialAuth = isEmailPasswordOnlyAuthScope();
+
+	const handleFieldFocus = (element: HTMLElement) => {
+		scrollAuthFieldIntoView(element);
+	};
+
+	const handleLastFieldBeforeSubmitFocus = (element: HTMLElement) => {
+		handleFieldFocus(element);
+		if (submitRef.current) {
+			scrollAuthPrimaryActionIntoView(submitRef.current);
+		}
+	};
 
 	const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -125,6 +141,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 								placeholder="Max"
 								value={firstName}
 								onChange={(e) => setFirstName(e.target.value)}
+								onFocus={(e) => handleFieldFocus(e.currentTarget)}
 								required
 							/>
 						</Field>
@@ -135,6 +152,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 								placeholder="Robinson"
 								value={lastName}
 								onChange={(e) => setLastName(e.target.value)}
+								onFocus={(e) => handleFieldFocus(e.currentTarget)}
 								required
 							/>
 						</Field>
@@ -148,6 +166,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="m@example.com"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
+							onFocus={(e) => handleFieldFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -160,6 +179,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="••••••••"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
+							onFocus={(e) => handleFieldFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -172,6 +192,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="••••••••"
 							value={passwordConfirmation}
 							onChange={(e) => setPasswordConfirmation(e.target.value)}
+							onFocus={(e) => handleLastFieldBeforeSubmitFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -210,7 +231,12 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 						</div>
 					</Field>
 
-					<Button type="submit" className="w-full" disabled={loading || !!socialLoading}>
+					<Button
+						ref={submitRef}
+						type="submit"
+						className="w-full"
+						disabled={loading || !!socialLoading}
+					>
 						{loading ? <Loader2 className="size-4 animate-spin" /> : "Create an account"}
 					</Button>
 
