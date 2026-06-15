@@ -21,10 +21,16 @@ import {
 import { getActiveWorkout, getWorkoutById } from "@/lib/workout/api";
 import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
 
-type HomeWorkoutLoad = {
-	workoutId: string;
-	refreshToken: number;
+type HomeWorkoutFetchState = {
+	loadKey: string;
 	workout: WorkoutWithMappedSets | null;
+	settled: boolean;
+};
+
+const initialHomeWorkoutFetchState: HomeWorkoutFetchState = {
+	loadKey: "",
+	workout: null,
+	settled: false,
 };
 
 type ActiveWorkoutHomeState = {
@@ -45,7 +51,9 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 	const [refreshToken, setRefreshToken] = useState(0);
 	const [hasActiveWorkout, setHasActiveWorkout] = useState(false);
 	const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null);
-	const [homeWorkoutLoad, setHomeWorkoutLoad] = useState<HomeWorkoutLoad | null>(null);
+	const [homeWorkoutFetchState, setHomeWorkoutFetchState] = useState<HomeWorkoutFetchState>(
+		initialHomeWorkoutFetchState,
+	);
 	const [liveActivityWorkoutLoad, setLiveActivityWorkoutLoad] = useState<{
 		workoutId: string;
 		refreshToken: number;
@@ -55,6 +63,19 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 		useState<WorkoutSetMap | null>(null);
 	const lastLiveActivityPayloadRef = useRef<WorkoutLiveActivityPayload | null>(null);
 	const hadActiveWorkoutRef = useRef(false);
+
+	const homeWorkoutLoadKey = useMemo(() => {
+		if (!isHome || !activeWorkoutId) return "";
+		return `${activeWorkoutId}:${refreshToken}`;
+	}, [activeWorkoutId, isHome, refreshToken]);
+
+	useEffect(() => {
+		if (!isHome) {
+			// Drop cached home workout when leaving the tab — otherwise returning shows pre-navigation data.
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setHomeWorkoutFetchState(initialHomeWorkoutFetchState);
+		}
+	}, [isHome]);
 
 	const refreshActiveWorkout = useCallback(() => {
 		setRefreshToken((token) => token + 1);
@@ -85,17 +106,23 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 	useEffect(() => {
 		if (!isHome || !activeWorkoutId) return;
 
+		const loadKey = homeWorkoutLoadKey;
 		let isCurrent = true;
 
-		void getWorkoutById(activeWorkoutId).then((workout) => {
-			if (!isCurrent) return;
-			setHomeWorkoutLoad({ workoutId: activeWorkoutId, refreshToken, workout });
-		});
+		void getWorkoutById(activeWorkoutId)
+			.then((workout) => {
+				if (!isCurrent) return;
+				setHomeWorkoutFetchState({ loadKey, workout, settled: true });
+			})
+			.catch(() => {
+				if (!isCurrent) return;
+				setHomeWorkoutFetchState({ loadKey, workout: null, settled: true });
+			});
 
 		return () => {
 			isCurrent = false;
 		};
-	}, [activeWorkoutId, isHome, refreshToken]);
+	}, [activeWorkoutId, homeWorkoutLoadKey, isHome]);
 
 	useEffect(() => {
 		if (!activeWorkoutId) return;
@@ -132,18 +159,16 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 		hadActiveWorkoutRef.current = hasActiveWorkout;
 	}, [hasActiveWorkout]);
 
+	const isHomeWorkoutLoading =
+		Boolean(homeWorkoutLoadKey) &&
+		(!homeWorkoutFetchState.settled || homeWorkoutFetchState.loadKey !== homeWorkoutLoadKey);
+
 	const activeWorkout = useMemo(() => {
 		if (!isHome) return null;
 		if (!activeWorkoutId) return null;
-		if (
-			!homeWorkoutLoad ||
-			homeWorkoutLoad.workoutId !== activeWorkoutId ||
-			homeWorkoutLoad.refreshToken !== refreshToken
-		) {
-			return undefined;
-		}
-		return homeWorkoutLoad.workout;
-	}, [activeWorkoutId, homeWorkoutLoad, isHome, refreshToken]);
+		if (isHomeWorkoutLoading) return undefined;
+		return homeWorkoutFetchState.workout;
+	}, [activeWorkoutId, homeWorkoutFetchState.workout, isHome, isHomeWorkoutLoading]);
 
 	const value = useMemo(
 		() => ({

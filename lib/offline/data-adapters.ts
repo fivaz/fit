@@ -38,6 +38,28 @@ const emptyStore: OfflineStore = {
 
 let isSyncingQueue = false;
 
+// In-flight or recently edited sets — merged over API reads until sync succeeds.
+const optimisticWorkoutSets = new Map<string, WorkoutSetMap>();
+
+function applyCachedWorkoutSets(
+	workout: WorkoutWithMappedSets,
+	workoutId: string,
+): WorkoutWithMappedSets {
+	const optimistic = optimisticWorkoutSets.get(workoutId);
+	if (optimistic) {
+		return { ...workout, exerciseSets: optimistic };
+	}
+
+	if (isOfflineEnabled()) {
+		const localSets = readStore().workoutSetsByWorkoutId[workoutId];
+		if (localSets !== undefined) {
+			return { ...workout, exerciseSets: localSets };
+		}
+	}
+
+	return workout;
+}
+
 function isBrowser() {
 	return typeof window !== "undefined";
 }
@@ -395,12 +417,18 @@ export const offlineDataAdapters = {
 		return readStore().workoutSetsByWorkoutId[workoutId] ?? {};
 	},
 
+	stageWorkoutSets(workoutId: string, exerciseSetsMap: WorkoutSetMap) {
+		optimisticWorkoutSets.set(workoutId, exerciseSetsMap);
+	},
+
 	async syncWorkoutSets(workoutId: string, exerciseSetsMap: WorkoutSetMap) {
+		optimisticWorkoutSets.set(workoutId, exerciseSetsMap);
 		if (!isOfflineEnabled()) {
 			await apiFetch<void>(`/api/workouts/${workoutId}/sets`, {
 				method: "PUT",
 				body: { exerciseSetsMap },
 			});
+			optimisticWorkoutSets.delete(workoutId);
 			return exerciseSetsMap;
 		}
 		updateStore((store) => ({
@@ -415,24 +443,27 @@ export const offlineDataAdapters = {
 			method: "PUT",
 			body: { exerciseSetsMap },
 		});
+		optimisticWorkoutSets.delete(workoutId);
 		return exerciseSetsMap;
 	},
 
 	async getWorkoutById(workoutId: string): Promise<WorkoutWithMappedSets | null> {
 		if (!isOfflineEnabled()) {
-			return apiFetch<WorkoutWithMappedSets>(`/api/workouts/${workoutId}`);
+			const workout = await apiFetch<WorkoutWithMappedSets>(`/api/workouts/${workoutId}`);
+			return applyCachedWorkoutSets(workout, workoutId);
 		}
 		await flushPendingOperations();
 		try {
 			const workout = await apiFetch<WorkoutWithMappedSets>(`/api/workouts/${workoutId}`);
+			const merged = applyCachedWorkoutSets(workout, workoutId);
 			updateStore((store) => ({
 				...store,
 				workoutSetsByWorkoutId: {
 					...store.workoutSetsByWorkoutId,
-					[workoutId]: workout.exerciseSets,
+					[workoutId]: merged.exerciseSets,
 				},
 			}));
-			return workout;
+			return merged;
 		} catch {
 			return null;
 		}

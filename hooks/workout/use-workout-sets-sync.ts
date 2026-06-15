@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { logError } from "@/lib/logger";
-import { syncWorkoutSets } from "@/lib/workout/api";
+import { stageWorkoutSets, syncWorkoutSets } from "@/lib/workout/api";
 import { WorkoutSetMap } from "@/lib/workout/type";
 
 export const WORKOUT_SETS_SYNC_DEBOUNCE_MS = 1800;
@@ -33,6 +33,7 @@ export function useWorkoutSetsSync(workoutId: string, exerciseSets: WorkoutSetMa
 
 			if (!options?.skipStateUpdate) setIsSyncing(true);
 			try {
+				stageWorkoutSets(workoutId, sets);
 				await syncWorkoutSets(workoutId, sets);
 				lastSyncedSetsRef.current = sets;
 			} catch (error) {
