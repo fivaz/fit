@@ -26,7 +26,9 @@ export function formatProgressPeriodAriaLabel(
 }
 
 export function getLogsForDay(logs: ProgressWorkoutLogUI[], day: Date) {
-	return logs.filter((log) => isSameDay(new Date(log.endDate), day));
+	return logs
+		.filter((log) => isSameDay(new Date(log.endDate), day))
+		.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 }
 
 export function hasWorkoutOnDay(logs: ProgressWorkoutLogUI[], day: Date) {

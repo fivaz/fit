@@ -14,6 +14,7 @@ export const emptyProgressStats: ProgressStatsUI = {
 
 export type ProgressWorkoutLogUI = {
 	id: string;
+	startDate: string;
 	endDate: string;
 	programName: string;
 	exerciseCount: number;
