@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { ArrowLeft, Loader2 } from "lucide-react";
 
@@ -10,17 +10,39 @@ import { Button } from "@/components/ui/button";
 import { WorkoutViewDetail } from "@/components/workout/workout-view-detail";
 import { ROUTES } from "@/lib/consts";
 import { getWorkoutById } from "@/lib/workout/api";
+import { readWorkoutSelectedId } from "@/lib/workout/navigation";
 import { WorkoutWithMappedSets } from "@/lib/workout/type";
 
 export default function WorkoutViewPage() {
-	const params = useParams<{ id: string }>();
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-[40vh] items-center justify-center">
+					<Loader2 className="h-6 w-6 animate-spin text-orange-500" aria-label="Loading workout" />
+				</div>
+			}
+		>
+			<WorkoutViewPageContent />
+		</Suspense>
+	);
+}
+
+function WorkoutViewPageContent() {
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	const router = useRouter();
+	const workoutId = readWorkoutSelectedId(pathname, searchParams);
 	const [workout, setWorkout] = useState<WorkoutWithMappedSets | null | undefined>(undefined);
 
 	useEffect(() => {
+		if (!workoutId) {
+			router.replace(ROUTES.PROGRESS);
+			return;
+		}
+
 		let cancelled = false;
 
-		void getWorkoutById(params.id)
+		void getWorkoutById(workoutId)
 			.then((loaded) => {
 				if (cancelled) return;
 				if (loaded && !loaded.endDate) {
@@ -36,9 +58,9 @@ export default function WorkoutViewPage() {
 		return () => {
 			cancelled = true;
 		};
-	}, [params.id, router]);
+	}, [workoutId, router]);
 
-	if (workout === undefined) {
+	if (!workoutId || workout === undefined) {
 		return (
 			<div className="flex min-h-[40vh] items-center justify-center">
 				<Loader2 className="h-6 w-6 animate-spin text-orange-500" aria-label="Loading workout" />
