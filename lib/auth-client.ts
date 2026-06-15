@@ -5,6 +5,7 @@ import type { auth } from "@/lib/auth";
 import { resolvePublicAuthBaseUrl } from "@/lib/env/mobile-dev-url";
 import {
 	clearMobileAuthToken,
+	consumeAuthTokenRememberMe,
 	getMobileAuthTokenSync,
 	hydrateMobileAuthToken,
 	persistMobileAuthToken,
@@ -45,7 +46,7 @@ export const authClient = createAuthClient({
 		onSuccess: async (ctx) => {
 			const token = ctx.response.headers.get("set-auth-token");
 			if (!token) return;
-			await persistMobileAuthToken(token);
+			await persistMobileAuthToken(token, consumeAuthTokenRememberMe());
 		},
 	},
 });

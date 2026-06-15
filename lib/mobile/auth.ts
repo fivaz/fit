@@ -2,6 +2,7 @@
 
 import { signIn, signUp } from "@/lib/auth-client";
 import { ROUTES } from "@/lib/consts";
+import { setAuthTokenRememberMe } from "@/lib/mobile/auth-token-store";
 
 export type MobileAuthHandlers = {
 	onResponse?: () => void;
@@ -26,6 +27,8 @@ export async function signInWithEmailForMobile(params: {
 	handlers?: MobileAuthHandlers;
 }) {
 	const { email, password, rememberMe = true, handlers } = params;
+
+	setAuthTokenRememberMe(rememberMe);
 
 	return signIn.email({
 		email,
