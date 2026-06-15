@@ -114,9 +114,18 @@ const prismaWorkoutRepository: WorkoutRepository = {
 		return newWorkout.id;
 	},
 	async finishWorkout(workoutId, userId) {
+		const lastSet = await prisma.set.findFirst({
+			where: {
+				time: { not: null },
+				workoutExercise: { workoutId, workout: { userId } },
+			},
+			orderBy: { time: "desc" },
+			select: { time: true },
+		});
+
 		await prisma.workout.update({
 			where: { id: workoutId, userId },
-			data: { endDate: new Date() },
+			data: { endDate: lastSet?.time ?? new Date() },
 		});
 	},
 	async getActiveWorkout(userId) {
