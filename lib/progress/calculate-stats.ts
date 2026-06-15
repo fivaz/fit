@@ -1,4 +1,5 @@
 import { ProgressStatsUI } from "@/lib/progress/type";
+import { isCompletedSet } from "@/lib/workout/exercise-progress";
 
 export type SetForStats = {
 	reps: number;
@@ -17,10 +18,10 @@ function average(values: number[]): number {
 	return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-type SetForVolume = Pick<SetForStats, "reps" | "weight">;
+type SetForVolume = Pick<SetForStats, "reps" | "weight" | "time">;
 
 export function calculateWorkoutVolume(sets: SetForVolume[]): number {
-	return sets.reduce((sum, set) => sum + (set.weight ?? 0) * set.reps, 0);
+	return sets.filter(isCompletedSet).reduce((sum, set) => sum + (set.weight ?? 0) * set.reps, 0);
 }
 
 export function calculateWorkoutDurationMinutes(startDate: Date, endDate: Date): number {

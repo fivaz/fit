@@ -6,19 +6,6 @@ import { corsHeadersFor, corsPreflightResponse, isAllowedApiCorsOrigin } from "@
 
 const PUBLIC_PATHS = [ROUTES.LOGIN, ROUTES.REGISTER, "/logout"];
 
-function getProgramsShellRewriteUrl(req: NextRequest): URL | null {
-	const detailPrefix = `${ROUTES.PROGRAMS}/`;
-	const pathname = req.nextUrl.pathname;
-	if (!pathname.startsWith(detailPrefix)) return null;
-
-	const detailPath = pathname.slice(detailPrefix.length);
-	if (!detailPath || detailPath.includes("/")) return null;
-
-	const rewriteUrl = req.nextUrl.clone();
-	rewriteUrl.pathname = ROUTES.PROGRAMS;
-	return rewriteUrl;
-}
-
 /** CORS for Capacitor / cross-origin clients hitting `/api/*` (see `lib/cors.ts`). */
 function applyApiCors(request: NextRequest): NextResponse | null {
 	const { pathname } = request.nextUrl;
@@ -61,11 +48,6 @@ export async function proxy(req: NextRequest) {
 	// Session for page routes is enforced in client layouts (`useDashboardSessionGate`).
 	// Proxy cannot see Capacitor bearer tokens on document/RSC requests, so server redirects
 	// would loop with client auth (login ↔ home). API routes still enforce auth in handlers.
-
-	const programsShellRewriteUrl = getProgramsShellRewriteUrl(req);
-	if (programsShellRewriteUrl) {
-		return NextResponse.rewrite(programsShellRewriteUrl);
-	}
 
 	return NextResponse.next();
 }

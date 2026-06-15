@@ -21,7 +21,8 @@ import {
 	buildWorkoutLiveActivityPayload,
 	dismissWorkoutLiveActivity,
 } from "@/lib/mobile/workout-live-activity";
-import { finishWorkout } from "@/lib/workout/api";
+import { finishWorkout, syncWorkoutSets } from "@/lib/workout/api";
+import { getLatestSetTimeFromWorkoutSets } from "@/lib/workout/set-time";
 import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
 
 type WorkoutDetailProps = {
@@ -54,12 +55,14 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 		setIsFinishing(true);
 
 		try {
+			await syncWorkoutSets(initialWorkout.id, exerciseSets);
 			await finishWorkout(initialWorkout.id);
 			await dismissWorkoutLiveActivity(
 				buildWorkoutLiveActivityPayload(initialWorkout, exerciseSets),
 			);
 			refreshActiveWorkout();
-			toast.success(`Workout finished on ${format(new Date(), "PPpp")}`);
+			const endDate = getLatestSetTimeFromWorkoutSets(exerciseSets) ?? new Date();
+			toast.success(`Workout finished on ${format(endDate, "PPpp")}`);
 			router.push(ROUTES.PROGRESS);
 		} catch (error) {
 			logError(error, "WorkoutDetail#handleFinish");

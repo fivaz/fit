@@ -1,7 +1,9 @@
 import { SetUI, WorkoutSetMap } from "@/lib/workout/type";
 
+type SetCompletionFields = Pick<SetUI, "reps" | "weight" | "time">;
+
 /** A set is complete when reps, weight, and time are all filled in. */
-export function isCompletedSet(set: SetUI): boolean {
+export function isCompletedSet(set: SetCompletionFields): boolean {
 	return set.reps > 0 && (set.weight ?? 0) > 0 && set.time != null;
 }
 
@@ -13,6 +15,12 @@ export function isLoggedWorkingSet(set: SetUI): boolean {
 
 export function isExerciseLogged(exerciseSets: SetUI[] | undefined): boolean {
 	return (exerciseSets ?? []).some(isLoggedWorkingSet);
+}
+
+export function countExercisesWithCompletedSets(
+	exercises: ReadonlyArray<{ sets: ReadonlyArray<SetCompletionFields> }>,
+): number {
+	return exercises.filter((exercise) => exercise.sets.some(isCompletedSet)).length;
 }
 
 export type WorkoutExerciseProgress = {

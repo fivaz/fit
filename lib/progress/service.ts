@@ -5,6 +5,7 @@ import {
 	calculateWorkoutVolume,
 } from "@/lib/progress/calculate-stats";
 import { HomeRecentWorkoutUI, ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
+import { countExercisesWithCompletedSets } from "@/lib/workout/exercise-progress";
 
 import "server-only";
 
@@ -54,7 +55,7 @@ export async function getProgressWorkoutLogs(
 			userId,
 			endDate: { not: null, gte: from, lte: to },
 		},
-		orderBy: { endDate: "desc" },
+		orderBy: { startDate: "desc" },
 		select: {
 			id: true,
 			startDate: true,
@@ -66,6 +67,7 @@ export async function getProgressWorkoutLogs(
 						select: {
 							reps: true,
 							weight: true,
+							time: true,
 						},
 					},
 				},
@@ -79,9 +81,10 @@ export async function getProgressWorkoutLogs(
 
 		return {
 			id: workout.id,
+			startDate: workout.startDate.toISOString(),
 			endDate: endDate.toISOString(),
 			programName: workout.program?.name ?? "Workout",
-			exerciseCount: workout.exercises.length,
+			exerciseCount: countExercisesWithCompletedSets(workout.exercises),
 			durationMinutes: Math.round(calculateWorkoutDurationMinutes(workout.startDate, endDate)),
 			volume: Math.round(calculateWorkoutVolume(sets)),
 		};
@@ -117,6 +120,7 @@ export async function getRecentWorkoutsForHome(
 						select: {
 							reps: true,
 							weight: true,
+							time: true,
 						},
 					},
 				},
