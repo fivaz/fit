@@ -1,3 +1,35 @@
+## [1.26.0](https://github.com/fivaz/fit-v2/compare/v1.25.0...v1.26.0) (2026-06-15)
+
+### ✨ Features
+
+* **env:** add MOBILE_DEV_URL fallback for Capacitor dev origins ([4908bef](https://github.com/fivaz/fit-v2/commit/4908bef2e88f2866afcdb97fc12fc28941a23b9c))
+* **home:** link recent workouts to program detail page ([f6b33f9](https://github.com/fivaz/fit-v2/commit/f6b33f9a34c0b757d96d8678dc5fc085f4fcd5e5))
+* **ios:** deploy to iPhone over Wi‑Fi via devicectl ([46d3989](https://github.com/fivaz/fit-v2/commit/46d398932fa2043e1af19cbd73b3339b74937266))
+* **ios:** workout live activity with set progress, mm:ss timer, dismiss on finish ([cb3c84f](https://github.com/fivaz/fit-v2/commit/cb3c84f1b3e352e22b6afe015e9d9774086c4482))
+* **mobile:** prepare iOS email login flow with auth bootstrap shell ([e3b6108](https://github.com/fivaz/fit-v2/commit/e3b61089b4fdc12de8a19ddfc98e7c9a3e1620ff))
+* **settings:** show git commit hash next to version in dev ([159a4b1](https://github.com/fivaz/fit-v2/commit/159a4b114692f592f0f788d76d76fc5fd95990ec))
+* **workout:** flash live-activity progress when set is logged ([479d83d](https://github.com/fivaz/fit-v2/commit/479d83d13c68b86e6a17a8d7b4e6ed8587e05fc9))
+
+### 🐛 Bug Fixes
+
+* **auth:** respect remember me for bearer token persistence ([145e70b](https://github.com/fivaz/fit-v2/commit/145e70b41b12ee50a765522b290b13e38e39a37e))
+* **auth:** stop login/home redirect loop for Capacitor bearer sessions ([70ecce1](https://github.com/fivaz/fit-v2/commit/70ecce125eac1a8f9bd828b4629240213ce665ec))
+* **auth:** when keyboard opens, allow scroll ([257ee8e](https://github.com/fivaz/fit-v2/commit/257ee8e8092383db3ad0539268220115ca6e4297))
+* flush pending workout set sync when leaving workout page ([46e0d01](https://github.com/fivaz/fit-v2/commit/46e0d014ac63b7155cc93e8e07b04dda234ab83f))
+* **home:** link recent workouts to program detail via query param ([e5425d9](https://github.com/fivaz/fit-v2/commit/e5425d949acbfc850ad2f8886bfed2b3ad32dcf6))
+* **mobile:** timeout session gate and allow local HTTP on iOS ([850008b](https://github.com/fivaz/fit-v2/commit/850008bbc0b6f73c6ebca73006695b0402903036))
+* show fresh workout sets when returning to active workout tab ([67bc5ac](https://github.com/fivaz/fit-v2/commit/67bc5ac4bc3605e119ffb006b8581159c04c48c2))
+* use KeyboardResize enum in capacitor config ([2def64f](https://github.com/fivaz/fit-v2/commit/2def64f7247063ea8cfdfd1963a1ba601166a0ff))
+
+### 🧹 Chores
+
+* **ios:** add cloudflare tunnel command ([96a9b89](https://github.com/fivaz/fit-v2/commit/96a9b892799537c722faab2f532c8972fe0f5f8a))
+* **ios:** split ios:build and ios:build:deploy scripts ([d607003](https://github.com/fivaz/fit-v2/commit/d6070036ac7bc247b75c5197fce07e134639a15c))
+
+### 💄 Styles
+
+* enhance live activity progress bar ([b3d91c2](https://github.com/fivaz/fit-v2/commit/b3d91c28d28b52878bc71221589d954d1522a9bb))
+
 ## [1.25.0](https://github.com/fivaz/fit-v2/compare/v1.24.0...v1.25.0) (2026-05-17)
 
 ### ✨ Features
