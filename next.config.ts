@@ -1,11 +1,33 @@
 import type { NextConfig } from "next";
 
 import { withSentryConfig } from "@sentry/nextjs";
+import { execSync } from "node:child_process";
 
 import "dotenv/config";
 
 import { resolvePublicApiBaseUrl, resolvePublicAuthBaseUrl } from "./lib/env/mobile-dev-url";
 import pkg from "./package.json";
+
+function resolveGitCommitHash(): string | undefined {
+	try {
+		return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim() || undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+function resolvedAppPublicEnv(): Record<string, string> {
+	const env: Record<string, string> = {
+		NEXT_PUBLIC_APP_VERSION: pkg.version,
+	};
+
+	if (process.env.NODE_ENV !== "production") {
+		const gitHash = resolveGitCommitHash();
+		if (gitHash) env.NEXT_PUBLIC_APP_GIT_HASH = gitHash;
+	}
+
+	return env;
+}
 
 function resolvedMobilePublicEnv(): Record<string, string> {
 	const env: Record<string, string> = {};
@@ -62,7 +84,7 @@ const nextConfig: NextConfig = {
 	// `build-static.mjs` sets NEXT_DIST_DIR=.next-static for the mobile export build.
 	distDir: process.env.NEXT_DIST_DIR ?? ".next",
 	env: {
-		NEXT_PUBLIC_APP_VERSION: pkg.version,
+		...resolvedAppPublicEnv(),
 		...resolvedMobilePublicEnv(),
 	},
 };

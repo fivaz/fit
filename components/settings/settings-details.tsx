@@ -179,6 +179,9 @@ export function SettingsDetailsInternal() {
 						</span>
 						<p className="text-xs font-medium dark:text-white">
 							Version {process.env.NEXT_PUBLIC_APP_VERSION}
+							{process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_APP_GIT_HASH
+								? ` - ${process.env.NEXT_PUBLIC_APP_GIT_HASH}`
+								: null}
 						</p>
 					</div>
 				</div>
