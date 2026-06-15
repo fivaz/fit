@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
 import { ROUTES } from "@/lib/consts";
 import { corsHeadersFor, corsPreflightResponse, isAllowedApiCorsOrigin } from "@/lib/cors";
 
@@ -59,14 +58,9 @@ export async function proxy(req: NextRequest) {
 		return NextResponse.next();
 	}
 
-	const session = await auth.api.getSession({
-		headers: req.headers,
-	});
-
-	if (!session) {
-		console.warn(`[PROXY] No token found for: ${pathname}. Redirecting to Login.`);
-		return NextResponse.redirect(new URL(ROUTES.LOGIN, req.url));
-	}
+	// Session for page routes is enforced in client layouts (`useDashboardSessionGate`).
+	// Proxy cannot see Capacitor bearer tokens on document/RSC requests, so server redirects
+	// would loop with client auth (login ↔ home). API routes still enforce auth in handlers.
 
 	const programsShellRewriteUrl = getProgramsShellRewriteUrl(req);
 	if (programsShellRewriteUrl) {

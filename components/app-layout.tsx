@@ -15,6 +15,7 @@ import {
 
 import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
 import { ROUTES } from "@/lib/consts";
+import { isProgramsRoute } from "@/lib/programs/navigation";
 import { cn } from "@/lib/utils";
 
 type AppLayoutProps = {
@@ -52,7 +53,8 @@ export function AppLayout({ children, className }: AppLayoutProps) {
 			<nav className="fixed right-0 bottom-0 left-0 z-50 border-t border-gray-200 bg-white px-2 py-2 pb-5 transition-colors duration-300 dark:border-gray-700 dark:bg-gray-800">
 				<div className="mx-auto flex max-w-md items-center justify-around">
 					{navItems.map((item) => {
-						const isActive = pathname === item.href;
+						const isActive =
+							item.href === ROUTES.PROGRAMS ? isProgramsRoute(pathname) : pathname === item.href;
 						const Icon = item.icon;
 						const isRunningWorkoutTab = item.href === ROUTES.HOME && hasActiveWorkout;
 

@@ -1,8 +1,42 @@
 import type { NextConfig } from "next";
 
 import { withSentryConfig } from "@sentry/nextjs";
+import { execSync } from "node:child_process";
 
+import "dotenv/config";
+
+import { resolvePublicApiBaseUrl, resolvePublicAuthBaseUrl } from "./lib/env/mobile-dev-url";
 import pkg from "./package.json";
+
+function resolveGitCommitHash(): string | undefined {
+	try {
+		return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim() || undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+function resolvedAppPublicEnv(): Record<string, string> {
+	const env: Record<string, string> = {
+		NEXT_PUBLIC_APP_VERSION: pkg.version,
+	};
+
+	if (process.env.NODE_ENV !== "production") {
+		const gitHash = resolveGitCommitHash();
+		if (gitHash) env.NEXT_PUBLIC_APP_GIT_HASH = gitHash;
+	}
+
+	return env;
+}
+
+function resolvedMobilePublicEnv(): Record<string, string> {
+	const env: Record<string, string> = {};
+	const apiBaseUrl = resolvePublicApiBaseUrl();
+	const authBaseUrl = resolvePublicAuthBaseUrl();
+	if (apiBaseUrl) env.NEXT_PUBLIC_API_BASE_URL = apiBaseUrl;
+	if (authBaseUrl) env.NEXT_PUBLIC_AUTH_BASE_URL = authBaseUrl;
+	return env;
+}
 
 /** Hostnames (and `a.b.*.*`-style patterns per Next.js) allowed to hit `/_next/*` in dev. Comma-separated. */
 function parseAllowedDevOriginsFromEnv(): string[] {
@@ -14,13 +48,27 @@ function parseAllowedDevOriginsFromEnv(): string[] {
 		.filter(Boolean);
 }
 
+/** Hostname from `MOBILE_DEV_URL` so Cloudflare Tunnel HMR (`/_next/webpack-hmr`) is allowed. */
+function allowedDevOriginFromMobileDevUrl(): string[] {
+	const raw = process.env.MOBILE_DEV_URL?.trim();
+	if (!raw) return [];
+	try {
+		return [new URL(raw).hostname];
+	} catch {
+		return [];
+	}
+}
+
 // When set (including defaults below), dev uses block mode for disallowed origins instead of warn-only.
 // Wildcards follow Next’s `isCsrfOriginAllowed` rules (dot-separated segments; `*` per segment).
 const allowedDevOrigins: string[] = [
-	...parseAllowedDevOriginsFromEnv(),
-	"127.0.0.1",
-	"192.168.*.*",
-	"10.*.*.*",
+	...new Set([
+		...parseAllowedDevOriginsFromEnv(),
+		...allowedDevOriginFromMobileDevUrl(),
+		"127.0.0.1",
+		"192.168.*.*",
+		"10.*.*.*",
+	]),
 ];
 
 const nextConfig: NextConfig = {
@@ -36,7 +84,8 @@ const nextConfig: NextConfig = {
 	// `build-static.mjs` sets NEXT_DIST_DIR=.next-static for the mobile export build.
 	distDir: process.env.NEXT_DIST_DIR ?? ".next",
 	env: {
-		NEXT_PUBLIC_APP_VERSION: pkg.version,
+		...resolvedAppPublicEnv(),
+		...resolvedMobilePublicEnv(),
 	},
 };
 

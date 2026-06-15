@@ -1,12 +1,16 @@
 "use client";
 
-import { ChangeEvent, ComponentProps, FormEvent, useState } from "react";
+import { ChangeEvent, ComponentProps, FormEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+	scrollAuthFieldIntoView,
+	scrollAuthPrimaryActionIntoView,
+} from "@/components/auth/auth-page-layout";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/logo";
@@ -20,8 +24,10 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { signIn, signUp } from "@/lib/auth-client";
+import { signIn } from "@/lib/auth-client";
 import { APP_NAME, ROUTES } from "@/lib/consts";
+import { signUpWithEmailForMobile } from "@/lib/mobile/auth";
+import { isEmailPasswordOnlyAuthScope } from "@/lib/mobile/auth-scope";
 import { cn } from "@/lib/utils";
 
 export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
@@ -35,7 +41,20 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 	const [loading, setLoading] = useState(false);
 	const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
 	const router = useRouter();
+	const submitRef = useRef<HTMLButtonElement>(null);
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	const hideSocialAuth = isEmailPasswordOnlyAuthScope();
+
+	const handleFieldFocus = (element: HTMLElement) => {
+		scrollAuthFieldIntoView(element);
+	};
+
+	const handleLastFieldBeforeSubmitFocus = (element: HTMLElement) => {
+		handleFieldFocus(element);
+		if (submitRef.current) {
+			scrollAuthPrimaryActionIntoView(submitRef.current);
+		}
+	};
 
 	const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -70,17 +89,16 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 
 		setLoading(true);
 		try {
-			await signUp.email({
+			await signUpWithEmailForMobile({
 				email,
 				password,
 				timezone,
 				name: `${firstName.trim()} ${lastName.trim()}`,
 				image: image ? await convertImageToBase64(image) : undefined,
-				callbackURL: ROUTES.HOME,
-				fetchOptions: {
+				handlers: {
 					onResponse: () => setLoading(false),
-					onError: (ctx) => {
-						toast.error(ctx.error.message);
+					onError: (message) => {
+						toast.error(message);
 					},
 					onSuccess: () => {
 						toast.success("Account created successfully!");
@@ -123,6 +141,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 								placeholder="Max"
 								value={firstName}
 								onChange={(e) => setFirstName(e.target.value)}
+								onFocus={(e) => handleFieldFocus(e.currentTarget)}
 								required
 							/>
 						</Field>
@@ -133,6 +152,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 								placeholder="Robinson"
 								value={lastName}
 								onChange={(e) => setLastName(e.target.value)}
+								onFocus={(e) => handleFieldFocus(e.currentTarget)}
 								required
 							/>
 						</Field>
@@ -146,6 +166,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="m@example.com"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
+							onFocus={(e) => handleFieldFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -158,6 +179,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="••••••••"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
+							onFocus={(e) => handleFieldFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -170,6 +192,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="••••••••"
 							value={passwordConfirmation}
 							onChange={(e) => setPasswordConfirmation(e.target.value)}
+							onFocus={(e) => handleLastFieldBeforeSubmitFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -208,42 +231,51 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 						</div>
 					</Field>
 
-					<Button type="submit" className="w-full" disabled={loading || !!socialLoading}>
+					<Button
+						ref={submitRef}
+						type="submit"
+						className="w-full"
+						disabled={loading || !!socialLoading}
+					>
 						{loading ? <Loader2 className="size-4 animate-spin" /> : "Create an account"}
 					</Button>
 
-					<FieldSeparator>Or sign up with</FieldSeparator>
+					{!hideSocialAuth ? (
+						<>
+							<FieldSeparator>Or sign up with</FieldSeparator>
 
-					<Field className="grid gap-4 sm:grid-cols-2">
-						<Button
-							variant="outline"
-							type="button"
-							disabled={loading || !!socialLoading}
-							onClick={() => handleSocialLogin("github")}
-						>
-							{socialLoading === "github" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<>
-									<GithubIcon className="size-5" /> GitHub
-								</>
-							)}
-						</Button>
-						<Button
-							variant="outline"
-							type="button"
-							disabled={loading || !!socialLoading}
-							onClick={() => handleSocialLogin("google")}
-						>
-							{socialLoading === "google" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<>
-									<GoogleIcon className="size-5" /> Google
-								</>
-							)}
-						</Button>
-					</Field>
+							<Field className="grid gap-4 sm:grid-cols-2">
+								<Button
+									variant="outline"
+									type="button"
+									disabled={loading || !!socialLoading}
+									onClick={() => handleSocialLogin("github")}
+								>
+									{socialLoading === "github" ? (
+										<Loader2 className="size-4 animate-spin" />
+									) : (
+										<>
+											<GithubIcon className="size-5" /> GitHub
+										</>
+									)}
+								</Button>
+								<Button
+									variant="outline"
+									type="button"
+									disabled={loading || !!socialLoading}
+									onClick={() => handleSocialLogin("google")}
+								>
+									{socialLoading === "google" ? (
+										<Loader2 className="size-4 animate-spin" />
+									) : (
+										<>
+											<GoogleIcon className="size-5" /> Google
+										</>
+									)}
+								</Button>
+							</Field>
+						</>
+					) : null}
 				</FieldGroup>
 			</form>
 		</div>

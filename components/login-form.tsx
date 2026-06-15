@@ -1,12 +1,16 @@
 "use client";
 
-import React, { ComponentProps, FormEvent, useState } from "react";
+import React, { ComponentProps, FormEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+	scrollAuthFieldIntoView,
+	scrollAuthPrimaryActionIntoView,
+} from "@/components/auth/auth-page-layout";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/logo";
@@ -22,6 +26,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
 import { APP_NAME, ROUTES } from "@/lib/consts";
+import { signInWithEmailForMobile } from "@/lib/mobile/auth";
+import { isEmailPasswordOnlyAuthScope } from "@/lib/mobile/auth-scope";
 import { cn } from "@/lib/utils";
 
 export function LoginForm({ className, ...props }: ComponentProps<"div">) {
@@ -31,20 +37,32 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 	const [loading, setLoading] = useState(false);
 	const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
 	const router = useRouter();
+	const submitRef = useRef<HTMLButtonElement>(null);
+	const hideSocialAuth = isEmailPasswordOnlyAuthScope();
+
+	const handleFieldFocus = (element: HTMLElement) => {
+		scrollAuthFieldIntoView(element);
+	};
+
+	const handlePasswordFocus = (element: HTMLElement) => {
+		handleFieldFocus(element);
+		if (submitRef.current) {
+			scrollAuthPrimaryActionIntoView(submitRef.current);
+		}
+	};
 
 	const handleLogin = async (e: FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
 		try {
-			await signIn.email({
+			await signInWithEmailForMobile({
 				email,
 				password,
 				rememberMe,
-				callbackURL: ROUTES.HOME,
-				fetchOptions: {
+				handlers: {
 					onResponse: () => setLoading(false),
-					onError: (ctx) => {
-						toast.error(ctx.error.message);
+					onError: (message) => {
+						toast.error(message);
 					},
 					onSuccess: () => {
 						toast.success("Welcome back!");
@@ -101,6 +119,7 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="m@example.com"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
+							onFocus={(e) => handleFieldFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -118,6 +137,7 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 							placeholder="••••••••"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
+							onFocus={(e) => handlePasswordFocus(e.currentTarget)}
 							required
 						/>
 					</Field>
@@ -134,45 +154,54 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 					</div>
 
 					<Field>
-						<Button type="submit" className="w-full" disabled={loading || !!socialLoading}>
+						<Button
+							ref={submitRef}
+							type="submit"
+							className="w-full"
+							disabled={loading || !!socialLoading}
+						>
 							{loading ? <Loader2 className="size-4 animate-spin" /> : "Login"}
 						</Button>
 					</Field>
 
-					<FieldSeparator>Or continue with</FieldSeparator>
+					{!hideSocialAuth ? (
+						<>
+							<FieldSeparator>Or continue with</FieldSeparator>
 
-					<Field className="grid gap-4 sm:grid-cols-2">
-						<Button
-							variant="outline"
-							type="button"
-							disabled={loading || !!socialLoading}
-							onClick={() => handleSocialLogin("github")}
-						>
-							{socialLoading === "github" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<>
-									<GithubIcon className="size-5" />
-									GitHub
-								</>
-							)}
-						</Button>
-						<Button
-							variant="outline"
-							type="button"
-							disabled={loading || !!socialLoading}
-							onClick={() => handleSocialLogin("google")}
-						>
-							{socialLoading === "google" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<>
-									<GoogleIcon className="size-5" />
-									Google
-								</>
-							)}
-						</Button>
-					</Field>
+							<Field className="grid gap-4 sm:grid-cols-2">
+								<Button
+									variant="outline"
+									type="button"
+									disabled={loading || !!socialLoading}
+									onClick={() => handleSocialLogin("github")}
+								>
+									{socialLoading === "github" ? (
+										<Loader2 className="size-4 animate-spin" />
+									) : (
+										<>
+											<GithubIcon className="size-5" />
+											GitHub
+										</>
+									)}
+								</Button>
+								<Button
+									variant="outline"
+									type="button"
+									disabled={loading || !!socialLoading}
+									onClick={() => handleSocialLogin("google")}
+								>
+									{socialLoading === "google" ? (
+										<Loader2 className="size-4 animate-spin" />
+									) : (
+										<>
+											<GoogleIcon className="size-5" />
+											Google
+										</>
+									)}
+								</Button>
+							</Field>
+						</>
+					) : null}
 				</FieldGroup>
 			</form>
 		</div>

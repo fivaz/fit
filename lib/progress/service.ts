@@ -101,6 +101,7 @@ export async function getRecentWorkoutsForHome(
 		take: limit,
 		select: {
 			id: true,
+			programId: true,
 			startDate: true,
 			endDate: true,
 			program: {
@@ -129,6 +130,7 @@ export async function getRecentWorkoutsForHome(
 
 		return {
 			id: workout.id,
+			programId: workout.programId,
 			endDate: endDate.toISOString(),
 			programName: workout.program?.name ?? "Workout",
 			exerciseCount: workout.exercises.length,

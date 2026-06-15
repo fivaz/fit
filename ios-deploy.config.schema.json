@@ -1,0 +1,47 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "ios-deploy config",
+	"type": "object",
+	"properties": {
+		"enabled": {
+			"type": "boolean",
+			"description": "Set false to skip deploy when running pnpm ios:build"
+		},
+		"deviceId": {
+			"type": "string",
+			"description": "Physical device UDID or CoreDevice identifier. Leave empty to auto-select (prefers Wi‑Fi when preferWireless is true)."
+		},
+		"preferWireless": {
+			"type": "boolean",
+			"description": "When true, prefer a device seen over the network (Connect via network in Xcode) over USB."
+		},
+		"installTool": {
+			"type": "string",
+			"enum": ["auto", "devicectl", "ios-deploy"],
+			"description": "Install path: devicectl (Xcode wireless stack), ios-deploy, or auto (devicectl then ios-deploy)."
+		},
+		"xcodeProject": { "type": "string" },
+		"scheme": { "type": "string" },
+		"configuration": { "type": "string", "enum": ["Debug", "Release"] },
+		"derivedDataPath": { "type": "string" },
+		"bundleId": { "type": "string" },
+		"iosDeploy": {
+			"type": "object",
+			"properties": {
+				"justLaunch": { "type": "boolean" },
+				"noStart": {
+					"type": "boolean",
+					"description": "When true, install only and do not launch the app on the device."
+				},
+				"uninstall": { "type": "boolean" },
+				"timeout": { "type": "number" },
+				"noWifi": { "type": "boolean" },
+				"usbOnly": {
+					"type": "boolean",
+					"description": "ios-deploy fallback: USB only (--no-wifi)."
+				},
+				"verbose": { "type": "boolean" }
+			}
+		}
+	}
+}

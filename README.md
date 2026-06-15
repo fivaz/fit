@@ -134,11 +134,51 @@ Prerequisites: Xcode (+ CLI tools), PostgreSQL for `DATABASE_URL`, and env vars 
 | Step                          | Command                        | Role                                                                                                                     |
 | ----------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | Sync web build into `ios/`    | `pnpm run ios:build`           | Regenerate iOS assets from `public/favicon.svg`, run `build:static`, then `cap sync ios`. **Does not** start `next dev`. |
+| Build + install on device     | `pnpm run ios:build:deploy`    | Same as `ios:build`, then `xcodebuild` + install on a paired iPhone (USB or Wi‑Fi). See **CLI deploy to iPhone** below.  |
+| Install only (after a build)  | `pnpm run ios:deploy`          | Run `scripts/ios-deploy.mjs` without rebuilding the static bundle.                                                       |
 | Icons / splash only           | `pnpm run generate-ios-assets` | Skip full static export when only native images changed.                                                                 |
 | Capacitor config/plugins only | `pnpm run ios:sync`            | When `.next-static/` already exists.                                                                                     |
 | Open Xcode                    | `pnpm run ios:open`            | Run Simulator or device, signing, archives.                                                                              |
 
 Repository checks before release: `pnpm run ios:readiness` (see `docs/ios-qa-release-checklist.md`).
+
+### CLI deploy to iPhone
+
+Automated install uses the same Core Device stack as Xcode (`devicectl`), with `ios-deploy` as a fallback. You need a **Debug** signing team configured in Xcode at least once.
+
+1. **Config file** — Copy `ios-deploy.config.example.json` → `ios-deploy.config.json` (gitignored). Set `deviceId` to your iPhone UDID, or leave empty to auto-select (prefers Wi‑Fi when `preferWireless` is true).
+2. **Wireless (no USB)** — In Xcode: **Window → Devices and Simulators** → select your iPhone → enable **Connect via network** (pair over USB once if needed). Mac and iPhone on the same network; USB can be unplugged.
+3. **Deploy** — `pnpm run ios:build:deploy` (full pipeline) or `pnpm run ios:deploy` after `ios:build`.
+
+List paired devices:
+
+```bash
+xcrun devicectl list devices
+# or (USB / legacy Wi‑Fi listing)
+ios-deploy -c
+```
+
+**`ios-deploy.config.json` options** (see `ios-deploy.config.schema.json`):
+
+| Field               | Default       | Purpose                                                                                         |
+| ------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
+| `enabled`           | `true`        | Set `false` to skip CLI deploy entirely.                                                        |
+| `deviceId`          | `""`          | UDID or Core Device identifier; empty = auto-select.                                            |
+| `preferWireless`    | `true`        | Prefer a network-connected device over USB when both are visible.                               |
+| `installTool`       | `"auto"`      | `"devicectl"` (Xcode wireless stack), `"ios-deploy"`, or `"auto"` (devicectl, then ios-deploy). |
+| `configuration`     | `"Debug"`     | Xcode build configuration.                                                                      |
+| `derivedDataPath`   | `"ios/build"` | Where `App.app` is produced.                                                                    |
+| `iosDeploy.noStart` | `false`       | When `true`, install only and do not launch the app on the device.                              |
+| `iosDeploy.usbOnly` | `false`       | When using the ios-deploy fallback, pass `--no-wifi` (USB only).                                |
+
+**Environment overrides** (see `.env.example`):
+
+| Variable                | Purpose                                                                                |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `IOS_DEPLOY_DEVICE_ID`  | Override `deviceId` from config.                                                       |
+| `IOS_DEPLOY_REQUIRED=1` | Fail the script when no reachable iPhone is found (default: skip install with exit 0). |
+
+If no device is found, deploy is skipped unless `IOS_DEPLOY_REQUIRED=1` — the static sync from `ios:build` still completes.
 
 ### Local API + iOS Simulator
 
@@ -172,6 +212,17 @@ NEXT_PUBLIC_AUTH_BASE_URL=http://127.0.0.1:3000
 
 For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for those three URLs (not `127.0.0.1`). Same network and firewall rules apply.
 
+### Live reload via tunnel (optional)
+
+To load the app from a running dev server instead of the bundled `.next-static/` files (useful when the iPhone is off-LAN or you want fast web reloads):
+
+1. Start the dev server: `pnpm run dev`.
+2. Start a tunnel, e.g. `cloudflared tunnel --url http://localhost:3000`, and copy the HTTPS URL.
+3. Set **`MOBILE_DEV_URL`** in `.env` to your tunnel HTTPS origin (or set each var individually). It applies to `CAPACITOR_SERVER_URL`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_TRUSTED_ORIGINS` when those are unset.
+4. Run `pnpm run ios:sync` (or `ios:build`) and reopen the app on the device.
+
+Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick tunnels get a new URL on each restart.
+
 ### Static/mobile (Capacitor) environment
 
 | Variable                      | When                               | Purpose                                                                                                            |
@@ -183,8 +234,12 @@ For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for those thre
 | `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                           | Extra origins for Better Auth CSRF checks (comma-separated). Capacitor shell origins are built into `lib/auth.ts`. |
 | `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for `/api/*` CORS (`lib/cors.ts`).                                                   |
 | `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs (`offline`, `apiFetch` when successful, etc.).                           |
+| `MOBILE_DEV_URL`              | Optional (tunnel / LAN dev)        | Single origin; fills the Capacitor/auth/API vars below when each is unset (`lib/env/mobile-dev-url.ts`).           |
+| `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `.next-static/`; run `ios:sync` after changing.                      |
+| `IOS_DEPLOY_DEVICE_ID`        | Optional (CLI deploy)              | Override iPhone UDID for `ios:build:deploy` / `ios:deploy`.                                                        |
+| `IOS_DEPLOY_REQUIRED`         | Optional (CLI deploy)              | `1` → fail deploy when no paired device is reachable; default skips install.                                       |
 
-See `.env.example` for commented templates (hosted API, local Simulator, physical device).
+See `.env.example` for commented templates (hosted API, local Simulator, physical device, tunnel, CLI deploy).
 
 ## Running tests
 
@@ -282,6 +337,8 @@ Common commands:
 - `pnpm run build` - production build
 - `pnpm run build:static` - static export build for mobile/native bundles
 - `pnpm run ios:build` - generate assets, static export, and Capacitor sync into the iOS project
+- `pnpm run ios:build:deploy` - `ios:build` plus `xcodebuild` and install on a paired iPhone (USB or Wi‑Fi; see `ios-deploy.config.json`)
+- `pnpm run ios:deploy` - install the last Xcode build on device without re-running `ios:build`
 - `pnpm run ios:open` - open the Capacitor iOS workspace in Xcode
 - `pnpm run ios:sync` - Capacitor sync only (when `.next-static/` is already built)
 - `pnpm run ios:readiness` - repository checks before App Store / Xcode hardening

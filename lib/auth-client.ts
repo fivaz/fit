@@ -2,19 +2,24 @@ import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
 import type { auth } from "@/lib/auth";
+import { resolvePublicAuthBaseUrl } from "@/lib/env/mobile-dev-url";
 import {
 	clearMobileAuthToken,
+	consumeAuthTokenRememberMe,
 	getMobileAuthTokenSync,
 	hydrateMobileAuthToken,
 	persistMobileAuthToken,
 } from "@/lib/mobile/auth-token-store";
+import { clientDebug } from "@/lib/mobile/client-debug";
+
+const SESSION_REFETCH_TIMEOUT_MS = 10_000;
 
 function isLoopbackHost(hostname: string) {
 	return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
 function resolveAuthBaseURL() {
-	const configuredBaseURL = process.env.NEXT_PUBLIC_AUTH_BASE_URL?.trim();
+	const configuredBaseURL = resolvePublicAuthBaseUrl();
 	if (!configuredBaseURL) return undefined;
 	if (typeof window === "undefined") return configuredBaseURL;
 
@@ -41,7 +46,7 @@ export const authClient = createAuthClient({
 		onSuccess: async (ctx) => {
 			const token = ctx.response.headers.get("set-auth-token");
 			if (!token) return;
-			await persistMobileAuthToken(token);
+			await persistMobileAuthToken(token, consumeAuthTokenRememberMe());
 		},
 	},
 });
@@ -54,10 +59,26 @@ export const { signIn, signUp, useSession } = authClient;
 
 /** Load persisted bearer token, then refresh Better Auth session (needed after Capacitor full page loads). */
 export async function bootstrapMobileAuthBeforeSession(
-	refetchSession: () => Promise<void>,
-): Promise<void> {
+	refetchSession: () => Promise<unknown>,
+): Promise<boolean> {
 	await hydrateMobileAuthToken();
-	await refetchSession();
+
+	try {
+		await Promise.race([
+			Promise.resolve(refetchSession()),
+			new Promise<never>((_, reject) => {
+				setTimeout(() => reject(new Error("Session refetch timeout")), SESSION_REFETCH_TIMEOUT_MS);
+			}),
+		]);
+		return true;
+	} catch (error) {
+		clientDebug("auth", "bootstrap refetch failed", {
+			error: error instanceof Error ? error.message : String(error),
+			hasBearerToken: Boolean(getMobileAuthTokenSync()),
+			authBaseURL: resolveAuthBaseURL() ?? "(same origin)",
+		});
+		return false;
+	}
 }
 
 type SignOutOptions = Parameters<typeof authClient.signOut>[0];

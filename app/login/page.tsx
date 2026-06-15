@@ -1,11 +1,13 @@
+import { AuthPageLayout } from "@/components/auth/auth-page-layout";
+import { AuthPublicShell } from "@/components/auth/auth-public-shell";
 import { LoginForm } from "@/components/login-form";
 
 export default function LoginPage() {
 	return (
-		<div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-			<div className="w-full max-w-sm">
+		<AuthPublicShell>
+			<AuthPageLayout>
 				<LoginForm />
-			</div>
-		</div>
+			</AuthPageLayout>
+		</AuthPublicShell>
 	);
 }

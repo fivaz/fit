@@ -3,6 +3,8 @@
  * Used by `proxy.ts` for `/api/*`; `mergeCorsIntoResponse` is available for route handlers if needed.
  */
 
+import { resolveBetterAuthUrl } from "@/lib/env/mobile-dev-url";
+
 const MOBILE_SHELL_ORIGINS = new Set([
 	"capacitor://localhost",
 	"ionic://localhost",
@@ -19,7 +21,7 @@ function extraOriginsFromEnv(): string[] {
 }
 
 function betterAuthPublicOrigin(): string | null {
-	const raw = process.env.BETTER_AUTH_URL?.trim();
+	const raw = resolveBetterAuthUrl();
 	if (!raw) return null;
 	try {
 		return new URL(raw).origin;

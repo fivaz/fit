@@ -1,0 +1,14 @@
+# Copy to ~/.cloudflared/config.yml (or symlink) after `cloudflared tunnel create fit-dev`.
+# DNS: cloudflared tunnel route dns fit-dev dev.sfivaz.com
+# Run: cloudflared tunnel run fit-dev
+#
+# .env: MOBILE_DEV_URL=https://dev.sfivaz.com
+# Restart `pnpm dev` after changing MOBILE_DEV_URL (Next.js allowedDevOrigins reads it at startup).
+
+tunnel: fit-dev
+credentials-file: /Users/fivaz/.cloudflared/79a461f4-b2d0-4a9e-89bb-c53dc0bf973d.json
+
+ingress:
+  - hostname: dev.sfivaz.com
+    service: http://localhost:3000
+  - service: http_status:404

@@ -1,0 +1,19 @@
+{
+	"enabled": true,
+	"deviceId": "00008110-000878601EB8801E",
+	"preferWireless": true,
+	"installTool": "auto",
+	"xcodeProject": "ios/App/App.xcodeproj",
+	"scheme": "App",
+	"configuration": "Debug",
+	"derivedDataPath": "ios/build",
+	"bundleId": "com.fivaz.fittracker",
+	"iosDeploy": {
+		"justLaunch": false,
+		"noStart": false,
+		"uninstall": false,
+		"timeout": 120,
+		"noWifi": false,
+		"verbose": false
+	}
+}

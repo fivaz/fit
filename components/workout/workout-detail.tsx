@@ -1,21 +1,27 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { format } from "date-fns";
 import { CheckCircle, CloudCheck, CloudUpload, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
-import { useDebounceValue } from "usehooks-ts";
 
 import { WorkoutTimer } from "@/components/timer";
 import { Button } from "@/components/ui/button";
 import { ExerciseCard } from "@/components/workout/workout-exercise-row";
+import { WorkoutProgressFlash } from "@/components/workout/workout-progress-flash";
 import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
+import { useWorkoutSetCompletionFlash } from "@/hooks/workout/use-workout-set-completion-flash";
+import { useWorkoutSetsSync } from "@/hooks/workout/use-workout-sets-sync";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
-import { finishWorkout, syncWorkoutSets } from "@/lib/workout/api";
+import {
+	buildWorkoutLiveActivityPayload,
+	dismissWorkoutLiveActivity,
+} from "@/lib/mobile/workout-live-activity";
+import { finishWorkout } from "@/lib/workout/api";
 import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
 
 type WorkoutDetailProps = {
@@ -24,39 +30,17 @@ type WorkoutDetailProps = {
 
 export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	const [exerciseSets, setExerciseSets] = useState<WorkoutSetMap>(initialWorkout.exerciseSets);
-	const [debouncedSets] = useDebounceValue(exerciseSets, 1800);
-	const [isSyncing, setIsSyncing] = useState(false);
+	const { isSyncing } = useWorkoutSetsSync(initialWorkout.id, exerciseSets);
 	const [isFinishing, setIsFinishing] = useState(false);
-	const isFirstRender = useRef(true);
 	const confirm = useConfirm();
 	const router = useRouter();
-	const { refreshActiveWorkout } = useActiveWorkoutHome();
+	const { refreshActiveWorkout, setLiveActivityExerciseSets } = useActiveWorkoutHome();
+	const { flash } = useWorkoutSetCompletionFlash(initialWorkout, exerciseSets);
 
 	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false;
-			return;
-		}
-
-		const syncData = async () => {
-			setIsSyncing(true);
-			try {
-				await syncWorkoutSets(initialWorkout.id, debouncedSets);
-			} catch (error) {
-				logError(error, "WorkoutDetail#syncData", {
-					extra: {
-						initialWorkoutId: initialWorkout.id,
-						debouncedSets,
-					},
-				});
-				toast.error("Sync failed, trying again...");
-			} finally {
-				setIsSyncing(false);
-			}
-		};
-
-		void syncData();
-	}, [debouncedSets, initialWorkout.id]);
+		setLiveActivityExerciseSets(exerciseSets);
+		return () => setLiveActivityExerciseSets(null);
+	}, [exerciseSets, setLiveActivityExerciseSets]);
 
 	async function handleFinish() {
 		const confirmed = await confirm({
@@ -71,6 +55,9 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 
 		try {
 			await finishWorkout(initialWorkout.id);
+			await dismissWorkoutLiveActivity(
+				buildWorkoutLiveActivityPayload(initialWorkout, exerciseSets),
+			);
 			refreshActiveWorkout();
 			toast.success(`Workout finished on ${format(new Date(), "PPpp")}`);
 			router.push(ROUTES.PROGRESS);
@@ -84,9 +71,9 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 
 	return (
 		<>
-			<header className="sticky top-0 z-10">
-				<div aria-hidden className="pt-12" />
-				<div className="border-b border-gray-200 bg-white/80 px-5 pb-4 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
+			<WorkoutProgressFlash flash={flash} />
+			<header className="sticky top-0 isolate z-20 border-b border-gray-200 bg-white pt-[max(3rem,env(safe-area-inset-top))] shadow-sm dark:border-gray-700 dark:bg-gray-900">
+				<div className="px-5 pb-4">
 					<div className="flex items-start justify-between">
 						<div>
 							<div className="flex items-center gap-2">

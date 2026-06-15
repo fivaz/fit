@@ -77,6 +77,9 @@ importers:
       better-auth:
         specifier: ^1.4.9
         version: 1.4.10(@prisma/client@7.2.0(prisma@7.2.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3))(mysql2@3.15.3)(next@16.1.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(pg@8.16.3)(prisma@7.2.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      capacitor-live-activity:
+        specifier: ^8.1.0
+        version: 8.1.0(@capacitor/core@8.3.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -3003,6 +3006,11 @@ packages:
 
   caniuse-lite@1.0.30001763:
     resolution: {integrity: sha512-mh/dGtq56uN98LlNX9qdbKnzINhX0QzhiWBFEkFfsFO4QyCvL8YegrJAazCwXIeqkIob8BlZPGM3xdnY+sgmvQ==}
+
+  capacitor-live-activity@8.1.0:
+    resolution: {integrity: sha512-n9XN/S8cEDcR8S2EzA9K7B4xcOmQzPZGNhiHZT5VMiAucGRf6OlD4G3iWpwG7YnKxwF0jOd8mAON37RdCfYrIA==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   chai@5.3.3:
     resolution: {integrity: sha512-4zNhdJD/iOjSH0A05ea+Ke6MU5mmpQcbQsSOkgdaUMJ9zTlDTD/GYlwohmIE2u0gaxHYiVHEn1Fw9mZ/ktJWgw==}
@@ -9470,6 +9478,10 @@ snapshots:
   callsites@3.1.0: {}
 
   caniuse-lite@1.0.30001763: {}
+
+  capacitor-live-activity@8.1.0(@capacitor/core@8.3.2):
+    dependencies:
+      '@capacitor/core': 8.3.2
 
   chai@5.3.3:
     dependencies:

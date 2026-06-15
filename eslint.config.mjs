@@ -21,6 +21,7 @@ const eslintConfig = defineConfig(
 			"ios/App/App/config.xml",
 			"ios/App/App/public/**",
 			"ios/App/build/**",
+			"ios/build/**",
 			"ios/App/Pods/**",
 			"ios/capacitor-cordova-ios-plugins/**",
 			"next-env.d.ts",

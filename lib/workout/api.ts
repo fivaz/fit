@@ -13,6 +13,10 @@ export function syncWorkoutSets(workoutId: string, exerciseSetsMap: WorkoutSetMa
 	return offlineDataAdapters.syncWorkoutSets(workoutId, exerciseSetsMap);
 }
 
+export function stageWorkoutSets(workoutId: string, exerciseSetsMap: WorkoutSetMap) {
+	offlineDataAdapters.stageWorkoutSets(workoutId, exerciseSetsMap);
+}
+
 export function startWorkout(programId: string) {
 	return offlineDataAdapters.startWorkout(programId);
 }
