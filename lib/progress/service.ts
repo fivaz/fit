@@ -66,6 +66,7 @@ export async function getProgressWorkoutLogs(
 						select: {
 							reps: true,
 							weight: true,
+							time: true,
 						},
 					},
 				},
@@ -117,6 +118,7 @@ export async function getRecentWorkoutsForHome(
 						select: {
 							reps: true,
 							weight: true,
+							time: true,
 						},
 					},
 				},

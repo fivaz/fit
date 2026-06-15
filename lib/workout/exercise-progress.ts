@@ -1,7 +1,9 @@
 import { SetUI, WorkoutSetMap } from "@/lib/workout/type";
 
+type SetCompletionFields = Pick<SetUI, "reps" | "weight" | "time">;
+
 /** A set is complete when reps, weight, and time are all filled in. */
-export function isCompletedSet(set: SetUI): boolean {
+export function isCompletedSet(set: SetCompletionFields): boolean {
 	return set.reps > 0 && (set.weight ?? 0) > 0 && set.time != null;
 }
 
