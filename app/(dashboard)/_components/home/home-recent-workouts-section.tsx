@@ -7,7 +7,7 @@ import { ChevronRight, Dumbbell, Loader2 } from "lucide-react";
 
 import { useHomeRecentWorkouts } from "@/app/(dashboard)/_components/home/use-home-recent-workouts";
 import { ROUTES } from "@/lib/consts";
-import { programsDetailUrl } from "@/lib/programs/navigation";
+import { programsDetailHref } from "@/lib/programs/navigation";
 import { formatWorkoutEndedCaption } from "@/lib/progress/utils";
 import { cn } from "@/lib/utils";
 
@@ -102,7 +102,7 @@ export function HomeRecentWorkoutsSection() {
 							<li key={workout.id}>
 								{workout.programId ? (
 									<Link
-										href={programsDetailUrl(workout.programId)}
+										href={programsDetailHref(workout.programId)}
 										className="block"
 										aria-label={`Open program ${workout.programName}`}
 									>
