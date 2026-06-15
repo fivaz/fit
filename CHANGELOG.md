@@ -1,3 +1,17 @@
+## [1.27.0](https://github.com/fivaz/fit-v2/compare/v1.26.0...v1.27.0) (2026-06-15)
+
+### ✨ Features
+
+* view workout sets in completion order with dedicated UI ([8cf2182](https://github.com/fivaz/fit-v2/commit/8cf21823f86b791ed7c9845326cd73140382e344))
+
+### 🐛 Bug Fixes
+
+* count only logged exercises on progress workout logs ([f694c4e](https://github.com/fivaz/fit-v2/commit/f694c4e6150f7b1f4be644f6c74be4b39b7bfa58))
+* count volume only for fully logged sets ([e6a8ee4](https://github.com/fivaz/fit-v2/commit/e6a8ee4daa756e8e74c102b6fbcb40d31713922e))
+* **ios:** static workouts page for Capacitor export and query-param nav ([4b886b7](https://github.com/fivaz/fit-v2/commit/4b886b75e06401f784dc0608cdf37856f6b19713))
+* sort progress day logs by latest start date first ([cbd7aff](https://github.com/fivaz/fit-v2/commit/cbd7affd3e58fd968607bef960b0e577d96cf89d))
+* use last set time as workout end date ([79fc22a](https://github.com/fivaz/fit-v2/commit/79fc22ac801b35f5ef5ef1c514f1e5b4ebc50f5f))
+
 ## [1.26.0](https://github.com/fivaz/fit-v2/compare/v1.25.0...v1.26.0) (2026-06-15)
 
 ### ✨ Features
