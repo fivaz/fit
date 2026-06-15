@@ -17,6 +17,12 @@ export function isExerciseLogged(exerciseSets: SetUI[] | undefined): boolean {
 	return (exerciseSets ?? []).some(isLoggedWorkingSet);
 }
 
+export function countExercisesWithCompletedSets(
+	exercises: ReadonlyArray<{ sets: ReadonlyArray<SetCompletionFields> }>,
+): number {
+	return exercises.filter((exercise) => exercise.sets.some(isCompletedSet)).length;
+}
+
 export type WorkoutExerciseProgress = {
 	total: number;
 	done: number;

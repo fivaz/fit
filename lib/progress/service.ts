@@ -5,6 +5,7 @@ import {
 	calculateWorkoutVolume,
 } from "@/lib/progress/calculate-stats";
 import { HomeRecentWorkoutUI, ProgressStatsUI, ProgressWorkoutLogUI } from "@/lib/progress/type";
+import { countExercisesWithCompletedSets } from "@/lib/workout/exercise-progress";
 
 import "server-only";
 
@@ -83,7 +84,7 @@ export async function getProgressWorkoutLogs(
 			startDate: workout.startDate.toISOString(),
 			endDate: endDate.toISOString(),
 			programName: workout.program?.name ?? "Workout",
-			exerciseCount: workout.exercises.length,
+			exerciseCount: countExercisesWithCompletedSets(workout.exercises),
 			durationMinutes: Math.round(calculateWorkoutDurationMinutes(workout.startDate, endDate)),
 			volume: Math.round(calculateWorkoutVolume(sets)),
 		};
