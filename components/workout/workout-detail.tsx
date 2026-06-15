@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { format } from "date-fns";
 import { CheckCircle, CloudCheck, CloudUpload, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
-import { useDebounceValue } from "usehooks-ts";
 
 import { WorkoutTimer } from "@/components/timer";
 import { Button } from "@/components/ui/button";
@@ -15,13 +14,14 @@ import { WorkoutProgressFlash } from "@/components/workout/workout-progress-flas
 import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { useActiveWorkoutHome } from "@/hooks/workout/active-workout-home";
 import { useWorkoutSetCompletionFlash } from "@/hooks/workout/use-workout-set-completion-flash";
+import { useWorkoutSetsSync } from "@/hooks/workout/use-workout-sets-sync";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
 import {
 	buildWorkoutLiveActivityPayload,
 	dismissWorkoutLiveActivity,
 } from "@/lib/mobile/workout-live-activity";
-import { finishWorkout, syncWorkoutSets } from "@/lib/workout/api";
+import { finishWorkout } from "@/lib/workout/api";
 import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
 
 type WorkoutDetailProps = {
@@ -30,10 +30,8 @@ type WorkoutDetailProps = {
 
 export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	const [exerciseSets, setExerciseSets] = useState<WorkoutSetMap>(initialWorkout.exerciseSets);
-	const [debouncedSets] = useDebounceValue(exerciseSets, 1800);
-	const [isSyncing, setIsSyncing] = useState(false);
+	const { isSyncing } = useWorkoutSetsSync(initialWorkout.id, exerciseSets);
 	const [isFinishing, setIsFinishing] = useState(false);
-	const isFirstRender = useRef(true);
 	const confirm = useConfirm();
 	const router = useRouter();
 	const { refreshActiveWorkout, setLiveActivityExerciseSets } = useActiveWorkoutHome();
@@ -43,32 +41,6 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 		setLiveActivityExerciseSets(exerciseSets);
 		return () => setLiveActivityExerciseSets(null);
 	}, [exerciseSets, setLiveActivityExerciseSets]);
-
-	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false;
-			return;
-		}
-
-		const syncData = async () => {
-			setIsSyncing(true);
-			try {
-				await syncWorkoutSets(initialWorkout.id, debouncedSets);
-			} catch (error) {
-				logError(error, "WorkoutDetail#syncData", {
-					extra: {
-						initialWorkoutId: initialWorkout.id,
-						debouncedSets,
-					},
-				});
-				toast.error("Sync failed, trying again...");
-			} finally {
-				setIsSyncing(false);
-			}
-		};
-
-		void syncData();
-	}, [debouncedSets, initialWorkout.id]);
 
 	async function handleFinish() {
 		const confirmed = await confirm({
