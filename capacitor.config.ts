@@ -1,4 +1,5 @@
 import type { CapacitorConfig } from "@capacitor/cli";
+import { KeyboardResize } from "@capacitor/keyboard";
 
 import "dotenv/config";
 
@@ -20,7 +21,7 @@ const config: CapacitorConfig = {
 		: {}),
 	plugins: {
 		Keyboard: {
-			resize: "body",
+			resize: KeyboardResize.Body,
 		},
 		SplashScreen: {
 			backgroundColor: "#ffffff",
