@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 import { AppLayout } from "@/components/app-layout";
 import { NetworkSync } from "@/components/network-sync";
@@ -11,6 +12,7 @@ import {
 	useActiveWorkoutHome,
 } from "@/hooks/workout/active-workout-home";
 import { cn } from "@/lib/utils";
+import { isWorkoutViewRoute } from "@/lib/workout/navigation";
 
 type DashboardLayoutType = {
 	children: ReactNode;
@@ -25,10 +27,13 @@ export default function DashboardLayout({ children }: DashboardLayoutType) {
 }
 
 function DashboardLayoutContent({ children }: DashboardLayoutType) {
+	const pathname = usePathname();
 	const { isActiveWorkoutVisible } = useActiveWorkoutHome();
 	const { session, sessionLoading, sessionUnreachable } = useDashboardSessionGate();
 
-	const appLayoutClassName = cn(isActiveWorkoutVisible ? undefined : "px-5 pt-12");
+	const appLayoutClassName = cn(
+		isActiveWorkoutVisible || isWorkoutViewRoute(pathname) ? undefined : "px-5 pt-12",
+	);
 
 	if (!session) {
 		return (

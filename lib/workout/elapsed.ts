@@ -3,10 +3,13 @@ function padTwo(value: number): string {
 }
 
 /** Formats workout duration as mm:ss, or h:mm:ss when longer than an hour. */
-export function formatWorkoutElapsed(startDate: Date | string, endDate: Date = new Date()): string {
+export function formatWorkoutElapsed(
+	startDate: Date | string,
+	endDate: Date | string = new Date(),
+): string {
 	const totalSeconds = Math.max(
 		0,
-		Math.floor((endDate.getTime() - new Date(startDate).getTime()) / 1000),
+		Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / 1000),
 	);
 	const hours = Math.floor(totalSeconds / 3600);
 	const minutes = Math.floor((totalSeconds % 3600) / 60);
