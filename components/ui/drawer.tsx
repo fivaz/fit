@@ -1,9 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useRef } from "react";
 
 import { Drawer as DrawerPrimitive } from "vaul";
 
+import {
+	scrollDrawerFieldIntoView,
+	useSoftwareKeyboardInsets,
+} from "@/hooks/use-software-keyboard-open";
 import { cn } from "@/lib/utils";
 
 function Drawer({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
@@ -41,19 +46,54 @@ function DrawerOverlay({
 function DrawerContent({
 	className,
 	children,
+	style,
 	...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+	const contentRef = useRef<HTMLDivElement>(null);
+	// Bottom sheets are `fixed` to the viewport bottom. On iOS/Capacitor the soft keyboard
+	// overlays that layer even with KeyboardResize.Body — inputs in drawers (e.g. Body Stats)
+	// end up hidden. Lift the sheet by keyboard height, cap its height, allow scroll, and
+	// scroll the focused field after the keyboard animation (same pattern as auth-page-layout).
+	const { open: keyboardOpen, height: keyboardHeight } = useSoftwareKeyboardInsets();
+
+	useEffect(() => {
+		if (!keyboardOpen) return;
+
+		const content = contentRef.current;
+		if (!content) return;
+
+		const handleFocusIn = (event: FocusEvent) => {
+			const target = event.target;
+			if (!(target instanceof HTMLElement) || !content.contains(target)) return;
+			scrollDrawerFieldIntoView(target);
+		};
+
+		content.addEventListener("focusin", handleFocusIn);
+		return () => content.removeEventListener("focusin", handleFocusIn);
+	}, [keyboardOpen]);
+
+	const keyboardAwareStyle =
+		keyboardOpen && keyboardHeight > 0
+			? {
+					bottom: keyboardHeight,
+					maxHeight: `calc(100dvh - ${keyboardHeight}px - env(safe-area-inset-top))`,
+				}
+			: undefined;
+
 	return (
 		<DrawerPortal data-slot="drawer-portal">
 			<DrawerOverlay />
 			<DrawerPrimitive.Content
+				ref={contentRef}
 				data-slot="drawer-content"
+				style={{ ...style, ...keyboardAwareStyle }}
 				className={cn(
 					"group/drawer-content bg-background fixed z-50 flex h-auto flex-col",
 					"data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b",
 					"data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t",
 					"data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:sm:max-w-sm",
 					"data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:sm:max-w-sm",
+					keyboardOpen && "overflow-y-auto overscroll-y-contain",
 					className,
 				)}
 				{...props}
