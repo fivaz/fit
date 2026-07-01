@@ -1,0 +1,13 @@
+---
+description: Package.json script naming conventions for fit
+globs: ["package.json"]
+alwaysApply: false
+---
+
+# Package Script Naming (fit)
+
+- Workflow test commands: `act:X` (for example `act:e2e`, `act:release`).
+- Database operations: `db:X` (for example `db:reset`, `db:deploy`).
+- Test commands: `test:X` (for example `test:e2e`).
+
+When adding a command expected to run repeatedly (for example `act` workflow checks), add a dedicated `package.json` script.

@@ -1,0 +1,18 @@
+---
+description: Fit API envelope, path-scoped security, and Zod at boundaries
+globs: ["app/api/**/*.ts", "app/**/*.ts", "lib/**/*.ts", "lib/**/*.tsx"]
+alwaysApply: false
+---
+
+# Security (fit)
+
+- Validate request data at API boundaries using Zod before business logic executes.
+- API responses must follow the standard envelope — see `api-contracts.mdc`.
+- Return generic error messages to clients; keep detailed diagnostics internal.
+- Fail closed on auth/authz uncertainty; verify ownership before mutations.
+
+## Don't
+
+- Trust client-side checks as a substitute for server-side authorization.
+- Expose stack traces or database details in API responses.
+- Log tokens, passwords, or personal data.
