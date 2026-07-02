@@ -7,10 +7,6 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-	scrollAuthFieldIntoView,
-	scrollAuthPrimaryActionIntoView,
-} from "@/components/auth/auth-page-layout";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/logo";
@@ -24,6 +20,10 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+	scrollFieldIntoView,
+	scrollPrimaryActionIntoView,
+} from "@/hooks/use-software-keyboard-scroll";
 import { signIn } from "@/lib/auth-client";
 import { APP_NAME, ROUTES } from "@/lib/consts";
 import { signInWithEmailForMobile } from "@/lib/mobile/auth";
@@ -41,13 +41,13 @@ export function LoginForm({ className, ...props }: ComponentProps<"div">) {
 	const hideSocialAuth = isEmailPasswordOnlyAuthScope();
 
 	const handleFieldFocus = (element: HTMLElement) => {
-		scrollAuthFieldIntoView(element);
+		scrollFieldIntoView(element);
 	};
 
 	const handlePasswordFocus = (element: HTMLElement) => {
 		handleFieldFocus(element);
 		if (submitRef.current) {
-			scrollAuthPrimaryActionIntoView(submitRef.current);
+			scrollPrimaryActionIntoView(submitRef.current);
 		}
 	};
 

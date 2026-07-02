@@ -1,14 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useRef } from "react";
 
 import { Drawer as DrawerPrimitive } from "vaul";
 
-import {
-	scrollDrawerFieldIntoView,
-	useSoftwareKeyboardInsets,
-} from "@/hooks/use-software-keyboard-open";
+import { useSoftwareKeyboardScroll } from "@/hooks/use-software-keyboard-scroll";
 import { cn } from "@/lib/utils";
 
 function Drawer({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
@@ -49,28 +45,13 @@ function DrawerContent({
 	style,
 	...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
-	const contentRef = useRef<HTMLDivElement>(null);
 	// Bottom sheets are `fixed` to the viewport bottom. On iOS/Capacitor the soft keyboard
 	// overlays that layer even with KeyboardResize.Body — inputs in drawers (e.g. Body Stats)
 	// end up hidden. Lift the sheet by keyboard height, cap its height, allow scroll, and
-	// scroll the focused field after the keyboard animation (same pattern as auth-page-layout).
-	const { open: keyboardOpen, height: keyboardHeight } = useSoftwareKeyboardInsets();
-
-	useEffect(() => {
-		if (!keyboardOpen) return;
-
-		const content = contentRef.current;
-		if (!content) return;
-
-		const handleFocusIn = (event: FocusEvent) => {
-			const target = event.target;
-			if (!(target instanceof HTMLElement) || !content.contains(target)) return;
-			scrollDrawerFieldIntoView(target);
-		};
-
-		content.addEventListener("focusin", handleFocusIn);
-		return () => content.removeEventListener("focusin", handleFocusIn);
-	}, [keyboardOpen]);
+	// scroll the focused field after the keyboard animation (see useSoftwareKeyboardScroll).
+	const { containerRef, keyboardOpen, keyboardHeight } = useSoftwareKeyboardScroll<HTMLDivElement>({
+		autoScrollOnFocus: true,
+	});
 
 	const keyboardAwareStyle =
 		keyboardOpen && keyboardHeight > 0
@@ -84,7 +65,7 @@ function DrawerContent({
 		<DrawerPortal data-slot="drawer-portal">
 			<DrawerOverlay />
 			<DrawerPrimitive.Content
-				ref={contentRef}
+				ref={containerRef}
 				data-slot="drawer-content"
 				style={{ ...style, ...keyboardAwareStyle }}
 				className={cn(

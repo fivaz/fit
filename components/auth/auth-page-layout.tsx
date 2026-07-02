@@ -1,8 +1,8 @@
 "use client";
 
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode } from "react";
 
-import { useSoftwareKeyboardOpen } from "@/hooks/use-software-keyboard-open";
+import { useSoftwareKeyboardScroll } from "@/hooks/use-software-keyboard-scroll";
 import { cn } from "@/lib/utils";
 
 type AuthPageLayoutProps = {
@@ -15,18 +15,13 @@ type AuthPageLayoutProps = {
  * bottom room only while the keyboard is open (Capacitor / visualViewport).
  */
 export function AuthPageLayout({ children, className }: AuthPageLayoutProps) {
-	const keyboardOpen = useSoftwareKeyboardOpen();
-	const scrollRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		if (!keyboardOpen && scrollRef.current) {
-			scrollRef.current.scrollTop = 0;
-		}
-	}, [keyboardOpen]);
+	const { containerRef, keyboardOpen } = useSoftwareKeyboardScroll<HTMLDivElement>({
+		resetScrollOnClose: true,
+	});
 
 	return (
 		<div
-			ref={scrollRef}
+			ref={containerRef}
 			className={cn(
 				"fixed inset-0 z-0 bg-gray-50 dark:bg-gray-900",
 				keyboardOpen ? "overflow-y-auto overscroll-y-contain" : "overflow-hidden",
@@ -49,20 +44,4 @@ export function AuthPageLayout({ children, className }: AuthPageLayoutProps) {
 			</div>
 		</div>
 	);
-}
-
-function runScrollIntoView(element: HTMLElement, block: ScrollLogicalPosition) {
-	const scroll = () => element.scrollIntoView({ block, behavior: "smooth" });
-	requestAnimationFrame(scroll);
-	window.setTimeout(scroll, 400);
-}
-
-/** Scroll focused field into view after the keyboard animates (iOS/Capacitor). */
-export function scrollAuthFieldIntoView(element: HTMLElement) {
-	runScrollIntoView(element, "nearest");
-}
-
-/** Scroll the submit button into view (e.g. when password field is focused). */
-export function scrollAuthPrimaryActionIntoView(element: HTMLElement) {
-	runScrollIntoView(element, "end");
 }

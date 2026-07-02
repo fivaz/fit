@@ -83,14 +83,3 @@ export function useSoftwareKeyboardInsets(): SoftwareKeyboardInsets {
 export function useSoftwareKeyboardOpen(): boolean {
 	return useSoftwareKeyboardInsets().open;
 }
-
-function runScrollIntoView(element: HTMLElement, block: ScrollLogicalPosition) {
-	const scroll = () => element.scrollIntoView({ block, behavior: "smooth" });
-	requestAnimationFrame(scroll);
-	window.setTimeout(scroll, 400);
-}
-
-/** Scroll focused field into view after the keyboard animates (iOS/Capacitor). */
-export function scrollDrawerFieldIntoView(element: HTMLElement) {
-	runScrollIntoView(element, "nearest");
-}
