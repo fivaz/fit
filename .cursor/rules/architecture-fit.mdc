@@ -1,0 +1,21 @@
+---
+description: Next.js/Expo layout and Clean Architecture boundaries for fit
+globs: ["app/**/*.ts", "app/**/*.tsx", "components/**/*.ts", "components/**/*.tsx", "lib/**/*.ts", "lib/**/*.tsx"]
+alwaysApply: false
+---
+
+# Architecture (fit)
+
+- Keep domain logic independent from Next.js and Expo concerns.
+- UI and route handlers in `app/` orchestrate data flow; heavy business rules belong in `lib/`.
+- Shared utilities in `lib/` should stay framework-agnostic when possible.
+- Isolate side effects (network, storage, Capacitor/native APIs) behind thin adapters.
+
+## Do
+
+- Prefer dependency injection or thin adapters at boundaries.
+- When changing data flow, note Client vs Server component boundaries and state implications.
+
+## Don't
+
+- Couple reusable business rules to component lifecycle or App Router behavior.

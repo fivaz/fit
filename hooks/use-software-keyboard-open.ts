@@ -6,17 +6,30 @@ import { isNativeMobileRuntime } from "@/lib/mobile/runtime";
 
 const KEYBOARD_HEIGHT_THRESHOLD_PX = 120;
 
-function isKeyboardOpenFromVisualViewport(): boolean {
+export type SoftwareKeyboardInsets = {
+	open: boolean;
+	height: number;
+};
+
+function getKeyboardHeightFromVisualViewport(): number {
 	const viewport = window.visualViewport;
-	if (!viewport) return false;
-	return window.innerHeight - viewport.height > KEYBOARD_HEIGHT_THRESHOLD_PX;
+	if (!viewport) return 0;
+	return Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+}
+
+function getKeyboardInsetsFromVisualViewport(): SoftwareKeyboardInsets {
+	const height = getKeyboardHeightFromVisualViewport();
+	return {
+		open: height > KEYBOARD_HEIGHT_THRESHOLD_PX,
+		height,
+	};
 }
 
 /**
- * True while the software keyboard is visible (Capacitor on device, visualViewport elsewhere).
+ * Keyboard visibility and height (Capacitor on device, visualViewport elsewhere).
  */
-export function useSoftwareKeyboardOpen(): boolean {
-	const [keyboardOpen, setKeyboardOpen] = useState(false);
+export function useSoftwareKeyboardInsets(): SoftwareKeyboardInsets {
+	const [insets, setInsets] = useState<SoftwareKeyboardInsets>({ open: false, height: 0 });
 
 	useEffect(() => {
 		let cancelled = false;
@@ -27,7 +40,7 @@ export function useSoftwareKeyboardOpen(): boolean {
 			if (!viewport) return;
 
 			const update = () => {
-				if (!cancelled) setKeyboardOpen(isKeyboardOpenFromVisualViewport());
+				if (!cancelled) setInsets(getKeyboardInsetsFromVisualViewport());
 			};
 
 			update();
@@ -43,16 +56,17 @@ export function useSoftwareKeyboardOpen(): boolean {
 			void import("@capacitor/keyboard").then(({ Keyboard }) => {
 				if (cancelled) return;
 
-				void Keyboard.addListener("keyboardWillShow", () => setKeyboardOpen(true)).then((handle) =>
-					cleanups.push(() => void handle.remove()),
-				);
-				void Keyboard.addListener("keyboardWillHide", () => setKeyboardOpen(false)).then((handle) =>
-					cleanups.push(() => void handle.remove()),
-				);
-			});
-		}
+				void Keyboard.addListener("keyboardWillShow", (info) => {
+					setInsets({ open: true, height: info.keyboardHeight });
+				}).then((handle) => cleanups.push(() => void handle.remove()));
 
-		attachVisualViewport();
+				void Keyboard.addListener("keyboardWillHide", () => {
+					setInsets({ open: false, height: 0 });
+				}).then((handle) => cleanups.push(() => void handle.remove()));
+			});
+		} else {
+			attachVisualViewport();
+		}
 
 		return () => {
 			cancelled = true;
@@ -60,5 +74,23 @@ export function useSoftwareKeyboardOpen(): boolean {
 		};
 	}, []);
 
-	return keyboardOpen;
+	return insets;
+}
+
+/**
+ * True while the software keyboard is visible (Capacitor on device, visualViewport elsewhere).
+ */
+export function useSoftwareKeyboardOpen(): boolean {
+	return useSoftwareKeyboardInsets().open;
+}
+
+function runScrollIntoView(element: HTMLElement, block: ScrollLogicalPosition) {
+	const scroll = () => element.scrollIntoView({ block, behavior: "smooth" });
+	requestAnimationFrame(scroll);
+	window.setTimeout(scroll, 400);
+}
+
+/** Scroll focused field into view after the keyboard animates (iOS/Capacitor). */
+export function scrollDrawerFieldIntoView(element: HTMLElement) {
+	runScrollIntoView(element, "nearest");
 }

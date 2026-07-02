@@ -4,6 +4,8 @@ import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
+import { assertCapacitorEnv } from "./assert-capacitor-env.mjs";
+
 const buildTmpDir = path.resolve(".static-build-tmp");
 const appApiDir = path.resolve("app/api");
 const appApiBackupDir = path.resolve(".static-build-tmp/app-api");
@@ -78,6 +80,7 @@ function runNextBuild() {
 }
 
 try {
+	assertCapacitorEnv();
 	await reconcileStaleApiBackup();
 	movedApiRoutes = await moveApiRoutesOutOfBuild();
 	await runNextBuild();
