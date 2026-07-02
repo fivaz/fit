@@ -1,3 +1,9 @@
+## [1.27.2](https://github.com/fivaz/fit-v2/compare/v1.27.1...v1.27.2) (2026-07-02)
+
+### 🔨 Code Refactoring
+
+* **mobile:** extract shared keyboard scroll hook for auth and drawer ([c96a9ee](https://github.com/fivaz/fit-v2/commit/c96a9ee0588a2c7130dea7b5eea952aacd672873))
+
 ## [1.27.1](https://github.com/fivaz/fit-v2/compare/v1.27.0...v1.27.1) (2026-07-02)
 
 ### 🐛 Bug Fixes
