@@ -1,3 +1,15 @@
+## [1.27.1](https://github.com/fivaz/fit-v2/compare/v1.27.0...v1.27.1) (2026-07-02)
+
+### 🐛 Bug Fixes
+
+* **ci:** bump Playwright to 1.61.0 to fix browser install hang on Node 24 ([4a03056](https://github.com/fivaz/fit-v2/commit/4a030563378006c7438ba477375247cbe0078d7a))
+* **ios:** fail static build early when Capacitor API URLs are missing ([8d25dc4](https://github.com/fivaz/fit-v2/commit/8d25dc45e8c549d509d53ad42669f16fbe535a8a))
+* **mobile:** keep drawer inputs visible above the soft keyboard ([e1657a1](https://github.com/fivaz/fit-v2/commit/e1657a18a17906a91efde11109eaee78d48316ce))
+
+### 🧹 Chores
+
+* **rules:** split portable Cursor rules into dotfiles ([541f64a](https://github.com/fivaz/fit-v2/commit/541f64a1797659501e38c0f34166c98701a33579))
+
 ## [1.27.0](https://github.com/fivaz/fit-v2/compare/v1.26.0...v1.27.0) (2026-06-15)
 
 ### ✨ Features
