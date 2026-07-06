@@ -17,12 +17,12 @@ const formSchema = z.object({
 	muscles: z.array(z.string()).min(1, "Select at least one muscle group"),
 });
 
-type ProgramFormProps = {
+type ProgramFormManualProps = {
 	program: ProgramUI;
 	onClose: () => void;
 };
 
-export function ProgramForm({ program, onClose }: ProgramFormProps) {
+export function ProgramFormManual({ program, onClose }: ProgramFormManualProps) {
 	const { addItem, updateItem } = useProgramMutations();
 	const [errors, setErrors] = useState<{ name?: string; muscles?: string }>({});
 	const isEdit = !!program.id;

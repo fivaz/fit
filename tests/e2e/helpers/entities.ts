@@ -6,6 +6,7 @@ export async function createProgram(page: Page, name: string) {
 	await page.goto(ROUTES.PROGRAMS);
 	await page.getByRole("button", { name: "Create program" }).click();
 	await expect(page.getByRole("heading", { name: "Create Program" })).toBeVisible();
+	await page.getByRole("button", { name: "Switch to manual program creation" }).click();
 	await page.getByLabel("Program Name").fill(name);
 	await page.getByRole("button", { name: /chest/i }).click();
 	await page.getByRole("button", { name: "Create Program" }).click();

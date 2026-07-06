@@ -3,9 +3,10 @@
 import * as React from "react";
 import { useState } from "react";
 
-import { PlusIcon } from "lucide-react";
+import { PenLineIcon, PlusIcon, SparklesIcon } from "lucide-react";
 
-import { ProgramForm } from "@/components/program/program-form-button/program-form";
+import { ProgramFormManual } from "@/components/program/program-form-button/program-form";
+import { ProgramFormAutomatic } from "@/components/program/program-form-button/program-form-automatic";
 import { Button } from "@/components/ui/button";
 import {
 	Drawer,
@@ -16,6 +17,8 @@ import {
 	DrawerTrigger,
 } from "@/components/ui/drawer";
 import { buildEmptyProgram, ProgramUI } from "@/lib/program/type";
+
+type CreationMode = "automatic" | "manual";
 
 type ProgramFormButtonProps = React.ComponentProps<typeof Button> & {
 	program?: ProgramUI;
@@ -30,19 +33,24 @@ export function ProgramFormButton({
 	onOpenChange: setExternalOpen,
 	...props
 }: ProgramFormButtonProps) {
-	// Internal state management if external state isn't provided
 	const [internalOpen, setInternalOpen] = useState(false);
+	const [creationMode, setCreationMode] = useState<CreationMode>("automatic");
 
-	// Determine which state to use
 	const isControlled = externalOpen !== undefined;
 	const open = isControlled ? externalOpen : internalOpen;
 	const onOpenChange = isControlled ? setExternalOpen : setInternalOpen;
 	const isEditProgram = Boolean(program.id);
 	const ariaLabel = props["aria-label"] ?? (isEditProgram ? "Edit program" : "Create program");
 
+	const handleOpenChange = (nextOpen: boolean) => {
+		if (!nextOpen) {
+			setCreationMode("automatic");
+		}
+		onOpenChange?.(nextOpen);
+	};
+
 	return (
-		<Drawer open={open} onOpenChange={onOpenChange}>
-			{/* Omit Trigger if controlled externally */}
+		<Drawer open={open} onOpenChange={handleOpenChange}>
 			{!isControlled && (
 				<DrawerTrigger asChild>
 					<Button aria-label={ariaLabel} {...props}>
@@ -53,16 +61,50 @@ export function ProgramFormButton({
 
 			<DrawerContent className="max-h-[90vh]">
 				<div className="mx-auto w-full max-w-md overflow-y-auto pb-6">
-					<DrawerHeader>
+					<DrawerHeader className="relative">
 						<DrawerTitle>{isEditProgram ? "Edit Program" : "Create Program"}</DrawerTitle>
-						{!isEditProgram && (
-							<DrawerDescription>
-								Name your program and select target muscle groups.
-							</DrawerDescription>
+						{isEditProgram ? null : creationMode === "automatic" ? (
+							<>
+								<DrawerDescription>
+									Tell our AI coach what you want and we&apos;ll build your program.
+								</DrawerDescription>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="absolute top-0 right-0 mx-4 my-2"
+									aria-label="Switch to manual program creation"
+									onClick={() => setCreationMode("manual")}
+								>
+									<PenLineIcon className="size-4" />
+									Manual
+								</Button>
+							</>
+						) : (
+							<>
+								<DrawerDescription>
+									Name your program and select target muscle groups.
+								</DrawerDescription>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="absolute top-0 right-0 mx-4 my-2"
+									aria-label="Switch to automatic program creation"
+									onClick={() => setCreationMode("automatic")}
+								>
+									<SparklesIcon className="size-4" />
+									AI coach
+								</Button>
+							</>
 						)}
 					</DrawerHeader>
 
-					<ProgramForm program={program} onClose={() => onOpenChange?.(false)} />
+					{isEditProgram || creationMode === "manual" ? (
+						<ProgramFormManual program={program} onClose={() => handleOpenChange(false)} />
+					) : (
+						<ProgramFormAutomatic onClose={() => handleOpenChange(false)} />
+					)}
 				</div>
 			</DrawerContent>
 		</Drawer>
