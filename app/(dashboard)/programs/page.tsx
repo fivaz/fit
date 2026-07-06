@@ -50,15 +50,23 @@ function ProgramsPageContent() {
 	useEffect(() => {
 		let isCurrent = true;
 
-		void Promise.all([getPrograms(), getProgramGroups()])
-			.then(([loadedPrograms, loadedGroups]) => {
+		void getPrograms()
+			.then((loadedPrograms) => {
 				if (!isCurrent) return;
 				setPrograms(loadedPrograms);
-				setGroups(loadedGroups);
 			})
 			.catch(() => {
 				if (!isCurrent) return;
 				setPrograms([]);
+			});
+
+		void getProgramGroups()
+			.then((loadedGroups) => {
+				if (!isCurrent) return;
+				setGroups(loadedGroups);
+			})
+			.catch(() => {
+				if (!isCurrent) return;
 				setGroups([]);
 			});
 

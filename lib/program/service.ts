@@ -21,7 +21,7 @@ export interface ProgramRepository {
 	getPrograms(userId: string): Promise<ProgramUI[]>;
 	getProgramById(id: string, userId: string): Promise<ProgramWithExercisesRaw | null>;
 	upsertProgram(
-		program: Pick<ProgramUI, "id" | "name" | "muscles" | "groupId">,
+		program: Pick<ProgramUI, "id" | "name" | "muscles" | "groupId" | "order">,
 		userId: string,
 	): Promise<void>;
 	reorderPrograms(groupId: string | null, sortedIds: string[], userId: string): Promise<void>;
@@ -44,14 +44,14 @@ const prismaProgramRepository: ProgramRepository = {
 			...programWithExercisesArgs,
 		});
 	},
-	async upsertProgram({ id, name, muscles, groupId }, userId) {
+	async upsertProgram({ id, name, muscles, groupId, order }, userId) {
 		const programCount = await prisma.program.count({
 			where: { userId, groupId: groupId ?? null },
 		});
 
 		await prisma.program.upsert({
 			where: { id: id || "new-id", userId },
-			update: { name, muscles, groupId: groupId ?? null },
+			update: { name, muscles, groupId: groupId ?? null, order },
 			create: {
 				id,
 				name,
@@ -63,14 +63,12 @@ const prismaProgramRepository: ProgramRepository = {
 		});
 	},
 	async reorderPrograms(groupId, sortedIds, userId) {
+		if (sortedIds.length === 0) return;
+
 		await prisma.$transaction(
 			sortedIds.map((id, index) =>
 				prisma.program.update({
-					where: {
-						id,
-						userId,
-						groupId: groupId ?? null,
-					},
+					where: { id, userId },
 					data: { order: index },
 				}),
 			),
@@ -112,13 +110,13 @@ export function createProgramService(repository: ProgramRepository) {
 				})),
 			};
 		},
-		async saveProgram({ id, name, muscles, groupId }: ProgramUI, userId: string) {
+		async saveProgram({ id, name, muscles, groupId, order }: ProgramUI, userId: string) {
 			await devDelay();
 			try {
-				await repository.upsertProgram({ id, name, muscles, groupId }, userId);
+				await repository.upsertProgram({ id, name, muscles, groupId, order }, userId);
 				revalidatePath(ROUTES.PROGRAMS);
 			} catch (error) {
-				logError(error, "saveProgram", { extra: { id, name, muscles, groupId, userId } });
+				logError(error, "saveProgram", { extra: { id, name, muscles, groupId, order, userId } });
 				throw new Error("Failed to save program");
 			}
 		},
