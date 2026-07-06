@@ -69,7 +69,7 @@ const prismaProgramRepository: ProgramRepository = {
 			sortedIds.map((id, index) =>
 				prisma.program.update({
 					where: { id, userId },
-					data: { order: index },
+					data: { order: index, groupId: groupId ?? null },
 				}),
 			),
 		);

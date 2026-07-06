@@ -247,9 +247,8 @@ export const offlineDataAdapters = {
 		updateStore((store) => ({
 			...store,
 			programs: store.programs.map((program) => {
-				if ((program.groupId ?? null) !== groupId) return program;
 				const nextOrder = sortedIds.indexOf(program.id);
-				return nextOrder === -1 ? program : { ...program, order: nextOrder };
+				return nextOrder === -1 ? program : { ...program, groupId, order: nextOrder };
 			}),
 		}));
 		await runOrQueue({

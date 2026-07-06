@@ -2,18 +2,13 @@
 
 import * as React from "react";
 
-import { move } from "@dnd-kit/helpers";
-import { DragDropProvider } from "@dnd-kit/react";
+import { useDroppable } from "@dnd-kit/react";
 import { ChevronDown } from "lucide-react";
-import { toast } from "sonner";
 
 import { ProgramRow } from "@/app/(dashboard)/programs/_components/program-row";
-import { useProgramMutations, useProgramsStore } from "@/hooks/program/store";
-import { reorderPrograms } from "@/lib/program/api";
 import { ProgramUI } from "@/lib/program/type";
-import { sectionGroupId } from "@/lib/programs/grouping";
 import { readProgramsUiPrefs, setGroupCollapsed } from "@/lib/programs/ui-preferences";
-import { cn, sameOrder } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 type ProgramGroupSectionProps = {
 	sectionId: string;
@@ -28,38 +23,21 @@ export function ProgramGroupSection({
 	programs,
 	onOpenProgram,
 }: ProgramGroupSectionProps) {
-	const { items: allPrograms } = useProgramsStore();
-	const { setItems } = useProgramMutations();
 	const [isCollapsed, setIsCollapsed] = React.useState(() =>
 		readProgramsUiPrefs().collapsedGroupIds.includes(sectionId),
 	);
+	const { ref: droppableRef, isDropTarget } = useDroppable({
+		id: sectionId,
+		type: "column",
+		accept: "item",
+		collisionPriority: 1,
+	});
 
 	const toggleCollapsed = () => {
 		const nextCollapsed = !isCollapsed;
 		setIsCollapsed(nextCollapsed);
 		setGroupCollapsed(sectionId, nextCollapsed);
 	};
-
-	function handleReorder(event: Parameters<typeof move>[1]) {
-		const reordered = move(programs, event).map((program, order) => ({ ...program, order }));
-
-		if (sameOrder(programs, reordered)) return;
-
-		setItems(
-			allPrograms.map((program) => {
-				const reorderedProgram = reordered.find((item) => item.id === program.id);
-				return reorderedProgram ?? program;
-			}),
-			{
-				persist: () =>
-					reorderPrograms(
-						sectionGroupId(sectionId),
-						reordered.map((program) => program.id),
-					),
-				onError: () => toast.error("Failed to reorder programs. Reverting."),
-			},
-		);
-	}
 
 	return (
 		<section className="space-y-3">
@@ -84,22 +62,27 @@ export function ProgramGroupSection({
 			</button>
 
 			{!isCollapsed && (
-				<DragDropProvider onDragEnd={handleReorder}>
-					<div className="flex flex-col gap-4">
-						{programs.length === 0 ? (
-							<p className="text-muted-foreground px-1 text-sm">No programs in this group yet.</p>
-						) : (
-							programs.map((program, index) => (
-								<ProgramRow
-									key={program.id}
-									program={program}
-									index={index}
-									onOpen={onOpenProgram}
-								/>
-							))
-						)}
-					</div>
-				</DragDropProvider>
+				<div
+					ref={droppableRef}
+					className={cn(
+						"flex min-h-16 flex-col gap-4 rounded-lg transition-colors",
+						isDropTarget && "bg-accent/40 ring-chart-1 ring-1 ring-inset",
+					)}
+				>
+					{programs.length === 0 ? (
+						<p className="text-muted-foreground px-1 text-sm">No programs in this group yet.</p>
+					) : (
+						programs.map((program, index) => (
+							<ProgramRow
+								key={program.id}
+								program={program}
+								index={index}
+								sectionId={sectionId}
+								onOpen={onOpenProgram}
+							/>
+						))
+					)}
+				</div>
 			)}
 		</section>
 	);
