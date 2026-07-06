@@ -17,10 +17,6 @@ import { useWorkoutSetCompletionFlash } from "@/hooks/workout/use-workout-set-co
 import { useWorkoutSetsSync } from "@/hooks/workout/use-workout-sets-sync";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
-import {
-	buildWorkoutLiveActivityPayload,
-	dismissWorkoutLiveActivity,
-} from "@/lib/mobile/workout-live-activity";
 import { finishWorkout, syncWorkoutSets } from "@/lib/workout/api";
 import { getLatestSetTimeFromWorkoutSets } from "@/lib/workout/set-time";
 import { WorkoutSetMap, WorkoutWithMappedSets } from "@/lib/workout/type";
@@ -35,7 +31,8 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 	const [isFinishing, setIsFinishing] = useState(false);
 	const confirm = useConfirm();
 	const router = useRouter();
-	const { refreshActiveWorkout, setLiveActivityExerciseSets } = useActiveWorkoutHome();
+	const { notifyWorkoutFinished, refreshActiveWorkout, setLiveActivityExerciseSets } =
+		useActiveWorkoutHome();
 	const { flash } = useWorkoutSetCompletionFlash(initialWorkout, exerciseSets);
 
 	useEffect(() => {
@@ -57,9 +54,7 @@ export function WorkoutDetail({ initialWorkout }: WorkoutDetailProps) {
 		try {
 			await syncWorkoutSets(initialWorkout.id, exerciseSets);
 			await finishWorkout(initialWorkout.id);
-			await dismissWorkoutLiveActivity(
-				buildWorkoutLiveActivityPayload(initialWorkout, exerciseSets),
-			);
+			notifyWorkoutFinished();
 			refreshActiveWorkout();
 			const endDate = getLatestSetTimeFromWorkoutSets(exerciseSets) ?? new Date();
 			toast.success(`Workout finished on ${format(endDate, "PPpp")}`);

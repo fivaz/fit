@@ -27,6 +27,8 @@ export function WorkoutLiveActivityBridge({
 	const lastWorkoutIdRef = useRef<string | null>(null);
 
 	useEffect(() => {
+		if (workout.endDate) return;
+
 		if (lastWorkoutIdRef.current !== workout.id) {
 			startedRef.current = false;
 			lastWorkoutIdRef.current = workout.id;
@@ -46,6 +48,8 @@ export function WorkoutLiveActivityBridge({
 	}, [workout, exerciseSetsOverride, onPayloadChange]);
 
 	useEffect(() => {
+		if (workout.endDate) return;
+
 		const tick = () => {
 			const exerciseSets = exerciseSetsOverride ?? workout.exerciseSets;
 			const payload = buildWorkoutLiveActivityPayload(workout, exerciseSets);
