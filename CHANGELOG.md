@@ -1,3 +1,9 @@
+## [1.27.3](https://github.com/fivaz/fit-v2/compare/v1.27.2...v1.27.3) (2026-07-06)
+
+### 🐛 Bug Fixes
+
+* **ios:** remove live activity immediately when workout finishes ([417248e](https://github.com/fivaz/fit-v2/commit/417248e582eed8d019ed219e78946fc9cdb5e00c))
+
 ## [1.27.2](https://github.com/fivaz/fit-v2/compare/v1.27.1...v1.27.2) (2026-07-02)
 
 ### 🔨 Code Refactoring
