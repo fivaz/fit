@@ -5,6 +5,7 @@ import { isNetworkAvailable } from "@/lib/mobile/network";
 import { isOfflineEnabled } from "@/lib/offline/config";
 import { ProgramUI } from "@/lib/program/type";
 import { ProgramWithExercises } from "@/lib/program/type";
+import { ProgramGroupUI } from "@/lib/program-group/type";
 import { WorkoutSetMap } from "@/lib/workout/type";
 import { WorkoutWithMappedSets } from "@/lib/workout/type";
 
@@ -20,6 +21,7 @@ type PendingOperation = {
 
 type OfflineStore = {
 	programs: ProgramUI[];
+	programGroups: ProgramGroupUI[];
 	exercises: ExerciseUI[];
 	bodyMetrics: BodyMetricsUI | null;
 	workoutSetsByWorkoutId: Record<string, WorkoutSetMap>;
@@ -30,6 +32,7 @@ const OFFLINE_STORE_KEY = "fit:offline-store:v1";
 
 const emptyStore: OfflineStore = {
 	programs: [],
+	programGroups: [],
 	exercises: [],
 	bodyMetrics: null,
 	workoutSetsByWorkoutId: {},
@@ -74,6 +77,7 @@ function readStore(): OfflineStore {
 
 		return {
 			programs: parsed.programs ?? [],
+			programGroups: parsed.programGroups ?? [],
 			exercises: parsed.exercises ?? [],
 			bodyMetrics: parsed.bodyMetrics ?? null,
 			workoutSetsByWorkoutId: parsed.workoutSetsByWorkoutId ?? {},
@@ -201,6 +205,7 @@ export const offlineDataAdapters = {
 					muscles: program.muscles,
 					imageUrl: program.imageUrl,
 					order: program.order,
+					groupId: program.groupId,
 				}),
 				exercises: program.exercises.map(({ order: _order, ...exercise }) => exercise),
 			}));
@@ -231,24 +236,25 @@ export const offlineDataAdapters = {
 		});
 	},
 
-	async reorderPrograms(sortedIds: string[]) {
+	async reorderPrograms(groupId: string | null, sortedIds: string[]) {
 		if (!isOfflineEnabled()) {
 			await apiFetch<void>("/api/programs/reorder", {
 				method: "PATCH",
-				body: { sortedIds },
+				body: { groupId, sortedIds },
 			});
 			return;
 		}
 		updateStore((store) => ({
 			...store,
-			programs: store.programs
-				.map((program) => ({ ...program, order: sortedIds.indexOf(program.id) }))
-				.sort((a, b) => a.order - b.order),
+			programs: store.programs.map((program) => {
+				const nextOrder = sortedIds.indexOf(program.id);
+				return nextOrder === -1 ? program : { ...program, groupId, order: nextOrder };
+			}),
 		}));
 		await runOrQueue({
 			url: "/api/programs/reorder",
 			method: "PATCH",
-			body: { sortedIds },
+			body: { groupId, sortedIds },
 		});
 	},
 
@@ -263,6 +269,63 @@ export const offlineDataAdapters = {
 		}));
 		await runOrQueue({
 			url: `/api/programs/${id}`,
+			method: "DELETE",
+		});
+	},
+
+	getProgramGroupsLocal() {
+		return readStore().programGroups;
+	},
+
+	setProgramGroupsLocal(programGroups: ProgramGroupUI[]) {
+		if (!isOfflineEnabled()) return;
+		updateStore((store) => ({ ...store, programGroups }));
+	},
+
+	async getProgramGroups() {
+		if (!isOfflineEnabled()) {
+			return apiFetch<ProgramGroupUI[]>("/api/program-groups");
+		}
+		await flushPendingOperations();
+		try {
+			const programGroups = await apiFetch<ProgramGroupUI[]>("/api/program-groups");
+			this.setProgramGroupsLocal(programGroups);
+			return programGroups;
+		} catch {
+			return this.getProgramGroupsLocal();
+		}
+	},
+
+	async saveProgramGroup(group: ProgramGroupUI) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>("/api/program-groups", { method: "POST", body: group });
+			return;
+		}
+		updateStore((store) => ({
+			...store,
+			programGroups: upsertById(store.programGroups, group),
+		}));
+		await runOrQueue({
+			url: "/api/program-groups",
+			method: "POST",
+			body: group,
+		});
+	},
+
+	async deleteProgramGroup(id: string) {
+		if (!isOfflineEnabled()) {
+			await apiFetch<void>(`/api/program-groups/${id}`, { method: "DELETE" });
+			return;
+		}
+		updateStore((store) => ({
+			...store,
+			programGroups: removeById(store.programGroups, id),
+			programs: store.programs.map((program) =>
+				program.groupId === id ? { ...program, groupId: null } : program,
+			),
+		}));
+		await runOrQueue({
+			url: `/api/program-groups/${id}`,
 			method: "DELETE",
 		});
 	},

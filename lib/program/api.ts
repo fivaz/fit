@@ -13,8 +13,8 @@ export function saveProgram(program: ProgramUI) {
 	return offlineDataAdapters.saveProgram(program);
 }
 
-export function reorderPrograms(sortedIds: string[]) {
-	return offlineDataAdapters.reorderPrograms(sortedIds);
+export function reorderPrograms(groupId: string | null, sortedIds: string[]) {
+	return offlineDataAdapters.reorderPrograms(groupId, sortedIds);
 }
 
 export function deleteProgram(id: string) {

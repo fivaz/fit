@@ -4,8 +4,10 @@ import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
 import { dragToTarget, waitForLabeledItem } from "@/tests/e2e/helpers/dnd";
 import { createProgram } from "@/tests/e2e/helpers/entities";
 
-function programRowDragHandle(page: import("@playwright/test").Page, programName: string) {
-	return page.getByRole("button", { name: `Drag ${programName} to reorder` });
+function programDragHandle(page: import("@playwright/test").Page, programName: string) {
+	return page.getByRole("button", {
+		name: `Drag ${programName} to reorder or move to another group`,
+	});
 }
 
 test.describe("Program Reorder", () => {
@@ -36,14 +38,21 @@ test.describe("Program Reorder", () => {
 		expect(beforeSecondIndex).toBeGreaterThanOrEqual(0);
 		expect(beforeFirstIndex).not.toBe(beforeSecondIndex);
 
-		const firstProgramHandle = programRowDragHandle(page, firstProgram);
-		const secondProgramHandle = programRowDragHandle(page, secondProgram);
+		const firstProgramHandle = programDragHandle(page, firstProgram);
+		const secondProgramHandle = programDragHandle(page, secondProgram);
 
 		await test.step("Reorder programs and verify persisted order", async () => {
+			const reorderResponse = page.waitForResponse(
+				(response) =>
+					response.url().includes("/api/programs/reorder") &&
+					response.request().method() === "PATCH" &&
+					response.ok(),
+				{ timeout: 15_000 },
+			);
+
 			await dragToTarget(page, firstProgramHandle, secondProgramHandle);
-			await expect(page.getByRole("button", { name: "Create program" })).toBeEnabled({
-				timeout: 15_000,
-			});
+			await reorderResponse;
+
 			await page.reload();
 			await waitForLabeledItem(page, "button", /Open program /, firstProgram);
 			await waitForLabeledItem(page, "button", /Open program /, secondProgram);
@@ -59,9 +68,7 @@ test.describe("Program Reorder", () => {
 
 		expect(afterFirstIndex).toBeGreaterThanOrEqual(0);
 		expect(afterSecondIndex).toBeGreaterThanOrEqual(0);
-		expect(afterFirstIndex).not.toBe(afterSecondIndex);
-		const beforeDirection = Math.sign(beforeFirstIndex - beforeSecondIndex);
-		const afterDirection = Math.sign(afterFirstIndex - afterSecondIndex);
-		expect(afterDirection).toBe(-beforeDirection);
+		expect(afterFirstIndex).toBeGreaterThan(beforeFirstIndex);
+		expect(afterSecondIndex).toBeLessThan(beforeSecondIndex);
 	});
 });

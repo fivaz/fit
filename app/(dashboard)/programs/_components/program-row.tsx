@@ -13,11 +13,18 @@ import { cn } from "@/lib/utils";
 type ProgramRowProps = {
 	program: ProgramUI;
 	index: number;
+	sectionId: string;
 	onOpen: (programId: string) => void;
 };
 
-export function ProgramRow({ program, index, onOpen }: ProgramRowProps) {
-	const { ref, handleRef, isDragging } = useSortable({ id: program.id, index });
+export function ProgramRow({ program, index, sectionId, onOpen }: ProgramRowProps) {
+	const { ref, handleRef, isDragging } = useSortable({
+		id: program.id,
+		index,
+		group: sectionId,
+		type: "item",
+		accept: "item",
+	});
 
 	return (
 		<div ref={ref} className={cn("relative block", isDragging && "z-50")}>
@@ -31,7 +38,7 @@ export function ProgramRow({ program, index, onOpen }: ProgramRowProps) {
 					ref={handleRef}
 					type="button"
 					className="text-primary absolute top-0 left-0 z-30 cursor-grab p-3 hover:text-orange-600 active:cursor-grabbing"
-					aria-label={`Drag ${program.name} to reorder`}
+					aria-label={`Drag ${program.name} to reorder or move to another group`}
 				>
 					<GripVertical className="size-5" />
 				</button>

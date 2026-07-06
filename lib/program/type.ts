@@ -9,6 +9,7 @@ export const programUISelect = {
 		muscles: true,
 		imageUrl: true,
 		order: true,
+		groupId: true,
 	},
 } satisfies Prisma.ProgramDefaultArgs;
 
@@ -46,15 +47,19 @@ export function buildEmptyProgram(): ProgramUI {
 		muscles: [],
 		order: 0,
 		imageUrl: null,
+		groupId: null,
 	};
 }
 
 export function formToProgram(formData: FormData): ProgramUI {
+	const groupId = (formData.get("groupId") as string) || null;
+
 	return {
 		id: (formData.get("id") as string) || "",
 		name: (formData.get("name") as string) || "",
 		muscles: formData.getAll("muscles") as MuscleGroup[],
 		order: 0,
 		imageUrl: null,
+		groupId: groupId || null,
 	};
 }

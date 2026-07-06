@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import * as z from "zod";
 
 import { SelectMuscles } from "@/components/select-muscles";
+import { SelectProgramGroup } from "@/components/select-program-group";
 import { Button } from "@/components/ui/button";
 import { DrawerClose, DrawerFooter } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
@@ -17,12 +18,12 @@ const formSchema = z.object({
 	muscles: z.array(z.string()).min(1, "Select at least one muscle group"),
 });
 
-type ProgramFormProps = {
+type ProgramFormManualProps = {
 	program: ProgramUI;
 	onClose: () => void;
 };
 
-export function ProgramForm({ program, onClose }: ProgramFormProps) {
+export function ProgramFormManual({ program, onClose }: ProgramFormManualProps) {
 	const { addItem, updateItem } = useProgramMutations();
 	const [errors, setErrors] = useState<{ name?: string; muscles?: string }>({});
 	const isEdit = !!program.id;
@@ -84,6 +85,8 @@ export function ProgramForm({ program, onClose }: ProgramFormProps) {
 				<SelectMuscles defaultValue={program.muscles} />
 				{errors.muscles && <p className="text-destructive text-sm">{errors.muscles}</p>}
 			</div>
+
+			<SelectProgramGroup defaultValue={program.groupId} />
 
 			<DrawerFooter className="px-0">
 				<Button type="submit" className="w-full">

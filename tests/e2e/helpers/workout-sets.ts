@@ -6,6 +6,18 @@ type WorkoutSetValues = {
 	time: string;
 };
 
+function formatSetClockTime(date: Date): string {
+	const pad = (value: number) => String(value).padStart(2, "0");
+	return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** Set clock times anchored to now so finish-workout duration stays positive at any hour. */
+export function recentSetTimes(minutesApart: number): [string, string] {
+	const first = new Date();
+	const second = new Date(first.getTime() + minutesApart * 60_000);
+	return [formatSetClockTime(first), formatSetClockTime(second)];
+}
+
 export async function fillWorkoutSet(page: Page, setIndex: number, values: WorkoutSetValues) {
 	const repsInput = page.getByRole("spinbutton").nth(setIndex * 2);
 	const weightInput = page.getByRole("spinbutton").nth(setIndex * 2 + 1);

@@ -15,7 +15,7 @@ test.describe("Program CRUD", () => {
 			await createProgram(page, programName);
 			await expect(page.getByRole("button", { name: `Open program ${programName}` })).toBeVisible();
 			await page.getByRole("button", { name: `Open program ${programName}` }).click();
-			await expect(page).toHaveURL(/\/programs\/[^/?#]+$/);
+			await expect(page).toHaveURL(/\/programs\?id=[^&]+$/);
 			await expect(page.getByRole("heading", { name: programName })).toBeVisible();
 		});
 
