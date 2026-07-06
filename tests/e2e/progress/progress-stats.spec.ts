@@ -7,7 +7,7 @@ import {
 	startWorkoutFromProgramPage,
 	waitForWorkoutSynced,
 } from "@/tests/e2e/helpers/program-workout";
-import { fillWorkoutSet } from "@/tests/e2e/helpers/workout-sets";
+import { fillWorkoutSet, recentSetTimes } from "@/tests/e2e/helpers/workout-sets";
 
 async function waitForProgressStats(page: import("@playwright/test").Page) {
 	const statsResponse = page.waitForResponse(
@@ -62,9 +62,10 @@ test.describe("Progress stats cards", () => {
 		});
 
 		await test.step("Log two sets with known volume and rest gap", async () => {
+			const [firstSetTime, secondSetTime] = recentSetTimes(3);
 			await startWorkoutFromProgramPage(page, programName);
-			await fillWorkoutSet(page, 0, { reps: "10", weight: "50", time: "08:00" });
-			await fillWorkoutSet(page, 1, { reps: "8", weight: "50", time: "08:03" });
+			await fillWorkoutSet(page, 0, { reps: "10", weight: "50", time: firstSetTime });
+			await fillWorkoutSet(page, 1, { reps: "8", weight: "50", time: secondSetTime });
 		});
 
 		await test.step("Sync and finish workout", async () => {

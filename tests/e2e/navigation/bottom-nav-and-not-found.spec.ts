@@ -1,4 +1,4 @@
-import { ROUTES } from "@/lib/consts";
+import { programsDetailHref } from "@/lib/programs/navigation";
 import { expect, test } from "@/tests/e2e/fixtures";
 import { signUpAndLoginTestUser } from "@/tests/e2e/helpers/auth";
 import { expectHomePageVisible } from "@/tests/e2e/helpers/home";
@@ -58,8 +58,9 @@ test.describe("Not found routes", () => {
 	test("Invalid program id shows not-found UI when authenticated", async ({ page, request }) => {
 		await signUpAndLoginTestUser(page, request, "not-found-routes");
 
-		await page.goto(`${ROUTES.PROGRAMS}/program-id-that-does-not-exist-0000`);
-		await expect(page).toHaveURL(/\/programs\/program-id-that-does-not-exist-0000$/);
+		const invalidProgramHref = programsDetailHref("program-id-that-does-not-exist-0000");
+		await page.goto(invalidProgramHref);
+		await expect(page).toHaveURL(invalidProgramHref);
 		await expect(page.getByText("Program not found")).toBeVisible();
 		await expect(page.getByRole("button", { name: "Go Back" })).toBeVisible();
 	});
