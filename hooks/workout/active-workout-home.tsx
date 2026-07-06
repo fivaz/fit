@@ -39,6 +39,8 @@ type ActiveWorkoutHomeState = {
 	hasActiveWorkout: boolean;
 	isActiveWorkoutVisible: boolean;
 	refreshActiveWorkout: () => void;
+	/** Clears active-workout state and dismisses the Live Activity after a local finish. */
+	notifyWorkoutFinished: () => void;
 	/** Pushes in-session set edits from the workout screen into the Live Activity bridge. */
 	setLiveActivityExerciseSets: (exerciseSets: WorkoutSetMap | null) => void;
 };
@@ -79,6 +81,17 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 
 	const refreshActiveWorkout = useCallback(() => {
 		setRefreshToken((token) => token + 1);
+	}, []);
+
+	const notifyWorkoutFinished = useCallback(() => {
+		void dismissWorkoutLiveActivity(lastLiveActivityPayloadRef.current ?? undefined);
+		lastLiveActivityPayloadRef.current = null;
+		hadActiveWorkoutRef.current = false;
+		setHasActiveWorkout(false);
+		setActiveWorkoutId(null);
+		setLiveActivityExerciseSetsState(null);
+		setLiveActivityWorkoutLoad(null);
+		setHomeWorkoutFetchState(initialHomeWorkoutFetchState);
 	}, []);
 
 	const setLiveActivityExerciseSets = useCallback((exerciseSets: WorkoutSetMap | null) => {
@@ -148,7 +161,9 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 		) {
 			return null;
 		}
-		return liveActivityWorkoutLoad.workout;
+		const workout = liveActivityWorkoutLoad.workout;
+		if (!workout || workout.endDate) return null;
+		return workout;
 	}, [activeWorkoutId, liveActivityWorkoutLoad, refreshToken]);
 
 	useEffect(() => {
@@ -167,7 +182,9 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 		if (!isHome) return null;
 		if (!activeWorkoutId) return null;
 		if (isHomeWorkoutLoading) return undefined;
-		return homeWorkoutFetchState.workout;
+		const workout = homeWorkoutFetchState.workout;
+		if (!workout || workout.endDate) return null;
+		return workout;
 	}, [activeWorkoutId, homeWorkoutFetchState.workout, isHome, isHomeWorkoutLoading]);
 
 	const value = useMemo(
@@ -176,9 +193,17 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 			hasActiveWorkout,
 			isActiveWorkoutVisible: isHome && Boolean(activeWorkout),
 			refreshActiveWorkout,
+			notifyWorkoutFinished,
 			setLiveActivityExerciseSets,
 		}),
-		[activeWorkout, hasActiveWorkout, isHome, refreshActiveWorkout, setLiveActivityExerciseSets],
+		[
+			activeWorkout,
+			hasActiveWorkout,
+			isHome,
+			notifyWorkoutFinished,
+			refreshActiveWorkout,
+			setLiveActivityExerciseSets,
+		],
 	);
 
 	return (
