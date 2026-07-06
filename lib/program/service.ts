@@ -20,8 +20,11 @@ type ProgramWithExercisesRaw = Prisma.ProgramGetPayload<typeof programWithExerci
 export interface ProgramRepository {
 	getPrograms(userId: string): Promise<ProgramUI[]>;
 	getProgramById(id: string, userId: string): Promise<ProgramWithExercisesRaw | null>;
-	upsertProgram(program: Pick<ProgramUI, "id" | "name" | "muscles">, userId: string): Promise<void>;
-	reorderPrograms(sortedIds: string[], userId: string): Promise<void>;
+	upsertProgram(
+		program: Pick<ProgramUI, "id" | "name" | "muscles" | "groupId">,
+		userId: string,
+	): Promise<void>;
+	reorderPrograms(groupId: string | null, sortedIds: string[], userId: string): Promise<void>;
 	deleteProgram(id: string, userId: string): Promise<void>;
 	hasOwnedProgram(programId: string, userId: string): Promise<boolean>;
 	replaceProgramExercises(programId: string, exerciseIds: string[]): Promise<void>;
@@ -41,18 +44,33 @@ const prismaProgramRepository: ProgramRepository = {
 			...programWithExercisesArgs,
 		});
 	},
-	async upsertProgram({ id, name, muscles }, userId) {
+	async upsertProgram({ id, name, muscles, groupId }, userId) {
+		const programCount = await prisma.program.count({
+			where: { userId, groupId: groupId ?? null },
+		});
+
 		await prisma.program.upsert({
 			where: { id: id || "new-id", userId },
-			update: { name, muscles },
-			create: { id, name, muscles, userId },
+			update: { name, muscles, groupId: groupId ?? null },
+			create: {
+				id,
+				name,
+				muscles,
+				groupId: groupId ?? null,
+				userId,
+				order: programCount,
+			},
 		});
 	},
-	async reorderPrograms(sortedIds, userId) {
+	async reorderPrograms(groupId, sortedIds, userId) {
 		await prisma.$transaction(
 			sortedIds.map((id, index) =>
 				prisma.program.update({
-					where: { id, userId },
+					where: {
+						id,
+						userId,
+						groupId: groupId ?? null,
+					},
 					data: { order: index },
 				}),
 			),
@@ -94,23 +112,23 @@ export function createProgramService(repository: ProgramRepository) {
 				})),
 			};
 		},
-		async saveProgram({ id, name, muscles }: ProgramUI, userId: string) {
+		async saveProgram({ id, name, muscles, groupId }: ProgramUI, userId: string) {
 			await devDelay();
 			try {
-				await repository.upsertProgram({ id, name, muscles }, userId);
+				await repository.upsertProgram({ id, name, muscles, groupId }, userId);
 				revalidatePath(ROUTES.PROGRAMS);
 			} catch (error) {
-				logError(error, "saveProgram", { extra: { id, name, muscles, userId } });
+				logError(error, "saveProgram", { extra: { id, name, muscles, groupId, userId } });
 				throw new Error("Failed to save program");
 			}
 		},
-		async reorderPrograms(sortedIds: string[], userId: string) {
+		async reorderPrograms(groupId: string | null, sortedIds: string[], userId: string) {
 			await devDelay();
 			try {
-				await repository.reorderPrograms(sortedIds, userId);
+				await repository.reorderPrograms(groupId, sortedIds, userId);
 				revalidatePath(ROUTES.PROGRAMS);
 			} catch (error) {
-				logError(error, "reorderPrograms", { extra: { sortedIds, userId } });
+				logError(error, "reorderPrograms", { extra: { groupId, sortedIds, userId } });
 				throw new Error("Failed to update program order");
 			}
 		},

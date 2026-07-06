@@ -24,6 +24,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   programs      Program[]
+  programGroups ProgramGroup[]
   exercises     Exercise[]
   workouts      Workout[]
   bodyMetrics   BodyMetric[]
@@ -71,12 +72,32 @@ enum MuscleGroup {
   traps
 }
 
+model ProgramGroup {
+  id     String @id @default(uuid())
+  name   String
+  order  Int    @default(0)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  programs Program[]
+
+  @@index([userId])
+  @@map("program_group")
+}
+
 model Program {
   id       String        @id @default(uuid())
   name     String
   muscles  MuscleGroup[]
   order    Int           @default(0)
   imageUrl String?
+
+  groupId String?
+  group   ProgramGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
 
   // Association with User
   userId String

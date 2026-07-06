@@ -51,6 +51,7 @@ async function main() {
 	await safeDelete(() => prisma.programToExercise.deleteMany());
 	await safeDelete(() => prisma.exercise.deleteMany());
 	await safeDelete(() => prisma.program.deleteMany());
+	await safeDelete(() => prisma.programGroup.deleteMany());
 	await safeDelete(() => prisma.bodyMetric.deleteMany());
 	await safeDelete(() => prisma.account.deleteMany());
 	await safeDelete(() => prisma.user.deleteMany());
