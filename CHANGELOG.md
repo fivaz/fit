@@ -1,3 +1,20 @@
+## [1.28.0](https://github.com/fivaz/fit-v2/compare/v1.27.3...v1.28.0) (2026-07-06)
+
+### ✨ Features
+
+* add automatic and manual views to create program drawer ([65e8189](https://github.com/fivaz/fit-v2/commit/65e81899a2ba15052b31644d8e93e50c1411bc65))
+* add collapsible program groups to programs page ([d130f95](https://github.com/fivaz/fit-v2/commit/d130f95460d94a805a675a70f7ed3b557c9d8368))
+
+### 🐛 Bug Fixes
+
+* **auth:** pass resolveBetterAuthUrl as Better Auth baseURL ([c5e7c50](https://github.com/fivaz/fit-v2/commit/c5e7c504312898fbe89df6949e99765fc6e2e563))
+* enable drag-and-drop of programs between groups ([68898dc](https://github.com/fivaz/fit-v2/commit/68898dc05380cfe765da7d36a42cadaab23f3bfd))
+* load programs and groups independently on programs page ([2b394c9](https://github.com/fivaz/fit-v2/commit/2b394c991d90b7ef263ef5c5574bf53949c13d4f))
+
+### ✅ Tests
+
+* **e2e:** fix program groups and routing regressions ([a83116c](https://github.com/fivaz/fit-v2/commit/a83116c673633e64ce66f7e3c4096392da6a66b7))
+
 ## [1.27.3](https://github.com/fivaz/fit-v2/compare/v1.27.2...v1.27.3) (2026-07-06)
 
 ### 🐛 Bug Fixes
