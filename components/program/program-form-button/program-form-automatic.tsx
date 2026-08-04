@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 
-import { SparklesIcon } from "lucide-react";
+import { Loader2Icon, SparklesIcon } from "lucide-react";
 import { toast } from "sonner";
 import * as z from "zod";
 
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { DrawerClose, DrawerFooter } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useProgramMutations } from "@/hooks/program/store";
+import { generatePrograms } from "@/lib/program/api";
 
 const descriptionSchema = z.object({
 	description: z.string().min(10, "Please describe your workout in at least 10 characters"),
@@ -17,10 +19,19 @@ type ProgramFormAutomaticProps = {
 	onClose: () => void;
 };
 
-export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
-	const [error, setError] = useState<string>();
+function formatSuccessMessage(count: number, names: string[]) {
+	if (count <= 3) {
+		return `Created ${names.join(", ")}.`;
+	}
+	return `Created ${count} programs successfully.`;
+}
 
-	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
+	const { addItem } = useProgramMutations();
+	const [error, setError] = useState<string>();
+	const [isGenerating, setIsGenerating] = useState(false);
+
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const formData = new FormData(e.currentTarget);
 		const description = String(formData.get("description") ?? "").trim();
@@ -32,8 +43,35 @@ export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
 		}
 
 		setError(undefined);
-		onClose();
-		toast.info("AI program generation is coming soon.");
+		setIsGenerating(true);
+
+		try {
+			const { programs } = await generatePrograms(description);
+
+			for (const program of programs) {
+				addItem({
+					id: program.id,
+					name: program.name,
+					muscles: program.muscles,
+					order: program.order,
+					imageUrl: program.imageUrl,
+					groupId: program.groupId,
+				});
+			}
+
+			onClose();
+			toast.success(
+				formatSuccessMessage(
+					programs.length,
+					programs.map((program) => program.name),
+				),
+			);
+		} catch (err) {
+			const message = err instanceof Error ? err.message : "Failed to generate program.";
+			toast.error(message);
+		} finally {
+			setIsGenerating(false);
+		}
 	};
 
 	return (
@@ -56,16 +94,24 @@ export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
 					placeholder="e.g. A 4-day upper/lower split focused on building strength with compound lifts. I have access to a full gym and want 60-minute sessions."
 					className={error ? "border-destructive" : ""}
 					rows={6}
+					disabled={isGenerating}
 				/>
 				{error && <p className="text-destructive text-sm">{error}</p>}
 			</div>
 
 			<DrawerFooter className="px-0">
-				<Button type="submit" className="w-full">
-					Generate Program
+				<Button type="submit" className="w-full" disabled={isGenerating}>
+					{isGenerating ? (
+						<>
+							<Loader2Icon className="size-4 animate-spin" aria-hidden />
+							Generating...
+						</>
+					) : (
+						"Generate Program"
+					)}
 				</Button>
 				<DrawerClose asChild>
-					<Button variant="outline" className="w-full">
+					<Button variant="outline" className="w-full" disabled={isGenerating}>
 						Cancel
 					</Button>
 				</DrawerClose>

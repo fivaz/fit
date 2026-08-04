@@ -236,6 +236,13 @@ export const offlineDataAdapters = {
 		});
 	},
 
+	async generatePrograms(description: string) {
+		return apiFetch<{ programs: ProgramWithExercises[] }>("/api/programs/generate", {
+			method: "POST",
+			body: { description },
+		});
+	},
+
 	async reorderPrograms(groupId: string | null, sortedIds: string[]) {
 		if (!isOfflineEnabled()) {
 			await apiFetch<void>("/api/programs/reorder", {

@@ -2,9 +2,10 @@ import { revalidatePath } from "next/cache";
 
 import { ROUTES } from "@/lib/consts";
 import { mapExerciseToUI } from "@/lib/exercise/utils";
-import { Prisma } from "@/lib/generated/prisma/client";
+import { MuscleGroup, Prisma } from "@/lib/generated/prisma/client";
 import { logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { SanitizedProgram } from "@/lib/program/generate-schema";
 import {
 	ProgramUI,
 	programUISelect,
@@ -28,6 +29,10 @@ export interface ProgramRepository {
 	deleteProgram(id: string, userId: string): Promise<void>;
 	hasOwnedProgram(programId: string, userId: string): Promise<boolean>;
 	replaceProgramExercises(programId: string, exerciseIds: string[]): Promise<void>;
+	createProgramsWithExercises(
+		programs: Array<{ id: string; name: string; muscles: MuscleGroup[]; exerciseIds: string[] }>,
+		userId: string,
+	): Promise<string[]>;
 }
 
 const prismaProgramRepository: ProgramRepository = {
@@ -88,6 +93,33 @@ const prismaProgramRepository: ProgramRepository = {
 				data: exerciseIds.map((exerciseId, index) => ({ programId, exerciseId, order: index })),
 			}),
 		]);
+	},
+	async createProgramsWithExercises(programs, userId) {
+		await prisma.$transaction(async (tx) => {
+			for (const program of programs) {
+				await tx.program.upsert({
+					where: { id: program.id, userId },
+					update: { name: program.name, muscles: program.muscles },
+					create: {
+						id: program.id,
+						name: program.name,
+						muscles: program.muscles,
+						userId,
+					},
+				});
+				await tx.programToExercise.deleteMany({ where: { programId: program.id } });
+				if (program.exerciseIds.length > 0) {
+					await tx.programToExercise.createMany({
+						data: program.exerciseIds.map((exerciseId, index) => ({
+							programId: program.id,
+							exerciseId,
+							order: index,
+						})),
+					});
+				}
+			}
+		});
+		return programs.map((program) => program.id);
 	},
 };
 
@@ -153,6 +185,38 @@ export function createProgramService(repository: ProgramRepository) {
 				throw new Error("Failed to update program exercises");
 			}
 		},
+		async createGeneratedPrograms(programs: SanitizedProgram[], userId: string) {
+			await devDelay();
+			try {
+				const programsWithIds = programs.map((program) => ({
+					id: crypto.randomUUID(),
+					name: program.name,
+					muscles: program.muscles,
+					exerciseIds: program.exerciseIds,
+				}));
+
+				const programIds = await repository.createProgramsWithExercises(programsWithIds, userId);
+				revalidatePath(ROUTES.PROGRAMS);
+
+				const createdPrograms: ProgramWithExercises[] = [];
+				for (const id of programIds) {
+					const program = await repository.getProgramById(id, userId);
+					if (!program) continue;
+					createdPrograms.push({
+						...program,
+						exercises: program.exercises.map(({ exercise, order }) => ({
+							...mapExerciseToUI(exercise),
+							order,
+						})),
+					});
+				}
+
+				return createdPrograms;
+			} catch (error) {
+				logError(error, "createGeneratedPrograms", { extra: { userId, count: programs.length } });
+				throw new Error("Failed to save generated programs");
+			}
+		},
 	};
 }
 
@@ -164,3 +228,4 @@ export const saveProgram = programService.saveProgram;
 export const reorderPrograms = programService.reorderPrograms;
 export const deleteProgram = programService.deleteProgram;
 export const updateProgramExercises = programService.updateProgramExercises;
+export const createGeneratedPrograms = programService.createGeneratedPrograms;

@@ -103,6 +103,11 @@ If you want social login enabled locally, also set:
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
 
+To enable **AI coach program generation** (Create Program → AI coach), set:
+
+- `GOOGLE_GENERATIVE_AI_API_KEY` — from [Google AI Studio](https://aistudio.google.com/apikey)
+- `AI_PROGRAM_MODEL` (optional) — defaults to `gemini-2.0-flash`
+
 ### 4) Prepare database
 
 ```bash

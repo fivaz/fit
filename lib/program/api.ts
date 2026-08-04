@@ -13,6 +13,10 @@ export function saveProgram(program: ProgramUI) {
 	return offlineDataAdapters.saveProgram(program);
 }
 
+export function generatePrograms(description: string) {
+	return offlineDataAdapters.generatePrograms(description);
+}
+
 export function reorderPrograms(groupId: string | null, sortedIds: string[]) {
 	return offlineDataAdapters.reorderPrograms(groupId, sortedIds);
 }
