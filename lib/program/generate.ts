@@ -1,4 +1,4 @@
-import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 
 import { ExerciseCatalogItem } from "@/lib/exercise/catalog";
@@ -13,7 +13,7 @@ import {
 
 import "server-only";
 
-const DEFAULT_MODEL = "gemini-2.0-flash";
+const DEFAULT_MODEL = "gpt-4o-mini";
 
 export class ProgramGenerationError extends Error {
 	constructor(
@@ -25,8 +25,8 @@ export class ProgramGenerationError extends Error {
 	}
 }
 
-function assertGoogleApiKeyConfigured(): void {
-	if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+function assertOpenAiApiKeyConfigured(): void {
+	if (!process.env.OPENAI_API_KEY) {
 		throw new ProgramGenerationError("AI program generation is not configured", 503);
 	}
 }
@@ -39,7 +39,7 @@ async function callModel(description: string, catalog: ExerciseCatalogItem[]) {
 	const system = buildProgramGenerationSystemPrompt(catalog);
 
 	return generateObject({
-		model: google(getModelId()),
+		model: openai(getModelId()),
 		schema: generatedProgramsSchema,
 		schemaName: "WorkoutPrograms",
 		schemaDescription: "One or more workout programs with exercise IDs from the catalog",
@@ -56,7 +56,7 @@ export async function generateProgramsFromDescription(
 		throw new ProgramGenerationError("Add exercises to your library first", 400);
 	}
 
-	assertGoogleApiKeyConfigured();
+	assertOpenAiApiKeyConfigured();
 
 	const catalogIdSet = new Set(catalog.map((exercise) => exercise.id));
 

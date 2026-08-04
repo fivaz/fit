@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@ai-sdk/google':
-        specifier: ^4.0.33
-        version: 4.0.33(zod@4.3.5)
+      '@ai-sdk/openai':
+        specifier: ^4.0.29
+        version: 4.0.29(zod@4.3.5)
       '@aparajita/capacitor-secure-storage':
         specifier: ^8.0.0
         version: 8.0.0
@@ -267,8 +267,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@4.0.33':
-    resolution: {integrity: sha512-xj3rhHYT3Dj8Xixjo4ZqGPqXz2GkubrikoqSN5IOyM9pEmNasSw303stcV7CeW8VS9BJX4oqbY5ohSFclDckYg==}
+  '@ai-sdk/openai@4.0.29':
+    resolution: {integrity: sha512-CtwkH7S0IzCKryZ+yLSuqOR0UhzzaNT1vyVlGvfiba43qQvyHUiYFS5/ayJRXiVOWJjUkSfqfKLBZ8LI+SqqgQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -6643,7 +6643,7 @@ snapshots:
       '@vercel/oidc': 3.2.0
       zod: 4.3.5
 
-  '@ai-sdk/google@4.0.33(zod@4.3.5)':
+  '@ai-sdk/openai@4.0.29(zod@4.3.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.5
       '@ai-sdk/provider-utils': 5.0.20(zod@4.3.5)

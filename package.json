@@ -42,7 +42,7 @@
 		"agent": "agent worker start"
 	},
 	"dependencies": {
-		"@ai-sdk/google": "^4.0.33",
+		"@ai-sdk/openai": "^4.0.29",
 		"@aparajita/capacitor-secure-storage": "^8.0.0",
 		"@capacitor/app": "^8.1.0",
 		"@capacitor/core": "^8.3.2",

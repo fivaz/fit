@@ -105,8 +105,8 @@ If you want social login enabled locally, also set:
 
 To enable **AI coach program generation** (Create Program → AI coach), set:
 
-- `GOOGLE_GENERATIVE_AI_API_KEY` — from [Google AI Studio](https://aistudio.google.com/apikey)
-- `AI_PROGRAM_MODEL` (optional) — defaults to `gemini-2.0-flash`
+- `OPENAI_API_KEY` — from [OpenAI](https://platform.openai.com/api-keys)
+- `AI_PROGRAM_MODEL` (optional) — defaults to `gpt-4o-mini`
 
 ### 4) Prepare database
 
