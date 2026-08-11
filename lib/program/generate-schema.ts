@@ -15,7 +15,9 @@ export const generatedProgramSchema = z.object({
 		.array(z.string().min(1))
 		.min(3)
 		.max(20)
-		.describe("Ordered exercise IDs from the provided catalog only"),
+		.describe(
+			"Ordered exercise IDs from the catalog only; honor any requested count and keep the same length across all programs in a split",
+		),
 });
 
 export const generatedProgramsSchema = z.object({
