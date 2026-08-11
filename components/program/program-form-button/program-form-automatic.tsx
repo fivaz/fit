@@ -105,6 +105,12 @@ export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
 					className={error ? "border-destructive" : ""}
 					rows={6}
 					disabled={isGenerating}
+					onKeyDown={(e) => {
+						if (e.key === "Enter" && !e.shiftKey && !isGenerating) {
+							e.preventDefault();
+							e.currentTarget.form?.requestSubmit();
+						}
+					}}
 				/>
 				{error && <p className="text-destructive text-sm">{error}</p>}
 			</div>
