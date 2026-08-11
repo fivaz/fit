@@ -19,6 +19,14 @@ export const generatedProgramSchema = z.object({
 });
 
 export const generatedProgramsSchema = z.object({
+	groupName: z
+		.string()
+		.min(2)
+		.max(80)
+		.nullable()
+		.describe(
+			"Name for the program group when returning multiple programs; use null for a single program",
+		),
 	programs: z.array(generatedProgramSchema).min(1).max(7),
 });
 
@@ -31,13 +39,19 @@ export type SanitizedProgram = {
 	exerciseIds: string[];
 };
 
+export type SanitizedGenerationResult = {
+	groupName: string | null;
+	programs: SanitizedProgram[];
+};
+
 export const MIN_EXERCISES_PER_PROGRAM = 3;
+export const DEFAULT_GROUP_NAME = "AI Generated Split";
 
 export function sanitizeGeneratedPrograms(
 	raw: GeneratedPrograms,
 	catalogIdSet: Set<string>,
-): SanitizedProgram[] {
-	return raw.programs.map((program) => {
+): SanitizedGenerationResult {
+	const programs = raw.programs.map((program) => {
 		const seen = new Set<string>();
 		const exerciseIds = program.exerciseIds.filter((id) => {
 			if (!catalogIdSet.has(id) || seen.has(id)) return false;
@@ -51,6 +65,10 @@ export function sanitizeGeneratedPrograms(
 			exerciseIds,
 		};
 	});
+
+	const groupName = programs.length > 1 ? raw.groupName?.trim() || DEFAULT_GROUP_NAME : null;
+
+	return { groupName, programs };
 }
 
 export function hasInvalidPrograms(programs: SanitizedProgram[]): boolean {

@@ -9,6 +9,7 @@ import { DrawerClose, DrawerFooter } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProgramMutations } from "@/hooks/program/store";
+import { useProgramGroupMutations } from "@/hooks/program-group/store";
 import { generatePrograms } from "@/lib/program/api";
 
 const descriptionSchema = z.object({
@@ -19,7 +20,10 @@ type ProgramFormAutomaticProps = {
 	onClose: () => void;
 };
 
-function formatSuccessMessage(count: number, names: string[]) {
+function formatSuccessMessage(count: number, names: string[], groupName: string | null) {
+	if (groupName) {
+		return `Created "${groupName}" with ${count} programs.`;
+	}
 	if (count <= 3) {
 		return `Created ${names.join(", ")}.`;
 	}
@@ -28,6 +32,7 @@ function formatSuccessMessage(count: number, names: string[]) {
 
 export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
 	const { addItem } = useProgramMutations();
+	const { addItem: addGroup } = useProgramGroupMutations();
 	const [error, setError] = useState<string>();
 	const [isGenerating, setIsGenerating] = useState(false);
 
@@ -46,7 +51,11 @@ export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
 		setIsGenerating(true);
 
 		try {
-			const { programs } = await generatePrograms(description);
+			const { programs, group } = await generatePrograms(description);
+
+			if (group) {
+				addGroup(group);
+			}
 
 			for (const program of programs) {
 				addItem({
@@ -64,6 +73,7 @@ export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
 				formatSuccessMessage(
 					programs.length,
 					programs.map((program) => program.name),
+					group?.name ?? null,
 				),
 			);
 		} catch (err) {

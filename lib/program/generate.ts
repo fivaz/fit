@@ -7,7 +7,7 @@ import { buildProgramGenerationSystemPrompt } from "@/lib/program/generate-promp
 import {
 	generatedProgramsSchema,
 	hasInvalidPrograms,
-	type SanitizedProgram,
+	type SanitizedGenerationResult,
 	sanitizeGeneratedPrograms,
 } from "@/lib/program/generate-schema";
 
@@ -51,7 +51,7 @@ async function callModel(description: string, catalog: ExerciseCatalogItem[]) {
 export async function generateProgramsFromDescription(
 	description: string,
 	catalog: ExerciseCatalogItem[],
-): Promise<SanitizedProgram[]> {
+): Promise<SanitizedGenerationResult> {
 	if (catalog.length === 0) {
 		throw new ProgramGenerationError("Add exercises to your library first", 400);
 	}
@@ -64,7 +64,7 @@ export async function generateProgramsFromDescription(
 		const { object } = await callModel(description, catalog);
 		let sanitized = sanitizeGeneratedPrograms(object, catalogIdSet);
 
-		if (hasInvalidPrograms(sanitized)) {
+		if (hasInvalidPrograms(sanitized.programs)) {
 			const { object: retryObject } = await callModel(
 				`${description}\n\nSome exercise IDs were invalid. Use only exact "id" values from the catalog.`,
 				catalog,
@@ -72,7 +72,7 @@ export async function generateProgramsFromDescription(
 			sanitized = sanitizeGeneratedPrograms(retryObject, catalogIdSet);
 		}
 
-		if (hasInvalidPrograms(sanitized)) {
+		if (hasInvalidPrograms(sanitized.programs)) {
 			throw new ProgramGenerationError(
 				"Could not generate a valid program from your description. Try being more specific.",
 				422,

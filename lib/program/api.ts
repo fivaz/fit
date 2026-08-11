@@ -1,5 +1,11 @@
 import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { ProgramUI, ProgramWithExercises } from "@/lib/program/type";
+import { ProgramGroupUI } from "@/lib/program-group/type";
+
+export type GenerateProgramsResult = {
+	programs: ProgramWithExercises[];
+	group: ProgramGroupUI | null;
+};
 
 export function getPrograms() {
 	return offlineDataAdapters.getPrograms();

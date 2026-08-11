@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
 
 		const catalog = await getExerciseCatalogForUser(userId);
 		const generated = await generateProgramsFromDescription(parsed.data.description, catalog);
-		const programs = await createGeneratedPrograms(generated, userId);
+		const { programs, group } = await createGeneratedPrograms(generated, userId);
 
-		return NextResponse.json({ programs });
+		return NextResponse.json({ programs, group });
 	} catch (error) {
 		if (error instanceof ProgramGenerationError) {
 			return NextResponse.json({ error: error.message }, { status: error.status });
