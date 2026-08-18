@@ -544,11 +544,11 @@ export const offlineDataAdapters = {
 
 	async getActiveWorkout(): Promise<{ id: string } | null> {
 		if (!isOfflineEnabled()) {
-			return apiFetch<{ id: string } | null>("/api/workouts/active");
+			return (await apiFetch<{ id: string } | null>("/api/workouts/active")) ?? null;
 		}
 		await flushPendingOperations();
 		try {
-			return await apiFetch<{ id: string } | null>("/api/workouts/active");
+			return (await apiFetch<{ id: string } | null>("/api/workouts/active")) ?? null;
 		} catch {
 			return null;
 		}

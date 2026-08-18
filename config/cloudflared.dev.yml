@@ -1,9 +1,16 @@
 # Copy to ~/.cloudflared/config.yml (or symlink) after `cloudflared tunnel create fit-dev`.
-# DNS: cloudflared tunnel route dns fit-dev dev.sfivaz.com
+# DNS:
+#   cloudflared tunnel route dns fit-dev dev.sfivaz.com
+#   cloudflared tunnel route dns fit-dev api-dev.sfivaz.com
 # Run: cloudflared tunnel run fit-dev
 #
-# .env: MOBILE_DEV_URL=https://dev.sfivaz.com
+# .env:
+#   MOBILE_DEV_URL=https://dev.sfivaz.com
+#   NEXT_PUBLIC_API_BASE_URL=https://api-dev.sfivaz.com
+#   NEXT_PUBLIC_AUTH_BASE_URL=https://api-dev.sfivaz.com
+#   BETTER_AUTH_URL=https://api-dev.sfivaz.com
 # Restart `pnpm dev` after changing MOBILE_DEV_URL (Next.js allowedDevOrigins reads it at startup).
+# Restart `cloudflared` after changing this ingress list.
 
 tunnel: fit-dev
 credentials-file: /Users/fivaz/.cloudflared/79a461f4-b2d0-4a9e-89bb-c53dc0bf973d.json
@@ -11,4 +18,6 @@ credentials-file: /Users/fivaz/.cloudflared/79a461f4-b2d0-4a9e-89bb-c53dc0bf973d
 ingress:
   - hostname: dev.sfivaz.com
     service: http://localhost:3000
+  - hostname: api-dev.sfivaz.com
+    service: http://localhost:3001
   - service: http_status:404

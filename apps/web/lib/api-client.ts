@@ -68,11 +68,14 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 		clientDebug("apiFetch", "ok", { method, url, status: response.status });
 	}
 
-	if (response.status === 204) {
+	const text = await response.text();
+	if (response.status === 204 || !text) {
+		// 204 is the no-content contract. Nest also sends empty 200 when a handler returns null;
+		// response.json() throws "Unexpected end of JSON input" on that payload.
 		return undefined as T;
 	}
 
-	return response.json() as Promise<T>;
+	return JSON.parse(text) as T;
 }
 
 async function getErrorMessage(response: Response) {

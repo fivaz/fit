@@ -1,3 +1,5 @@
+import { mobileDevOriginFromEnv } from "@/dev-origins";
+
 const MOBILE_SHELL_ORIGINS = new Set([
 	"capacitor://localhost",
 	"ionic://localhost",
@@ -29,6 +31,8 @@ export function isAllowedApiCorsOrigin(origin: string): boolean {
 	if (MOBILE_SHELL_ORIGINS.has(normalized)) return true;
 	const appOrigin = betterAuthPublicOrigin();
 	if (appOrigin && normalized === appOrigin) return true;
+	const mobileDevOrigin = mobileDevOriginFromEnv();
+	if (mobileDevOrigin && normalized === mobileDevOrigin) return true;
 	if (extraOriginsFromEnv().includes(normalized)) return true;
 	if (process.env.NODE_ENV !== "production") {
 		if (/^https?:\/\/localhost(?::\d+)?$/.test(normalized)) return true;

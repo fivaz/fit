@@ -105,11 +105,17 @@ export function ActiveWorkoutHomeProvider({ children }: { children: ReactNode })
 	useEffect(() => {
 		let isCurrent = true;
 
-		void getActiveWorkout().then((active) => {
-			if (!isCurrent) return;
-			setHasActiveWorkout(Boolean(active));
-			setActiveWorkoutId(active?.id ?? null);
-		});
+		void getActiveWorkout()
+			.then((active) => {
+				if (!isCurrent) return;
+				setHasActiveWorkout(Boolean(active));
+				setActiveWorkoutId(active?.id ?? null);
+			})
+			.catch(() => {
+				if (!isCurrent) return;
+				setHasActiveWorkout(false);
+				setActiveWorkoutId(null);
+			});
 
 		return () => {
 			isCurrent = false;

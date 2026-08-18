@@ -221,14 +221,32 @@ For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for those thre
 
 ### Live reload via tunnel (optional)
 
-To load the app from a running dev server instead of the bundled `out/` files (useful when the iPhone is off-LAN or you want fast web reloads):
+To load the app from a running dev server instead of the bundled `out/` files (useful when the iPhone is off-LAN or you want fast web reloads).
 
-1. Start the dev server: `pnpm run dev`.
-2. Start a tunnel, e.g. `cloudflared tunnel --url http://localhost:3000`, and copy the HTTPS URL.
-3. Set **`MOBILE_DEV_URL`** (or `CAPACITOR_SERVER_URL`) to the Next.js tunnel origin. Set `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_URL` to the Nest API origin (a second tunnel to `:3001`, or LAN IP `:3001`).
-4. Run `pnpm run ios:sync` (or `ios:build`) and reopen the app on the device.
+One named tunnel (`fit-dev`) exposes **two HTTPS origins** so the SPA and Nest stay separate (Safari blocks `https://` pages from calling `http://localhost`):
 
-Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick tunnels get a new URL on each restart.
+| Hostname | Local service |
+| -------- | ------------- |
+| `dev.sfivaz.com` | Next (`:3000`) |
+| `api-dev.sfivaz.com` | Nest (`:3001`) |
+
+Copy/symlink `config/cloudflared.dev.yml` to `~/.cloudflared/config.yml`. First-time DNS:
+
+```bash
+cloudflared tunnel route dns fit-dev dev.sfivaz.com
+cloudflared tunnel route dns fit-dev api-dev.sfivaz.com
+```
+
+Run each of these in its **own terminal** — they are long-running, so do not chain them with `&&`:
+
+1. Set **`MOBILE_DEV_URL=https://dev.sfivaz.com`**, **`NEXT_PUBLIC_API_BASE_URL`** / **`NEXT_PUBLIC_AUTH_BASE_URL`** / **`BETTER_AUTH_URL`** to `https://api-dev.sfivaz.com`. Do not point the API URLs at `http://localhost:3001` while the WebView is on HTTPS.
+2. `pnpm run dev:lan` — Next + Nest.
+3. `pnpm run tunnel:dev` — Cloudflare Tunnel (`fit-dev`).
+4. `pnpm run ios:build:deploy` — sync Capacitor `server.url` and install.
+
+Restart Next after changing `MOBILE_DEV_URL` or `NEXT_PUBLIC_*`, restart Nest after changing `BETTER_AUTH_URL`, and restart `cloudflared` after changing ingress rules.
+
+Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick `cloudflared tunnel --url` URLs change on each restart; the named `fit-dev` tunnel does not.
 
 ### Static/mobile (Capacitor) environment
 

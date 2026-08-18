@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { bearer } from "better-auth/plugins";
 
+import { mobileDevOriginFromEnv } from "@/dev-origins";
 import { prisma } from "@/prisma/client";
 
 const trustedOriginsFromEnv = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
@@ -33,12 +34,14 @@ const trustedOriginsBase =
 			: ["http://localhost:3000"];
 
 const betterAuthPublicOrigin = trustedOriginFromBetterAuthUrl();
+const mobileDevOrigin = mobileDevOriginFromEnv();
 const trustedOrigins = [
 	...new Set([
 		...trustedOriginsBase,
 		...MOBILE_WEBVIEW_ORIGINS,
 		"http://localhost:3000",
 		...(betterAuthPublicOrigin ? [betterAuthPublicOrigin] : []),
+		...(mobileDevOrigin ? [mobileDevOrigin] : []),
 	]),
 ];
 
