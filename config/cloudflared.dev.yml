@@ -6,9 +6,7 @@
 #
 # .env:
 #   MOBILE_DEV_URL=https://dev.sfivaz.com
-#   NEXT_PUBLIC_API_BASE_URL=https://api-dev.sfivaz.com
-#   NEXT_PUBLIC_AUTH_BASE_URL=https://api-dev.sfivaz.com
-#   BETTER_AUTH_URL=https://api-dev.sfivaz.com
+#   API_BASE_URL=https://api-dev.sfivaz.com
 # Restart `pnpm dev` after changing MOBILE_DEV_URL (Next.js allowedDevOrigins reads it at startup).
 # Restart `cloudflared` after changing this ingress list.
 

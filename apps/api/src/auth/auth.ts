@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { bearer } from "better-auth/plugins";
 
+import { resolveApiPublicOrigin, resolveApiPublicUrl } from "@/api-origin";
 import { mobileDevOriginFromEnv } from "@/dev-origins";
 import { prisma } from "@/prisma/client";
 
@@ -9,16 +10,6 @@ const trustedOriginsFromEnv = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
 	.split(",")
 	.map((origin) => origin.trim())
 	.filter(Boolean);
-
-function trustedOriginFromBetterAuthUrl(): string | null {
-	const raw = process.env.BETTER_AUTH_URL?.trim();
-	if (!raw) return null;
-	try {
-		return new URL(raw).origin;
-	} catch {
-		return null;
-	}
-}
 
 const MOBILE_WEBVIEW_ORIGINS = [
 	"capacitor://localhost",
@@ -33,7 +24,7 @@ const trustedOriginsBase =
 			? []
 			: ["http://localhost:3000"];
 
-const betterAuthPublicOrigin = trustedOriginFromBetterAuthUrl();
+const betterAuthPublicOrigin = resolveApiPublicOrigin();
 const mobileDevOrigin = mobileDevOriginFromEnv();
 const trustedOrigins = [
 	...new Set([
@@ -46,7 +37,7 @@ const trustedOrigins = [
 ];
 
 export const auth = betterAuth({
-baseURL: process.env.BETTER_AUTH_URL?.trim() || "http://localhost:3001",
+	baseURL: resolveApiPublicUrl(),
 	logger: {
 		level: "debug",
 	},

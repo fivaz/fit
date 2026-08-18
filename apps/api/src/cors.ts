@@ -1,3 +1,4 @@
+import { resolveApiPublicOrigin } from "@/api-origin";
 import { mobileDevOriginFromEnv } from "@/dev-origins";
 
 const MOBILE_SHELL_ORIGINS = new Set([
@@ -15,22 +16,12 @@ function extraOriginsFromEnv(): string[] {
 		.filter(Boolean);
 }
 
-function betterAuthPublicOrigin(): string | null {
-	const raw = process.env.BETTER_AUTH_URL?.trim();
-	if (!raw) return null;
-	try {
-		return new URL(raw).origin;
-	} catch {
-		return null;
-	}
-}
-
 export function isAllowedApiCorsOrigin(origin: string): boolean {
 	const normalized = origin.trim();
 	if (!normalized) return false;
 	if (MOBILE_SHELL_ORIGINS.has(normalized)) return true;
-	const appOrigin = betterAuthPublicOrigin();
-	if (appOrigin && normalized === appOrigin) return true;
+	const apiOrigin = resolveApiPublicOrigin();
+	if (apiOrigin && normalized === apiOrigin) return true;
 	const mobileDevOrigin = mobileDevOriginFromEnv();
 	if (mobileDevOrigin && normalized === mobileDevOrigin) return true;
 	if (extraOriginsFromEnv().includes(normalized)) return true;

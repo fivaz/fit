@@ -40,9 +40,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: 1
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fit_e2e?schema=public
       BETTER_AUTH_SECRET: ci-better-auth-secret
-      BETTER_AUTH_URL: http://localhost:3001
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
-      NEXT_PUBLIC_AUTH_BASE_URL: http://localhost:3001
+      API_BASE_URL: http://localhost:3001
       CORS_ALLOWED_ORIGINS: http://localhost:3000
       GOOGLE_CLIENT_ID: ci-google-client-id
       GOOGLE_CLIENT_SECRET: ci-google-client-secret

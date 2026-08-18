@@ -1,7 +1,11 @@
 import "dotenv/config";
 
-function resolveApiUrl(specific) {
-	return specific?.trim() || "http://localhost:3001";
+function firstHttpUrl(...values) {
+	for (const value of values) {
+		const trimmed = value?.trim();
+		if (trimmed) return trimmed;
+	}
+	return "http://localhost:3001";
 }
 
 function validateHttpUrl(label, value, envKeys) {
@@ -26,12 +30,20 @@ function validateHttpUrl(label, value, envKeys) {
  * Values are inlined at `pnpm build` / `pnpm ios:build` time.
  */
 export function assertCapacitorEnv() {
-	const apiBaseUrl = resolveApiUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
-	const authBaseUrl = resolveApiUrl(process.env.NEXT_PUBLIC_AUTH_BASE_URL);
+	const apiBaseUrl = firstHttpUrl(process.env.NEXT_PUBLIC_API_BASE_URL, process.env.API_BASE_URL);
+	const authBaseUrl = firstHttpUrl(
+		process.env.NEXT_PUBLIC_AUTH_BASE_URL,
+		process.env.NEXT_PUBLIC_API_BASE_URL,
+		process.env.API_BASE_URL,
+	);
 
 	const errors = [
-		validateHttpUrl("NEXT_PUBLIC_API_BASE_URL", apiBaseUrl, ["NEXT_PUBLIC_API_BASE_URL"]),
-		validateHttpUrl("NEXT_PUBLIC_AUTH_BASE_URL", authBaseUrl, ["NEXT_PUBLIC_AUTH_BASE_URL"]),
+		validateHttpUrl("API origin", apiBaseUrl, ["API_BASE_URL", "NEXT_PUBLIC_API_BASE_URL"]),
+		validateHttpUrl("Auth origin", authBaseUrl, [
+			"API_BASE_URL",
+			"NEXT_PUBLIC_AUTH_BASE_URL",
+			"NEXT_PUBLIC_API_BASE_URL",
+		]),
 	].filter(Boolean);
 
 	if (errors.length === 0) return;

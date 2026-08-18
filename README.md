@@ -38,7 +38,7 @@ Reference E2E coverage lives in `tests/e2e`.
 
 ## Architecture highlights
 
-- `apps/web` is a static SPA. `next build` writes `apps/web/out/`; Capacitor iOS loads that same folder. The browser talks only to Nest (`NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL`). There is no Next server in production.
+- `apps/web` is a static SPA. `next build` writes `apps/web/out/`; Capacitor iOS loads that same folder. The browser talks only to Nest (`API_BASE_URL`). There is no Next server in production.
 - `apps/api` is a NestJS REST API on port 3001 (`/api/*` + `/api/auth/*`)
 - Shared DTOs and API path constants live in `packages/shared` (Prisma-free)
 - Explicit relational data model for training domain:
@@ -97,8 +97,7 @@ Set at minimum:
 
 - `DATABASE_URL`
 - `BETTER_AUTH_SECRET`
-- `BETTER_AUTH_URL` (API origin, default `http://localhost:3001`)
-- `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL` (same API origin)
+- `API_BASE_URL` (Nest origin, default `http://localhost:3001`; auth client URLs inherit this)
 
 If you want social login enabled locally, also set:
 
@@ -126,7 +125,7 @@ This starts NestJS on [http://localhost:3001](http://localhost:3001) and Next.js
 
 ## Static SPA (web + Capacitor)
 
-`apps/web` always builds as a static export (`output: "export"`). Nest is the only server. The browser and the iOS WebView both call the API with `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL`.
+`apps/web` always builds as a static export (`output: "export"`). Nest is the only server. The browser and the iOS WebView both call the API origin from `API_BASE_URL` (inlined as `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL`).
 
 ```bash
 pnpm run build
@@ -191,10 +190,10 @@ If no device is found, deploy is skipped unless `IOS_DEPLOY_REQUIRED=1` — the 
 
 The Simulator reaches your Mac at **loopback** (`http://127.0.0.1:3000` is the same machine as Xcode).
 
-1. **`.env` (repo root)** — `BETTER_AUTH_URL` must be the Nest API origin (`http://127.0.0.1:3001`). `DATABASE_URL`, `BETTER_AUTH_SECRET` as usual.
-2. **Client URLs (baked into the static JS at `ios:build` time)** — Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_AUTH_BASE_URL` to the API origin, e.g. `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001 NEXT_PUBLIC_AUTH_BASE_URL=http://127.0.0.1:3001 pnpm run ios:build`.
+1. **`.env` (repo root)** — `API_BASE_URL` must be the Nest API origin (`http://127.0.0.1:3001`). `DATABASE_URL`, `BETTER_AUTH_SECRET` as usual. Auth client URLs inherit `API_BASE_URL`.
+2. **Client URLs (baked into the static JS at `ios:build` time)** — Set `API_BASE_URL` to the API origin, e.g. `API_BASE_URL=http://127.0.0.1:3001 pnpm run ios:build`.
 3. **`pnpm run dev`** — Keep Nest (`:3001`) and Next (`:3000`) running. `ios:build` does not start the servers.
-4. **`pnpm run ios:build`** — After changing `NEXT_PUBLIC_*` or web code affecting the bundle.
+4. **`pnpm run ios:build`** — After changing `API_BASE_URL` or web code affecting the bundle.
 5. **`pnpm run ios:open`** — Run on Simulator or device.
 
 **Auth and CRUD from the shell:** the WebView origin is `capacitor://localhost`. Nest CORS allows trusted origins. Sign-in uses Better Auth’s **bearer** token; `apps/web/lib/api-client.ts` sends `Authorization: Bearer …` on data calls after `hydrateMobileAuthToken()`.
@@ -209,15 +208,13 @@ Safari Web Inspector may log missing `__next._tree.txt` or **`*.js.map`** files 
 - Missing program after navigation logs **`[FitClient:ProgramPage]`** with `programId`.
 - Optional verbose traces: set **`NEXT_PUBLIC_CLIENT_DEBUG=1`** in `.env.local` and rebuild the static bundle, **or** in the Web Inspector console run `localStorage.setItem("fit:client-debug","1")` and reload (uses `lib/mobile/client-debug.ts`).
 
-Example `.env.local` for Simulator (same host for all three; change port if needed):
+Example `.env.local` for Simulator:
 
 ```bash
-BETTER_AUTH_URL=http://127.0.0.1:3001
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001
-NEXT_PUBLIC_AUTH_BASE_URL=http://127.0.0.1:3001
+API_BASE_URL=http://127.0.0.1:3001
 ```
 
-For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for those three URLs (not `127.0.0.1`). Same network and firewall rules apply.
+For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for `API_BASE_URL` (not `127.0.0.1`). Same network and firewall rules apply.
 
 ### Live reload via tunnel (optional)
 
@@ -239,12 +236,12 @@ cloudflared tunnel route dns fit-dev api-dev.sfivaz.com
 
 Run each of these in its **own terminal** — they are long-running, so do not chain them with `&&`:
 
-1. Set **`MOBILE_DEV_URL=https://dev.sfivaz.com`**, **`NEXT_PUBLIC_API_BASE_URL`** / **`NEXT_PUBLIC_AUTH_BASE_URL`** / **`BETTER_AUTH_URL`** to `https://api-dev.sfivaz.com`. Do not point the API URLs at `http://localhost:3001` while the WebView is on HTTPS.
+1. Set **`MOBILE_DEV_URL=https://dev.sfivaz.com`** and **`API_BASE_URL=https://api-dev.sfivaz.com`**. Do not point `API_BASE_URL` at `http://localhost:3001` while the WebView is on HTTPS.
 2. `pnpm run dev:lan` — Next + Nest.
 3. `pnpm run tunnel:dev` — Cloudflare Tunnel (`fit-dev`).
 4. `pnpm run ios:build:deploy` — sync Capacitor `server.url` and install.
 
-Restart Next after changing `MOBILE_DEV_URL` or `NEXT_PUBLIC_*`, restart Nest after changing `BETTER_AUTH_URL`, and restart `cloudflared` after changing ingress rules.
+Restart Next and Nest after changing `MOBILE_DEV_URL` or `API_BASE_URL`, and restart `cloudflared` after changing ingress rules.
 
 Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick `cloudflared tunnel --url` URLs change on each restart; the named `fit-dev` tunnel does not.
 
@@ -252,14 +249,14 @@ Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick `clo
 
 | Variable                      | When                               | Purpose                                                                                                            |
 | ----------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| _(unset `MOBILE_DEV_URL`)_    | Web app in browser                 | Next on `:3000` calls Nest on `:3001` via `NEXT_PUBLIC_*` (dev default `http://localhost:3001`). |
-| `NEXT_PUBLIC_API_BASE_URL`    | Web + Capacitor                    | Base URL for `apps/web/lib/api-client.ts`.                                                       |
-| `NEXT_PUBLIC_AUTH_BASE_URL`   | Web + Capacitor                    | Better Auth client base (`apps/web/lib/auth-client.ts`).                                         |
-| `BETTER_AUTH_URL`             | Nest API                           | Public API URL / cookie context; keep aligned with the two `NEXT_PUBLIC_*` values.               |
+| `MOBILE_DEV_URL`              | Optional (tunnel / LAN webview)    | App origin: Capacitor live-reload URL (`CAPACITOR_SERVER_URL` fallback). Unset for local web.                        |
+| `API_BASE_URL`                | Web + Capacitor + Nest             | API origin. Fills `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_URL` when those are unset. |
+| `NEXT_PUBLIC_API_BASE_URL`    | Optional override                  | Client API base; defaults to `API_BASE_URL`.                                                                        |
+| `NEXT_PUBLIC_AUTH_BASE_URL`   | Optional override                  | Better Auth client base; defaults to `API_BASE_URL`.                                                                |
+| `BETTER_AUTH_URL`             | Optional override                  | Nest Better Auth public URL; defaults to `API_BASE_URL`.                                                            |
 | `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                           | Extra origins for Better Auth CSRF (comma-separated). Capacitor origins are built into the API.  |
 | `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for Nest CORS.                                                     |
 | `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs.                                                       |
-| `MOBILE_DEV_URL`              | Optional (tunnel / LAN webview)    | Capacitor live-reload origin only (`CAPACITOR_SERVER_URL` fallback). Does not set API URLs.      |
 | `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `out/`; run `ios:sync` after changing.             |
 | `IOS_DEPLOY_DEVICE_ID`        | Optional (CLI deploy)              | Override iPhone UDID for `ios:build:deploy` / `ios:deploy`.                                                        |
 | `IOS_DEPLOY_REQUIRED`         | Optional (CLI deploy)              | `1` → fail deploy when no paired device is reachable; default skips install.                                       |

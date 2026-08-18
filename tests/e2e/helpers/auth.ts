@@ -9,7 +9,8 @@ export type TestUser = {
 	name: string;
 };
 
-const AUTH_API_BASE = process.env.NEXT_PUBLIC_AUTH_BASE_URL ?? "http://localhost:3001";
+const AUTH_API_BASE =
+	process.env.NEXT_PUBLIC_AUTH_BASE_URL ?? process.env.API_BASE_URL ?? "http://localhost:3001";
 
 export function buildTestUser(prefix: string): TestUser {
 	const credential = `${prefix}-${Date.now()}@example.com`;

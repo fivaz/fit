@@ -35,12 +35,9 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
 ## Runtime environment checks
 
-For static/mobile runtime, configure endpoints before building:
+For static/mobile runtime, set `API_BASE_URL` before building (auth client URLs inherit it). Optional overrides: `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`.
 
-- `NEXT_PUBLIC_API_BASE_URL`
-- `NEXT_PUBLIC_AUTH_BASE_URL`
-
-Both must point at the Nest API (default `http://localhost:3001` in local dev). Production values must use HTTPS and be reachable from the simulator/device.
+The API origin must point at Nest (default `http://localhost:3001` in local dev). Production values must use HTTPS and be reachable from the simulator/device.
 
 ## Simulator smoke tests
 

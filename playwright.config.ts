@@ -2,9 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 import "dotenv/config";
 
-process.env.NEXT_PUBLIC_API_BASE_URL ??= "http://localhost:3001";
-process.env.NEXT_PUBLIC_AUTH_BASE_URL ??= "http://localhost:3001";
-process.env.BETTER_AUTH_URL ??= "http://localhost:3001";
+process.env.API_BASE_URL ??= "http://localhost:3001";
+process.env.NEXT_PUBLIC_API_BASE_URL ??= process.env.API_BASE_URL;
+process.env.NEXT_PUBLIC_AUTH_BASE_URL ??= process.env.API_BASE_URL;
+process.env.BETTER_AUTH_URL ??= process.env.API_BASE_URL;
 process.env.CORS_ALLOWED_ORIGINS ??= "http://localhost:3000";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
