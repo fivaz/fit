@@ -19,7 +19,7 @@ node_modules
 # next.js
 **/.next/
 **/.next-static/
-/out/
+**/out/
 .static-build-tmp/
 
 # production

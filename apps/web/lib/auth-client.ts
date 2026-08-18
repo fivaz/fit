@@ -14,30 +14,17 @@ import { clientDebug } from "@/lib/mobile/client-debug";
 
 const SESSION_REFETCH_TIMEOUT_MS = 10_000;
 
-function isLoopbackHost(hostname: string) {
-	return hostname === "localhost" || hostname === "127.0.0.1";
-}
-
 function resolveAuthBaseURL() {
-	const configuredBaseURL = resolvePublicAuthBaseUrl();
-	if (!configuredBaseURL) return undefined;
-	if (typeof window === "undefined") return configuredBaseURL;
-
-	const currentURL = new URL(window.location.origin);
-	const configuredURL = new URL(configuredBaseURL);
-	const isSameOrigin = currentURL.origin === configuredURL.origin;
-	const isEquivalentLoopback =
-		currentURL.protocol === configuredURL.protocol &&
-		currentURL.port === configuredURL.port &&
-		isLoopbackHost(currentURL.hostname) &&
-		isLoopbackHost(configuredURL.hostname);
-
-	return isSameOrigin || isEquivalentLoopback ? undefined : configuredBaseURL;
+	// Always use the Nest origin. Collapsing to `undefined` made Better Auth
+	// fall back to `window.location.origin` (`:3000`), and Next no longer
+	// serves `/api/auth`.
+	return resolvePublicAuthBaseUrl();
 }
 
 export const authClient = createAuthClient({
 	plugins: [inferAdditionalFields(AUTH_ADDITIONAL_FIELDS)],
 	baseURL: resolveAuthBaseURL(),
+	basePath: "/api/auth",
 	fetchOptions: {
 		auth: {
 			type: "Bearer",
@@ -75,7 +62,7 @@ export async function bootstrapMobileAuthBeforeSession(
 		clientDebug("auth", "bootstrap refetch failed", {
 			error: error instanceof Error ? error.message : String(error),
 			hasBearerToken: Boolean(getMobileAuthTokenSync()),
-			authBaseURL: resolveAuthBaseURL() ?? "(same origin)",
+			authBaseURL: resolveAuthBaseURL() ?? "(unset)",
 		});
 		return false;
 	}

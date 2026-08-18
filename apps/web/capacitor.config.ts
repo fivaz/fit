@@ -13,7 +13,7 @@ const tunnelUrl = resolveCapacitorServerUrl();
 const config: CapacitorConfig = {
 	appId: "com.fivaz.fittracker",
 	appName: "Fit Tracker",
-	webDir: ".next-static",
+	webDir: "out",
 	...(tunnelUrl
 		? {
 				server: {

@@ -25,15 +25,9 @@ async function bootstrap() {
 	const app = await NestFactory.create(AppModule, { bodyParser: false });
 	const expressApp = app.getHttpAdapter().getInstance();
 
-	const handleAuth = toNodeHandler(auth);
-	expressApp.use((req: Request, res: Response, next: NextFunction) => {
-		if (req.url.split("?")[0].startsWith("/api/auth")) {
-			return handleAuth(req, res);
-		}
-		next();
-	});
-	expressApp.use(express.json());
-
+	// CORS must run before Better Auth. toNodeHandler intercepts `/api/auth/*`
+	// (including OPTIONS) and does not emit CORS headers, so a later enableCors
+	// never sees the preflight and the browser never sends sign-in/sign-up POST.
 	app.enableCors({
 		origin: corsOriginDelegate,
 		credentials: true,
@@ -50,6 +44,15 @@ async function bootstrap() {
 		],
 		exposedHeaders: ["set-auth-token", "Set-Auth-Token"],
 	});
+
+	const handleAuth = toNodeHandler(auth);
+	expressApp.use((req: Request, res: Response, next: NextFunction) => {
+		if (req.url.split("?")[0].startsWith("/api/auth")) {
+			return handleAuth(req, res);
+		}
+		next();
+	});
+	expressApp.use(express.json());
 
 	app.setGlobalPrefix("api");
 	app.useGlobalFilters(new ApiExceptionFilter());

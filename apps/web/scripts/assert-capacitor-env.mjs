@@ -23,7 +23,7 @@ function validateHttpUrl(label, value, envKeys) {
 
 /**
  * Capacitor loads a static bundle at `capacitor://localhost`; API and auth must target a remote http(s) origin.
- * Values are inlined at `pnpm build:static` / `pnpm ios:build` time.
+ * Values are inlined at `pnpm build` / `pnpm ios:build` time.
  */
 export function assertCapacitorEnv() {
 	const apiBaseUrl = resolveApiUrl(process.env.NEXT_PUBLIC_API_BASE_URL);

@@ -3,6 +3,7 @@ build
 coverage
 .next
 .next-static
+out
 dist
 node_modules
 .idea

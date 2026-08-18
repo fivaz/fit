@@ -87,13 +87,11 @@ const nextConfig: NextConfig = {
 	transpilePackages: ["@fit/shared"],
 	productionBrowserSourceMaps: false,
 	allowedDevOrigins,
-	// `output: "export"` is only enabled for the dedicated static bundle build path.
-	output: process.env.NEXT_BUILD_TARGET === "static" ? "export" : undefined,
+	// Always a static SPA. Capacitor and web hosting both serve `out/`; Nest is the only server.
+	output: "export",
 	images: {
-		unoptimized: process.env.NEXT_BUILD_TARGET === "static",
+		unoptimized: true,
 	},
-	// `build-static.mjs` sets NEXT_DIST_DIR=.next-static for the mobile export build.
-	distDir: process.env.NEXT_DIST_DIR ?? ".next",
 	env: {
 		...publicEnvFromProcess(),
 		...resolvedAppPublicEnv(),

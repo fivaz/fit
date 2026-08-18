@@ -7,11 +7,7 @@ function runNextBuild() {
 	return new Promise((resolve, reject) => {
 		const child = spawn("next", ["build"], {
 			stdio: "inherit",
-			env: {
-				...process.env,
-				NEXT_BUILD_TARGET: "static",
-				NEXT_DIST_DIR: ".next-static",
-			},
+			env: process.env,
 			shell: process.platform === "win32",
 		});
 

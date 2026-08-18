@@ -29,7 +29,7 @@ Reference E2E coverage lives in `tests/e2e`.
 ## Tech stack
 
 - Monorepo: pnpm workspaces (`apps/web`, `apps/api`, `packages/shared`)
-- Frontend: Next.js 16 (App Router), React 19, TypeScript
+- Frontend: Next.js 16 static SPA (`output: "export"`), React 19, TypeScript
 - Backend: NestJS + Better Auth + Prisma 7 + PostgreSQL
 - UI: Tailwind CSS + Radix primitives + Framer Motion + Lucide icons
 - Observability: Sentry (`@sentry/nextjs` on web, `@sentry/node` on the API)
@@ -38,7 +38,7 @@ Reference E2E coverage lives in `tests/e2e`.
 
 ## Architecture highlights
 
-- `apps/web` is a client-rendered Next.js UI (including Capacitor static export)
+- `apps/web` is a static SPA. `next build` writes `apps/web/out/`; Capacitor iOS loads that same folder. The browser talks only to Nest (`NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL`). There is no Next server in production.
 - `apps/api` is a NestJS REST API on port 3001 (`/api/*` + `/api/auth/*`)
 - Shared DTOs and API path constants live in `packages/shared` (Prisma-free)
 - Explicit relational data model for training domain:
@@ -124,17 +124,15 @@ pnpm run dev
 
 This starts NestJS on [http://localhost:3001](http://localhost:3001) and Next.js on [http://localhost:3000](http://localhost:3000). Use `pnpm dev:web` or `pnpm dev:api` to run one side.
 
-## Static export build path (iOS/Capacitor)
+## Static SPA (web + Capacitor)
 
-The Capacitor iOS app loads a **static** Next export from `apps/web/.next-static/` (`apps/web/capacitor.config.ts` → `webDir`). The bundle talks to the Nest API via `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL`.
-
-For a one-off static folder without syncing iOS:
+`apps/web` always builds as a static export (`output: "export"`). Nest is the only server. The browser and the iOS WebView both call the API with `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL`.
 
 ```bash
-pnpm run build:static
+pnpm run build
 ```
 
-The default `pnpm run build` path is unchanged for normal server-backed web deployment.
+That writes `apps/web/out/`. Capacitor `webDir` is that folder (`apps/web/capacitor.config.ts`). Preview the export with `pnpm --filter @fit/web start` (requires a prior build). `pnpm run dev` is still the SPA with hot reload.
 
 ### Capacitor iOS workflow
 
@@ -146,7 +144,7 @@ Prerequisites: Xcode (+ CLI tools), PostgreSQL for `DATABASE_URL`, and env vars 
 | Build + install on device     | `pnpm run ios:build:deploy`    | Same as `ios:build`, then `xcodebuild` + install on a paired iPhone (USB or Wi‑Fi). See **CLI deploy to iPhone** below.  |
 | Install only (after a build)  | `pnpm run ios:deploy`          | Run `scripts/ios-deploy.mjs` without rebuilding the static bundle.                                                       |
 | Icons / splash only           | `pnpm run generate-ios-assets` | Skip full static export when only native images changed.                                                                 |
-| Capacitor config/plugins only | `pnpm run ios:sync`            | When `.next-static/` already exists.                                                                                     |
+| Capacitor config/plugins only | `pnpm run ios:sync`            | When `apps/web/out/` already exists.                                                                                     |
 | Open Xcode                    | `pnpm run ios:open`            | Run Simulator or device, signing, archives.                                                                              |
 
 Repository checks before release: `pnpm run ios:readiness` (see `docs/ios-qa-release-checklist.md`).
@@ -223,7 +221,7 @@ For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for those thre
 
 ### Live reload via tunnel (optional)
 
-To load the app from a running dev server instead of the bundled `.next-static/` files (useful when the iPhone is off-LAN or you want fast web reloads):
+To load the app from a running dev server instead of the bundled `out/` files (useful when the iPhone is off-LAN or you want fast web reloads):
 
 1. Start the dev server: `pnpm run dev`.
 2. Start a tunnel, e.g. `cloudflared tunnel --url http://localhost:3000`, and copy the HTTPS URL.
@@ -244,7 +242,7 @@ Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick tunn
 | `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for Nest CORS.                                                     |
 | `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs.                                                       |
 | `MOBILE_DEV_URL`              | Optional (tunnel / LAN webview)    | Capacitor live-reload origin only (`CAPACITOR_SERVER_URL` fallback). Does not set API URLs.      |
-| `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `.next-static/`; run `ios:sync` after changing.    |
+| `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `out/`; run `ios:sync` after changing.             |
 | `IOS_DEPLOY_DEVICE_ID`        | Optional (CLI deploy)              | Override iPhone UDID for `ios:build:deploy` / `ios:deploy`.                                                        |
 | `IOS_DEPLOY_REQUIRED`         | Optional (CLI deploy)              | `1` → fail deploy when no paired device is reachable; default skips install.                                       |
 
@@ -343,13 +341,13 @@ Planned evolution:
 Common commands:
 
 - `pnpm run dev` - start dev server
-- `pnpm run build` - production build
-- `pnpm run build:static` - static export build for mobile/native bundles
+- `pnpm run build` - static SPA export to `apps/web/out/`
+- `pnpm run build:static` - same export, after checking Capacitor API/auth URLs
 - `pnpm run ios:build` - generate assets, static export, and Capacitor sync into the iOS project
 - `pnpm run ios:build:deploy` - `ios:build` plus `xcodebuild` and install on a paired iPhone (USB or Wi‑Fi; see `ios-deploy.config.json`)
 - `pnpm run ios:deploy` - install the last Xcode build on device without re-running `ios:build`
 - `pnpm run ios:open` - open the Capacitor iOS workspace in Xcode
-- `pnpm run ios:sync` - Capacitor sync only (when `.next-static/` is already built)
+- `pnpm run ios:sync` - Capacitor sync only (when `apps/web/out/` is already built)
 - `pnpm run ios:readiness` - repository checks before App Store / Xcode hardening
 - `pnpm run generate-ios-assets` - regenerate iOS icon/splash assets from `public/favicon.svg`
 - `pnpm run pretest` / `node scripts/free-dev-server-port.mjs` - free the default dev port (see `DEV_SERVER_PORT` in `.env.example`)

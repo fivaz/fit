@@ -1,5 +1,6 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Res, UseGuards } from "@nestjs/common";
 import type { WorkoutSetMap } from "@fit/shared";
+import type { Response } from "express";
 
 import { ApiError } from "@/api-error";
 import { AuthGuard } from "@/auth/auth.guard";
@@ -26,8 +27,14 @@ export class WorkoutsController {
 	}
 
 	@Get("active")
-	active(@UserId() userId: string) {
-		return getActiveWorkout(userId);
+	async active(@UserId() userId: string, @Res({ passthrough: true }) res: Response) {
+		const workout = await getActiveWorkout(userId);
+		if (!workout) {
+			// Nest omits the body when a handler returns null (empty 200), which is not valid JSON.
+			res.status(HttpStatus.NO_CONTENT);
+			return;
+		}
+		return workout;
 	}
 
 	@Get(":id")

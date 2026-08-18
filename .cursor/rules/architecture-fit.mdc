@@ -7,15 +7,17 @@ alwaysApply: false
 # Architecture (fit)
 
 - Keep domain logic independent from Next.js and NestJS concerns.
-- UI in `apps/web` orchestrates data flow; heavy business rules belong in `apps/api`.
+- `apps/web` is a static SPA (`output: "export"`). Pages fetch Nest over HTTP; do not add SSR, Server Actions, or Route Handlers.
+- Capacitor iOS loads the same `out/` export. Nest is the only backend.
 - Shared DTOs and API path constants live in `packages/shared` and must stay Prisma-free.
 - Isolate side effects (network, storage, Capacitor/native APIs) behind thin adapters.
 
 ## Do
 
 - Prefer dependency injection or thin adapters at boundaries.
-- When changing data flow, note Client vs Server component boundaries and state implications.
+- Keep session, data loading, and mutations in client code talking to `apps/api`.
 
 ## Don't
 
 - Couple reusable business rules to component lifecycle or App Router behavior.
+- Add Next rewrites/proxies that pretend the SPA and API are the same origin.
