@@ -40,7 +40,7 @@ For static/mobile runtime, configure endpoints before building:
 - `NEXT_PUBLIC_API_BASE_URL`
 - `NEXT_PUBLIC_AUTH_BASE_URL`
 
-Both must use HTTPS and be reachable from the simulator/device. Do not enable broad App Transport Security exceptions for production.
+Both must point at the Nest API (default `http://localhost:3001` in local dev). Production values must use HTTPS and be reachable from the simulator/device.
 
 ## Simulator smoke tests
 

@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import path from "node:path";
 
 const registeredEmails: string[] = [];
 
@@ -20,7 +21,7 @@ export function deleteTestUserByEmail(email: string) {
 
 	try {
 		execFileSync("pnpm", ["exec", "tsx", "scripts/delete-e2e-user-by-email.ts", email], {
-			cwd: process.cwd(),
+			cwd: path.join(process.cwd(), "apps/api"),
 			stdio: "pipe",
 			env: process.env,
 		});

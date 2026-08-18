@@ -21,7 +21,8 @@ When you change application code, run the relevant static checks before treating
 Use non-watch TypeScript check:
 
 ```bash
-pnpm exec tsc --noEmit
+pnpm exec tsc --noEmit -p apps/web
+pnpm exec tsc --noEmit -p apps/api
 ```
 
 Lint changed files (prefer scoped paths for speed):

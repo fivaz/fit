@@ -9,7 +9,7 @@ Rules in this folder are **fit-specific**. Portable coding standards live in `~/
 | `api-contracts.mdc`    | `{ data, error }` envelope and Zod validation         |
 | `validation.mdc`       | pnpm, `tsc --noEmit`, ESLint commands for this repo   |
 | `testing.mdc`          | Playwright paths, verify workflow, fit E2E commands   |
-| `architecture-fit.mdc` | Next.js/Expo layout for `app/`, `components/`, `lib/` |
+| `architecture-fit.mdc` | Next.js / NestJS layout for `apps/web`, `apps/api`, `packages/shared` |
 | `security-fit.mdc`     | Fit API envelope + path-scoped security notes         |
 | `naming-scripts.mdc`   | `act:`, `db:`, `test:` package.json script naming     |
 | `coderabbit-cli.mdc`   | CodeRabbit CLI usage                                  |

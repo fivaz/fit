@@ -1,6 +1,6 @@
 ---
 description: Fit API envelope, path-scoped security, and Zod at boundaries
-globs: ["app/api/**/*.ts", "app/**/*.ts", "lib/**/*.ts", "lib/**/*.tsx"]
+globs: ["apps/api/**/*.ts", "packages/shared/**/*.ts"]
 alwaysApply: false
 ---
 

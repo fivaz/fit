@@ -9,9 +9,7 @@ export type TestUser = {
 	name: string;
 };
 
-const AUTH_API_ROUTES = {
-	authEmailSignInApi: /\/api\/auth\/sign-in\/email$/,
-} as const;
+const AUTH_API_BASE = process.env.NEXT_PUBLIC_AUTH_BASE_URL ?? "http://localhost:3001";
 
 export function buildTestUser(prefix: string): TestUser {
 	const credential = `${prefix}-${Date.now()}@example.com`;
@@ -23,7 +21,7 @@ export function buildTestUser(prefix: string): TestUser {
 }
 
 export async function signUpTestUser(request: APIRequestContext, user: TestUser) {
-	const signupResponse = await request.post("/api/auth/sign-up/email", {
+	const signupResponse = await request.post(`${AUTH_API_BASE}/api/auth/sign-up/email`, {
 		data: {
 			email: user.email,
 			password: user.password,
@@ -42,7 +40,7 @@ export async function loginWithEmailPassword(page: Page, user: TestUser) {
 
 	const signInResponsePromise = page.waitForResponse((response) => {
 		return (
-			AUTH_API_ROUTES.authEmailSignInApi.test(response.url()) &&
+			/\/api\/auth\/sign-in\/email$/.test(response.url()) &&
 			response.request().method() === "POST"
 		);
 	});

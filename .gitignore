@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -17,13 +17,19 @@
 /.playwright-browsers
 
 # next.js
-/.next/
-/.next-static/
+**/.next/
+**/.next-static/
 /out/
 .static-build-tmp/
 
 # production
 /build
+**/dist/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+apps/api/src/generated/
 
 # misc
 .DS_Store
@@ -42,21 +48,17 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-/lib/generated/prisma
-
 .secrets
 .act-cache
 scripts/exercises-full.json
-public/exercises/*
+apps/web/public/exercises/*
 .idea/
 
 # Local ios-deploy overrides (device UDID, personal flags)
 ios-deploy.config.local.json
+apps/web/ios-deploy.config.local.json
 ios/build/
+apps/web/ios/build/
 # Sentry Config File
 .env.sentry-build-plugin
 

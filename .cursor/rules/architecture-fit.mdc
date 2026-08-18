@@ -1,14 +1,14 @@
 ---
-description: Next.js/Expo layout and Clean Architecture boundaries for fit
-globs: ["app/**/*.ts", "app/**/*.tsx", "components/**/*.ts", "components/**/*.tsx", "lib/**/*.ts", "lib/**/*.tsx"]
+description: Next.js/Nest layout and Clean Architecture boundaries for fit
+globs: ["apps/web/**/*.ts", "apps/web/**/*.tsx", "apps/api/**/*.ts", "packages/shared/**/*.ts"]
 alwaysApply: false
 ---
 
 # Architecture (fit)
 
-- Keep domain logic independent from Next.js and Expo concerns.
-- UI and route handlers in `app/` orchestrate data flow; heavy business rules belong in `lib/`.
-- Shared utilities in `lib/` should stay framework-agnostic when possible.
+- Keep domain logic independent from Next.js and NestJS concerns.
+- UI in `apps/web` orchestrates data flow; heavy business rules belong in `apps/api`.
+- Shared DTOs and API path constants live in `packages/shared` and must stay Prisma-free.
 - Isolate side effects (network, storage, Capacitor/native APIs) behind thin adapters.
 
 ## Do

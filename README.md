@@ -28,28 +28,29 @@ Reference E2E coverage lives in `tests/e2e`.
 
 ## Tech stack
 
-- Framework: Next.js 16 (App Router), React 19, TypeScript
-- Data: PostgreSQL + Prisma
-- Auth: better-auth (email/password + social provider config)
+- Monorepo: pnpm workspaces (`apps/web`, `apps/api`, `packages/shared`)
+- Frontend: Next.js 16 (App Router), React 19, TypeScript
+- Backend: NestJS + Better Auth + Prisma 7 + PostgreSQL
 - UI: Tailwind CSS + Radix primitives + Framer Motion + Lucide icons
-- Observability: Sentry (`@sentry/nextjs`)
+- Observability: Sentry (`@sentry/nextjs` on web, `@sentry/node` on the API)
 - Testing: Playwright end-to-end suite
 - Tooling: pnpm, ESLint, Prettier, Husky, Semantic Release
 
 ## Architecture highlights
 
-- Clear separation between UI composition and action/data layers (for example: pages in `app/` call domain actions in `lib/**/actions`)
+- `apps/web` is a client-rendered Next.js UI (including Capacitor static export)
+- `apps/api` is a NestJS REST API on port 3001 (`/api/*` + `/api/auth/*`)
+- Shared DTOs and API path constants live in `packages/shared` (Prisma-free)
 - Explicit relational data model for training domain:
   - `Program` <-> `Exercise` via `ProgramToExercise`
   - `Workout` + `WorkoutExercise` + `Set`
   - user-scoped ownership and cascade rules
-- Runtime auth + origin constraints for local and E2E execution
 
 See:
 
-- `prisma/schema.prisma`
-- `lib/auth.ts`
-- `app/(dashboard)/**`
+- `apps/api/prisma/schema.prisma`
+- `apps/api/src/auth/auth.ts`
+- `apps/web/app/(dashboard)/**`
 
 ## Agent orchestration and engineering process
 
@@ -96,7 +97,8 @@ Set at minimum:
 
 - `DATABASE_URL`
 - `BETTER_AUTH_SECRET`
-- `BETTER_AUTH_URL`
+- `BETTER_AUTH_URL` (API origin, default `http://localhost:3001`)
+- `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL` (same API origin)
 
 If you want social login enabled locally, also set:
 
@@ -120,9 +122,11 @@ pnpm run db:reset
 pnpm run dev
 ```
 
+This starts NestJS on [http://localhost:3001](http://localhost:3001) and Next.js on [http://localhost:3000](http://localhost:3000). Use `pnpm dev:web` or `pnpm dev:api` to run one side.
+
 ## Static export build path (iOS/Capacitor)
 
-The Capacitor iOS app loads a **static** Next export from `.next-static/` (`capacitor.config.ts` → `webDir`). That bundle has **no** embedded `app/api` server: `scripts/build-static.mjs` temporarily moves `app/api` aside so `output: "export"` can succeed, then restores it after the export.
+The Capacitor iOS app loads a **static** Next export from `apps/web/.next-static/` (`apps/web/capacitor.config.ts` → `webDir`). The bundle talks to the Nest API via `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_AUTH_BASE_URL`.
 
 For a one-off static folder without syncing iOS:
 
@@ -189,13 +193,13 @@ If no device is found, deploy is skipped unless `IOS_DEPLOY_REQUIRED=1` — the 
 
 The Simulator reaches your Mac at **loopback** (`http://127.0.0.1:3000` is the same machine as Xcode).
 
-1. **`.env.local` (server)** — `BETTER_AUTH_URL` must match the origin the shell calls (see example). `DATABASE_URL`, `BETTER_AUTH_SECRET` as usual.
-2. **Client URLs (baked into the static JS at `ios:build` time)** — Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_AUTH_BASE_URL` in `.env.local`, or prefix one build with env vars, e.g. `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3000 NEXT_PUBLIC_AUTH_BASE_URL=http://127.0.0.1:3000 pnpm run ios:build`.
-3. **`pnpm run dev`** — Keep this running in a terminal while you use sign-in and `/api/*` from the app (port **3000** by default). `ios:build` does not start the server.
+1. **`.env` (repo root)** — `BETTER_AUTH_URL` must be the Nest API origin (`http://127.0.0.1:3001`). `DATABASE_URL`, `BETTER_AUTH_SECRET` as usual.
+2. **Client URLs (baked into the static JS at `ios:build` time)** — Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_AUTH_BASE_URL` to the API origin, e.g. `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001 NEXT_PUBLIC_AUTH_BASE_URL=http://127.0.0.1:3001 pnpm run ios:build`.
+3. **`pnpm run dev`** — Keep Nest (`:3001`) and Next (`:3000`) running. `ios:build` does not start the servers.
 4. **`pnpm run ios:build`** — After changing `NEXT_PUBLIC_*` or web code affecting the bundle.
 5. **`pnpm run ios:open`** — Run on Simulator or device.
 
-**Auth and CRUD from the shell:** the WebView origin is `capacitor://localhost`. `proxy.ts` applies `lib/cors.ts` rules on `/api/*` so cross-origin requests are allowed for trusted origins. Sign-in uses Better Auth’s **bearer** token; `lib/api-client.ts` sends `Authorization: Bearer …` on data calls after `hydrateMobileAuthToken()` so `/api/*` routes see a session (cookies alone are not enough across origins).
+**Auth and CRUD from the shell:** the WebView origin is `capacitor://localhost`. Nest CORS allows trusted origins. Sign-in uses Better Auth’s **bearer** token; `apps/web/lib/api-client.ts` sends `Authorization: Bearer …` on data calls after `hydrateMobileAuthToken()`.
 
 Free port **3000** before Playwright or a clean `pnpm dev`: `pnpm run pretest` or `node scripts/free-dev-server-port.mjs` (optional `DEV_SERVER_PORT` / `E2E_DEV_PORT`).
 
@@ -210,9 +214,9 @@ Safari Web Inspector may log missing `__next._tree.txt` or **`*.js.map`** files 
 Example `.env.local` for Simulator (same host for all three; change port if needed):
 
 ```bash
-BETTER_AUTH_URL=http://127.0.0.1:3000
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3000
-NEXT_PUBLIC_AUTH_BASE_URL=http://127.0.0.1:3000
+BETTER_AUTH_URL=http://127.0.0.1:3001
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001
+NEXT_PUBLIC_AUTH_BASE_URL=http://127.0.0.1:3001
 ```
 
 For a **physical device** on Wi‑Fi, use your Mac’s **LAN IP** for those three URLs (not `127.0.0.1`). Same network and firewall rules apply.
@@ -223,7 +227,7 @@ To load the app from a running dev server instead of the bundled `.next-static/`
 
 1. Start the dev server: `pnpm run dev`.
 2. Start a tunnel, e.g. `cloudflared tunnel --url http://localhost:3000`, and copy the HTTPS URL.
-3. Set **`MOBILE_DEV_URL`** in `.env` to your tunnel HTTPS origin (or set each var individually). It applies to `CAPACITOR_SERVER_URL`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_TRUSTED_ORIGINS` when those are unset.
+3. Set **`MOBILE_DEV_URL`** (or `CAPACITOR_SERVER_URL`) to the Next.js tunnel origin. Set `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_URL` to the Nest API origin (a second tunnel to `:3001`, or LAN IP `:3001`).
 4. Run `pnpm run ios:sync` (or `ios:build`) and reopen the app on the device.
 
 Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick tunnels get a new URL on each restart.
@@ -232,15 +236,15 @@ Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick tunn
 
 | Variable                      | When                               | Purpose                                                                                                            |
 | ----------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| _(unset)_                     | Web app in browser                 | Same-origin `/api/*` and `/api/auth/*`.                                                                            |
-| `NEXT_PUBLIC_API_BASE_URL`    | Capacitor / static bundle          | Base URL for `lib/api-client.ts` (`fetch`). Inlined at **`pnpm ios:build`**.                                       |
-| `NEXT_PUBLIC_AUTH_BASE_URL`   | Capacitor / static bundle          | Better Auth client base (`lib/auth-client.ts`). Inlined at **`pnpm ios:build`**.                                   |
-| `BETTER_AUTH_URL`             | Server (`pnpm dev` / `pnpm start`) | Public URL / cookie context; keep origin aligned with the two `NEXT_PUBLIC_*` values.                              |
-| `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                           | Extra origins for Better Auth CSRF checks (comma-separated). Capacitor shell origins are built into `lib/auth.ts`. |
-| `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for `/api/*` CORS (`lib/cors.ts`).                                                   |
-| `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs (`offline`, `apiFetch` when successful, etc.).                           |
-| `MOBILE_DEV_URL`              | Optional (tunnel / LAN dev)        | Single origin; fills the Capacitor/auth/API vars below when each is unset (`lib/env/mobile-dev-url.ts`).           |
-| `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `.next-static/`; run `ios:sync` after changing.                      |
+| _(unset `MOBILE_DEV_URL`)_    | Web app in browser                 | Next on `:3000` calls Nest on `:3001` via `NEXT_PUBLIC_*` (dev default `http://localhost:3001`). |
+| `NEXT_PUBLIC_API_BASE_URL`    | Web + Capacitor                    | Base URL for `apps/web/lib/api-client.ts`.                                                       |
+| `NEXT_PUBLIC_AUTH_BASE_URL`   | Web + Capacitor                    | Better Auth client base (`apps/web/lib/auth-client.ts`).                                         |
+| `BETTER_AUTH_URL`             | Nest API                           | Public API URL / cookie context; keep aligned with the two `NEXT_PUBLIC_*` values.               |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                           | Extra origins for Better Auth CSRF (comma-separated). Capacitor origins are built into the API.  |
+| `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for Nest CORS.                                                     |
+| `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs.                                                       |
+| `MOBILE_DEV_URL`              | Optional (tunnel / LAN webview)    | Capacitor live-reload origin only (`CAPACITOR_SERVER_URL` fallback). Does not set API URLs.      |
+| `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `.next-static/`; run `ios:sync` after changing.    |
 | `IOS_DEPLOY_DEVICE_ID`        | Optional (CLI deploy)              | Override iPhone UDID for `ios:build:deploy` / `ios:deploy`.                                                        |
 | `IOS_DEPLOY_REQUIRED`         | Optional (CLI deploy)              | `1` → fail deploy when no paired device is reachable; default skips install.                                       |
 
@@ -250,7 +254,7 @@ See `.env.example` for commented templates (hosted API, local Simulator, physica
 
 ### E2E suite
 
-Use `pnpm run test` so port **3000** is freed first (stops a stray `pnpm dev`), then Playwright starts its own `next dev` on that port.
+Use `pnpm run test` so port **3000** is freed first, then Playwright starts Nest (`:3001`) and Next (`:3000`).
 
 ```bash
 pnpm run test

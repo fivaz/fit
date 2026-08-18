@@ -1,0 +1,26 @@
+export const PAGE_SIZE = 20;
+
+export const API_PATHS = {
+	auth: "/api/auth",
+	programs: "/api/programs",
+	programById: (id: string) => `/api/programs/${id}`,
+	programsReorder: "/api/programs/reorder",
+	programsGenerate: "/api/programs/generate",
+	programExercises: (id: string) => `/api/programs/${id}/exercises`,
+	programExercisesReorder: (id: string) => `/api/programs/${id}/exercises/reorder`,
+	programGroups: "/api/program-groups",
+	programGroupById: (id: string) => `/api/program-groups/${id}`,
+	exercises: "/api/exercises",
+	exerciseById: (id: string) => `/api/exercises/${id}`,
+	workouts: "/api/workouts",
+	workoutsActive: "/api/workouts/active",
+	workoutById: (id: string) => `/api/workouts/${id}`,
+	workoutSets: (id: string) => `/api/workouts/${id}/sets`,
+	workoutFinish: (id: string) => `/api/workouts/${id}/finish`,
+	bodyMetrics: "/api/body-metrics",
+	progressStats: "/api/progress/stats",
+	progressLogs: "/api/progress/logs",
+	homeRecentWorkouts: "/api/home/recent-workouts",
+	homeExerciseCount: "/api/home/exercise-count",
+	userTimezone: "/api/user/timezone",
+} as const;

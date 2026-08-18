@@ -2,6 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 import "dotenv/config";
 
+process.env.NEXT_PUBLIC_API_BASE_URL ??= "http://localhost:3001";
+process.env.NEXT_PUBLIC_AUTH_BASE_URL ??= "http://localhost:3001";
+process.env.BETTER_AUTH_URL ??= "http://localhost:3001";
+process.env.CORS_ALLOWED_ORIGINS ??= "http://localhost:3000";
+
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
 export default defineConfig({
@@ -15,14 +20,24 @@ export default defineConfig({
 		baseURL,
 		trace: "on-first-retry",
 	},
-	webServer: {
-		command: "node ./node_modules/next/dist/bin/next dev --port 3000",
-		port: 3000,
-		reuseExistingServer: !process.env.CI,
-		timeout: 120_000,
-		stdout: "pipe",
-		stderr: "pipe",
-	},
+	webServer: [
+		{
+			command: "pnpm --filter @fit/api dev",
+			url: "http://localhost:3001/api/health",
+			reuseExistingServer: !process.env.CI,
+			timeout: 120_000,
+			stdout: "pipe",
+			stderr: "pipe",
+		},
+		{
+			command: "pnpm --filter @fit/web dev",
+			url: "http://localhost:3000",
+			reuseExistingServer: !process.env.CI,
+			timeout: 120_000,
+			stdout: "pipe",
+			stderr: "pipe",
+		},
+	],
 	projects: [
 		{
 			name: "chromium",

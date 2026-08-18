@@ -1,6 +1,6 @@
 ---
 description: API response envelope and runtime validation standards
-globs: ["app/api/**/*.ts", "lib/**/*.ts", "**/*route.ts"]
+globs: ["apps/api/**/*.ts", "packages/shared/**/*.ts"]
 alwaysApply: false
 ---
 
