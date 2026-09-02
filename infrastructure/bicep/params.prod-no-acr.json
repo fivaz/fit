@@ -1,0 +1,50 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"environment": {
+			"value": "prod"
+		},
+		"location": {
+			"value": "westeurope"
+		},
+		"projectName": {
+			"value": "fittracker"
+		},
+		"containerAppMinReplicas": {
+			"value": 0
+		},
+		"containerAppMaxReplicas": {
+			"value": 3
+		},
+		"containerCpuCores": {
+			"value": "0.5"
+		},
+		"containerMemory": {
+			"value": "1Gi"
+		},
+		"enableCdnCustomDomain": {
+			"value": false
+		},
+		"customDomainName": {
+			"value": "fittracker.com"
+		},
+		"apiCustomDomainName": {
+			"value": "api.fittracker.com"
+		},
+		"deployAcr": {
+			"value": false
+		},
+		"externalAcrLoginServer": {
+			"value": "ghcr.io"
+		},
+		"tags": {
+			"value": {
+				"Project": "Fit Tracker",
+				"Environment": "Production",
+				"ManagedBy": "Bicep",
+				"CostCenter": "Portfolio"
+			}
+		}
+	}
+}
