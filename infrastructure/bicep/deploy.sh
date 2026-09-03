@@ -16,9 +16,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Configuration
 ENVIRONMENT="${1:-prod}"
-LOCATION="${2:-eastus}"
+LOCATION="${2:-northeurope}"
+RESOURCE_SUFFIX="${3:-}"
+
+# Pass "random" as the 3rd arg to generate a throwaway suffix, e.g.:
+#   ./deploy.sh dev northeurope random
+# This spins up a fully separate resource group + resource set that won't
+# collide with your main dev stack, for parallel/throwaway testing.
+if [ "$RESOURCE_SUFFIX" = "random" ]; then
+    RESOURCE_SUFFIX="$(openssl rand -hex 2)"
+fi
+
 PROJECT_NAME="fittracker"
-RG_NAME="rg-${PROJECT_NAME}-${ENVIRONMENT}"
+RG_NAME="rg-${PROJECT_NAME}-${ENVIRONMENT}${RESOURCE_SUFFIX:+-$RESOURCE_SUFFIX}"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║      Fit Tracker - Azure Infrastructure Deployment        ║${NC}"
@@ -27,6 +37,9 @@ echo ""
 echo -e "${YELLOW}Environment:${NC} $ENVIRONMENT"
 echo -e "${YELLOW}Location:${NC} $LOCATION"
 echo -e "${YELLOW}Resource Group:${NC} $RG_NAME"
+if [ -n "$RESOURCE_SUFFIX" ]; then
+    echo -e "${YELLOW}Resource Suffix:${NC} $RESOURCE_SUFFIX"
+fi
 echo ""
 
 # Check if Azure CLI is installed
@@ -64,7 +77,7 @@ echo -e "${BLUE}🔍 Validating Bicep template...${NC}"
 if az deployment group validate \
     --resource-group "$RG_NAME" \
     --template-file "$SCRIPT_DIR/main.bicep" \
-    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json" \
+    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json" resourceSuffix="$RESOURCE_SUFFIX" \
     --output none 2>/dev/null; then
     echo -e "${GREEN}✓${NC} Template validation passed"
 else
@@ -78,7 +91,7 @@ echo -e "${BLUE}📋 Previewing deployment changes (what-if)...${NC}"
 az deployment group what-if \
     --resource-group "$RG_NAME" \
     --template-file "$SCRIPT_DIR/main.bicep" \
-    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json"
+    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json" resourceSuffix="$RESOURCE_SUFFIX"
 echo ""
 
 # Confirm deployment
@@ -99,7 +112,7 @@ DEPLOYMENT_NAME="fittracker-${ENVIRONMENT}-$(date +%Y%m%d-%H%M%S)"
 if az deployment group create \
     --resource-group "$RG_NAME" \
     --template-file "$SCRIPT_DIR/main.bicep" \
-    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json" \
+    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json" resourceSuffix="$RESOURCE_SUFFIX" \
     --name "$DEPLOYMENT_NAME" \
     --output json > "$SCRIPT_DIR/deployment-output.json"; then
 

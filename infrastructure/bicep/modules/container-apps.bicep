@@ -10,6 +10,9 @@ param location string
 @description('Project name for resource naming')
 param projectName string
 
+@description('Optional lowercase alphanumeric suffix appended to resource names')
+param resourceSuffix string = ''
+
 @description('Resource tags')
 param tags object = {}
 
@@ -51,8 +54,9 @@ param corsAllowedOrigins string = 'https://fittracker.com,capacitor://localhost'
 // Container Apps Environment
 // ============================================
 
-var containerAppEnvName = 'cae-${projectName}-${environment}'
-var containerAppName = 'ca-${projectName}-api-${environment}'
+var nameSuffix = empty(resourceSuffix) ? '' : '-${resourceSuffix}'
+var containerAppEnvName = 'cae-${projectName}-${environment}${nameSuffix}'
+var containerAppName = 'ca-${projectName}-api-${environment}${nameSuffix}'
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: containerAppEnvName

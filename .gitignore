@@ -62,5 +62,8 @@ apps/web/ios/build/
 # Sentry Config File
 .env.sentry-build-plugin
 
+# Azure deployment output (regenerated on every deploy.sh run, leaks subscription/correlation IDs)
+infrastructure/bicep/deployment-output.json
+
 # Portable Cursor rules copied from ~/dotfiles/cursor (see .cursor/rules/README.md)
 .cursor/rules/imported/

@@ -10,6 +10,9 @@ param location string
 @description('Project name for resource naming')
 param projectName string
 
+@description('Optional lowercase alphanumeric suffix appended to resource names')
+param resourceSuffix string = ''
+
 @description('Resource tags')
 param tags object = {}
 
@@ -31,33 +34,38 @@ param softDeleteRetentionDays int = 90
 // Key Vault
 // ============================================
 
-var keyVaultName = 'kv-${projectName}-${environment}'
+var nameSuffix = empty(resourceSuffix) ? '' : '-${resourceSuffix}'
+var keyVaultName = 'kv-${projectName}-${environment}${nameSuffix}'
 
+// The Key Vault API rejects an explicit "enablePurgeProtection: false" (only
+// "true" or omitting the property are valid), so it's spliced in conditionally.
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
   tags: tags
-  properties: {
-    tenantId: subscription().tenantId
-    sku: {
-      family: 'A'
-      name: 'standard' // Standard tier (no HSM needed)
-    }
-    enabledForDeployment: false
-    enabledForDiskEncryption: false
-    enabledForTemplateDeployment: true
-    enableSoftDelete: enableSoftDelete
-    softDeleteRetentionInDays: softDeleteRetentionDays
-    enablePurgeProtection: enablePurgeProtection
-    enableRbacAuthorization: true // Use RBAC instead of access policies
-    publicNetworkAccess: 'Enabled'
-    networkAcls: {
-      defaultAction: 'Allow'
-      bypass: 'AzureServices'
-      ipRules: []
-      virtualNetworkRules: []
-    }
-  }
+  properties: union(
+    {
+      tenantId: subscription().tenantId
+      sku: {
+        family: 'A'
+        name: 'standard' // Standard tier (no HSM needed)
+      }
+      enabledForDeployment: false
+      enabledForDiskEncryption: false
+      enabledForTemplateDeployment: true
+      enableSoftDelete: enableSoftDelete
+      softDeleteRetentionInDays: softDeleteRetentionDays
+      enableRbacAuthorization: true // Use RBAC instead of access policies
+      publicNetworkAccess: 'Enabled'
+      networkAcls: {
+        defaultAction: 'Allow'
+        bypass: 'AzureServices'
+        ipRules: []
+        virtualNetworkRules: []
+      }
+    },
+    enablePurgeProtection ? { enablePurgeProtection: true } : {}
+  )
 }
 
 // Grant Container App managed identity permission to read secrets

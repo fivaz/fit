@@ -10,6 +10,9 @@ param location string
 @description('Project name for resource naming')
 param projectName string
 
+@description('Optional lowercase alphanumeric suffix appended to resource names')
+param resourceSuffix string = ''
+
 @description('Resource tags')
 param tags object = {}
 
@@ -26,9 +29,10 @@ param enableCdn bool = false
 // Storage Account for Static Website
 // ============================================
 
-var storageAccountName = 'st${projectName}${environment}'
-var cdnProfileName = 'cdn-${projectName}-${environment}'
-var cdnEndpointName = '${projectName}-${environment}'
+var nameSuffix = empty(resourceSuffix) ? '' : '-${resourceSuffix}'
+var storageAccountName = 'st${projectName}${environment}${resourceSuffix}'
+var cdnProfileName = 'cdn-${projectName}-${environment}${nameSuffix}'
+var cdnEndpointName = '${projectName}-${environment}${nameSuffix}'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName

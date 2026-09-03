@@ -20,6 +20,13 @@ param location string = resourceGroup().location
 @maxLength(10)
 param projectName string = 'fittracker'
 
+@description('Optional lowercase alphanumeric suffix appended to resource names, for ephemeral/parallel dev stacks that must not collide with the main deployment')
+@maxLength(5)
+param resourceSuffix string = ''
+
+@description('Enable Key Vault purge protection (should stay true for prod; disable for dev so deleted vaults can be purged immediately instead of blocking recreation for up to 90 days)')
+param enableKeyVaultPurgeProtection bool = true
+
 @description('Minimum replicas for Container Apps (0 for scale-to-zero)')
 @minValue(0)
 @maxValue(30)
@@ -92,6 +99,7 @@ module monitoring './modules/monitoring.bicep' = {
     environment: environment
     location: location
     projectName: projectName
+    resourceSuffix: resourceSuffix
     tags: tags
     dailyDataCapGb: 1 // Stay in free tier
     retentionInDays: 90
@@ -108,8 +116,9 @@ module keyVault './modules/key-vault.bicep' = {
     environment: environment
     location: location
     projectName: projectName
+    resourceSuffix: resourceSuffix
     tags: tags
-    enablePurgeProtection: true
+    enablePurgeProtection: enableKeyVaultPurgeProtection
     enableSoftDelete: true
     softDeleteRetentionDays: 90
   }
@@ -125,6 +134,7 @@ module containerRegistry './modules/container-registry.bicep' = if (deployAcr) {
     environment: environment
     location: location
     projectName: projectName
+    resourceSuffix: resourceSuffix
     tags: tags
     acrSku: 'Basic' // $5/month
   }
@@ -140,6 +150,7 @@ module containerApps './modules/container-apps.bicep' = if (deployContainerApps)
     environment: environment
     location: location
     projectName: projectName
+    resourceSuffix: resourceSuffix
     tags: tags
     acrLoginServer: deployAcr ? containerRegistry.outputs.acrLoginServer : externalAcrLoginServer
     acrName: deployAcr ? containerRegistry.outputs.acrName : ''
@@ -165,9 +176,10 @@ module keyVaultAccess './modules/key-vault.bicep' = if (deployContainerApps) {
     environment: environment
     location: location
     projectName: projectName
+    resourceSuffix: resourceSuffix
     tags: tags
     containerAppPrincipalId: containerApps.outputs.containerAppPrincipalId
-    enablePurgeProtection: true
+    enablePurgeProtection: enableKeyVaultPurgeProtection
     enableSoftDelete: true
     softDeleteRetentionDays: 90
   }
@@ -186,6 +198,7 @@ module storage './modules/storage.bicep' = {
     environment: environment
     location: location
     projectName: projectName
+    resourceSuffix: resourceSuffix
     tags: tags
     enableCdn: enableCdn
     enableCustomDomain: enableCdnCustomDomain
@@ -200,8 +213,9 @@ module monitoringAlerts './modules/monitoring.bicep' = {
     environment: environment
     location: location
     projectName: projectName
+    resourceSuffix: resourceSuffix
     tags: tags
-    containerAppId: containerApps.outputs.containerAppId
+    containerAppId: deployContainerApps ? containerApps.outputs.containerAppId : ''
     storageAccountId: storage.outputs.storageAccountId
     dailyDataCapGb: 1
     retentionInDays: 90

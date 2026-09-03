@@ -10,6 +10,9 @@ param location string
 @description('Project name for resource naming')
 param projectName string
 
+@description('Optional lowercase alphanumeric suffix appended to resource names')
+param resourceSuffix string = ''
+
 @description('Resource tags')
 param tags object = {}
 
@@ -21,7 +24,7 @@ param acrSku string = 'Basic'
 // Container Registry
 // ============================================
 
-var acrName = 'acr${projectName}${environment}'
+var acrName = 'acr${projectName}${environment}${resourceSuffix}'
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: acrName

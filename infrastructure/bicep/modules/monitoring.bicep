@@ -10,6 +10,9 @@ param location string
 @description('Project name for resource naming')
 param projectName string
 
+@description('Optional lowercase alphanumeric suffix appended to resource names')
+param resourceSuffix string = ''
+
 @description('Resource tags')
 param tags object = {}
 
@@ -32,9 +35,10 @@ param retentionInDays int = 90
 // Log Analytics Workspace
 // ============================================
 
-var logAnalyticsName = 'log-${projectName}-${environment}'
-var appInsightsName = 'appi-${projectName}-${environment}'
-var actionGroupName = 'ag-${projectName}-${environment}'
+var nameSuffix = empty(resourceSuffix) ? '' : '-${resourceSuffix}'
+var logAnalyticsName = 'log-${projectName}-${environment}${nameSuffix}'
+var appInsightsName = 'appi-${projectName}-${environment}${nameSuffix}'
+var actionGroupName = 'ag-${projectName}-${environment}${nameSuffix}'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: logAnalyticsName
@@ -103,7 +107,7 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
 
 // Alert: Container App Response Time > 2s
 resource responseTimeAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (containerAppId != '') {
-  name: 'alert-api-response-time-${environment}'
+  name: 'alert-api-response-time-${environment}${nameSuffix}'
   location: 'Global'
   tags: tags
   properties: {
@@ -139,7 +143,7 @@ resource responseTimeAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (co
 
 // Alert: Container App Error Rate > 5%
 resource errorRateAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (containerAppId != '') {
-  name: 'alert-api-error-rate-${environment}'
+  name: 'alert-api-error-rate-${environment}${nameSuffix}'
   location: 'Global'
   tags: tags
   properties: {
@@ -182,7 +186,7 @@ resource errorRateAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (conta
 
 // Alert: Storage Account Availability < 99.9%
 resource storageAvailabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (storageAccountId != '') {
-  name: 'alert-storage-availability-${environment}'
+  name: 'alert-storage-availability-${environment}${nameSuffix}'
   location: 'Global'
   tags: tags
   properties: {

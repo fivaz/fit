@@ -5,7 +5,7 @@
 		"_generator": {
 			"name": "bicep",
 			"version": "0.46.1.21595",
-			"templateHash": "305686388579704419"
+			"templateHash": "13959847323253477043"
 		}
 	},
 	"parameters": {
@@ -31,6 +31,21 @@
 			"maxLength": 10,
 			"metadata": {
 				"description": "Project name for resource naming"
+			}
+		},
+		"resourceSuffix": {
+			"type": "string",
+			"defaultValue": "",
+			"maxLength": 5,
+			"metadata": {
+				"description": "Optional lowercase alphanumeric suffix appended to resource names, for ephemeral/parallel dev stacks that must not collide with the main deployment"
+			}
+		},
+		"enableKeyVaultPurgeProtection": {
+			"type": "bool",
+			"defaultValue": true,
+			"metadata": {
+				"description": "Enable Key Vault purge protection (should stay true for prod; disable for dev so deleted vaults can be purged immediately instead of blocking recreation for up to 90 days)"
 			}
 		},
 		"containerAppMinReplicas": {
@@ -67,6 +82,13 @@
 				"description": "Memory per container"
 			}
 		},
+		"enableCdn": {
+			"type": "bool",
+			"defaultValue": false,
+			"metadata": {
+				"description": "Enable Azure CDN (deprecated - disabled by default)"
+			}
+		},
 		"enableCdnCustomDomain": {
 			"type": "bool",
 			"defaultValue": false,
@@ -100,6 +122,13 @@
 			"defaultValue": "",
 			"metadata": {
 				"description": "CORS allowed origins (comma-separated)"
+			}
+		},
+		"deployContainerApps": {
+			"type": "bool",
+			"defaultValue": true,
+			"metadata": {
+				"description": "Deploy Container Apps (set to false for initial infrastructure-only deployment)"
 			}
 		},
 		"deployAcr": {
@@ -154,6 +183,9 @@
 					"projectName": {
 						"value": "[parameters('projectName')]"
 					},
+					"resourceSuffix": {
+						"value": "[parameters('resourceSuffix')]"
+					},
 					"tags": {
 						"value": "[parameters('tags')]"
 					},
@@ -171,7 +203,7 @@
 						"_generator": {
 							"name": "bicep",
 							"version": "0.46.1.21595",
-							"templateHash": "13761396433487794892"
+							"templateHash": "7000052673897818550"
 						}
 					},
 					"parameters": {
@@ -191,6 +223,13 @@
 							"type": "string",
 							"metadata": {
 								"description": "Project name for resource naming"
+							}
+						},
+						"resourceSuffix": {
+							"type": "string",
+							"defaultValue": "",
+							"metadata": {
+								"description": "Optional lowercase alphanumeric suffix appended to resource names"
 							}
 						},
 						"tags": {
@@ -233,9 +272,10 @@
 						}
 					},
 					"variables": {
-						"logAnalyticsName": "[format('log-{0}-{1}', parameters('projectName'), parameters('environment'))]",
-						"appInsightsName": "[format('appi-{0}-{1}', parameters('projectName'), parameters('environment'))]",
-						"actionGroupName": "[format('ag-{0}-{1}', parameters('projectName'), parameters('environment'))]"
+						"nameSuffix": "[if(empty(parameters('resourceSuffix')), '', format('-{0}', parameters('resourceSuffix')))]",
+						"logAnalyticsName": "[format('log-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]",
+						"appInsightsName": "[format('appi-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]",
+						"actionGroupName": "[format('ag-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]"
 					},
 					"resources": [
 						{
@@ -286,7 +326,7 @@
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
-								"groupShortName": "[substring(parameters('projectName'), 0, 12)]",
+								"groupShortName": "[substring(parameters('projectName'), 0, min(length(parameters('projectName')), 12))]",
 								"enabled": true,
 								"emailReceivers": [
 									{
@@ -301,7 +341,7 @@
 							"condition": "[not(equals(parameters('containerAppId'), ''))]",
 							"type": "Microsoft.Insights/metricAlerts",
 							"apiVersion": "2018-03-01",
-							"name": "[format('alert-api-response-time-{0}', parameters('environment'))]",
+							"name": "[format('alert-api-response-time-{0}{1}', parameters('environment'), variables('nameSuffix'))]",
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
@@ -339,7 +379,7 @@
 							"condition": "[not(equals(parameters('containerAppId'), ''))]",
 							"type": "Microsoft.Insights/metricAlerts",
 							"apiVersion": "2018-03-01",
-							"name": "[format('alert-api-error-rate-{0}', parameters('environment'))]",
+							"name": "[format('alert-api-error-rate-{0}{1}', parameters('environment'), variables('nameSuffix'))]",
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
@@ -384,7 +424,7 @@
 							"condition": "[not(equals(parameters('storageAccountId'), ''))]",
 							"type": "Microsoft.Insights/metricAlerts",
 							"apiVersion": "2018-03-01",
-							"name": "[format('alert-storage-availability-{0}', parameters('environment'))]",
+							"name": "[format('alert-storage-availability-{0}{1}', parameters('environment'), variables('nameSuffix'))]",
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
@@ -475,11 +515,14 @@
 					"projectName": {
 						"value": "[parameters('projectName')]"
 					},
+					"resourceSuffix": {
+						"value": "[parameters('resourceSuffix')]"
+					},
 					"tags": {
 						"value": "[parameters('tags')]"
 					},
 					"enablePurgeProtection": {
-						"value": "[equals(parameters('environment'), 'prod')]"
+						"value": "[parameters('enableKeyVaultPurgeProtection')]"
 					},
 					"enableSoftDelete": {
 						"value": true
@@ -495,7 +538,7 @@
 						"_generator": {
 							"name": "bicep",
 							"version": "0.46.1.21595",
-							"templateHash": "9528797425466052041"
+							"templateHash": "9807999787396490191"
 						}
 					},
 					"parameters": {
@@ -515,6 +558,13 @@
 							"type": "string",
 							"metadata": {
 								"description": "Project name for resource naming"
+							}
+						},
+						"resourceSuffix": {
+							"type": "string",
+							"defaultValue": "",
+							"metadata": {
+								"description": "Optional lowercase alphanumeric suffix appended to resource names"
 							}
 						},
 						"tags": {
@@ -556,7 +606,8 @@
 						}
 					},
 					"variables": {
-						"keyVaultName": "[format('kv-{0}-{1}', parameters('projectName'), parameters('environment'))]"
+						"nameSuffix": "[if(empty(parameters('resourceSuffix')), '', format('-{0}', parameters('resourceSuffix')))]",
+						"keyVaultName": "[format('kv-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]"
 					},
 					"resources": [
 						{
@@ -565,27 +616,7 @@
 							"name": "[variables('keyVaultName')]",
 							"location": "[parameters('location')]",
 							"tags": "[parameters('tags')]",
-							"properties": {
-								"tenantId": "[subscription().tenantId]",
-								"sku": {
-									"family": "A",
-									"name": "standard"
-								},
-								"enabledForDeployment": false,
-								"enabledForDiskEncryption": false,
-								"enabledForTemplateDeployment": true,
-								"enableSoftDelete": "[parameters('enableSoftDelete')]",
-								"softDeleteRetentionInDays": "[parameters('softDeleteRetentionDays')]",
-								"enablePurgeProtection": "[parameters('enablePurgeProtection')]",
-								"enableRbacAuthorization": true,
-								"publicNetworkAccess": "Enabled",
-								"networkAcls": {
-									"defaultAction": "Allow",
-									"bypass": "AzureServices",
-									"ipRules": [],
-									"virtualNetworkRules": []
-								}
-							}
+							"properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'standard'), 'enabledForDeployment', false(), 'enabledForDiskEncryption', false(), 'enabledForTemplateDeployment', true(), 'enableSoftDelete', parameters('enableSoftDelete'), 'softDeleteRetentionInDays', parameters('softDeleteRetentionDays'), 'enableRbacAuthorization', true(), 'publicNetworkAccess', 'Enabled', 'networkAcls', createObject('defaultAction', 'Allow', 'bypass', 'AzureServices', 'ipRules', createArray(), 'virtualNetworkRules', createArray())), if(parameters('enablePurgeProtection'), createObject('enablePurgeProtection', true()), createObject()))]"
 						},
 						{
 							"condition": "[not(equals(parameters('containerAppPrincipalId'), ''))]",
@@ -729,6 +760,9 @@
 					"projectName": {
 						"value": "[parameters('projectName')]"
 					},
+					"resourceSuffix": {
+						"value": "[parameters('resourceSuffix')]"
+					},
 					"tags": {
 						"value": "[parameters('tags')]"
 					},
@@ -743,7 +777,7 @@
 						"_generator": {
 							"name": "bicep",
 							"version": "0.46.1.21595",
-							"templateHash": "5563401307833738494"
+							"templateHash": "576992895796067268"
 						}
 					},
 					"parameters": {
@@ -765,6 +799,13 @@
 								"description": "Project name for resource naming"
 							}
 						},
+						"resourceSuffix": {
+							"type": "string",
+							"defaultValue": "",
+							"metadata": {
+								"description": "Optional lowercase alphanumeric suffix appended to resource names"
+							}
+						},
 						"tags": {
 							"type": "object",
 							"defaultValue": {},
@@ -782,7 +823,7 @@
 						}
 					},
 					"variables": {
-						"acrName": "[format('acr{0}{1}', parameters('projectName'), parameters('environment'))]"
+						"acrName": "[format('acr{0}{1}{2}', parameters('projectName'), parameters('environment'), parameters('resourceSuffix'))]"
 					},
 					"resources": [
 						{
@@ -844,6 +885,7 @@
 			}
 		},
 		{
+			"condition": "[parameters('deployContainerApps')]",
 			"type": "Microsoft.Resources/deployments",
 			"apiVersion": "2025-04-01",
 			"name": "containerapps-deployment",
@@ -861,6 +903,9 @@
 					},
 					"projectName": {
 						"value": "[parameters('projectName')]"
+					},
+					"resourceSuffix": {
+						"value": "[parameters('resourceSuffix')]"
 					},
 					"tags": {
 						"value": "[parameters('tags')]"
@@ -899,7 +944,7 @@
 						"_generator": {
 							"name": "bicep",
 							"version": "0.46.1.21595",
-							"templateHash": "11800404094742620119"
+							"templateHash": "7588834006557592970"
 						}
 					},
 					"parameters": {
@@ -919,6 +964,13 @@
 							"type": "string",
 							"metadata": {
 								"description": "Project name for resource naming"
+							}
+						},
+						"resourceSuffix": {
+							"type": "string",
+							"defaultValue": "",
+							"metadata": {
+								"description": "Optional lowercase alphanumeric suffix appended to resource names"
 							}
 						},
 						"tags": {
@@ -999,8 +1051,9 @@
 						}
 					},
 					"variables": {
-						"containerAppEnvName": "[format('cae-{0}-{1}', parameters('projectName'), parameters('environment'))]",
-						"containerAppName": "[format('ca-{0}-api-{1}', parameters('projectName'), parameters('environment'))]"
+						"nameSuffix": "[if(empty(parameters('resourceSuffix')), '', format('-{0}', parameters('resourceSuffix')))]",
+						"containerAppEnvName": "[format('cae-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]",
+						"containerAppName": "[format('ca-{0}-api-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]"
 					},
 					"resources": [
 						{
@@ -1197,6 +1250,7 @@
 			]
 		},
 		{
+			"condition": "[parameters('deployContainerApps')]",
 			"type": "Microsoft.Resources/deployments",
 			"apiVersion": "2025-04-01",
 			"name": "keyvault-access-deployment",
@@ -1215,6 +1269,9 @@
 					"projectName": {
 						"value": "[parameters('projectName')]"
 					},
+					"resourceSuffix": {
+						"value": "[parameters('resourceSuffix')]"
+					},
 					"tags": {
 						"value": "[parameters('tags')]"
 					},
@@ -1222,7 +1279,7 @@
 						"value": "[reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppPrincipalId.value]"
 					},
 					"enablePurgeProtection": {
-						"value": "[equals(parameters('environment'), 'prod')]"
+						"value": "[parameters('enableKeyVaultPurgeProtection')]"
 					},
 					"enableSoftDelete": {
 						"value": true
@@ -1238,7 +1295,7 @@
 						"_generator": {
 							"name": "bicep",
 							"version": "0.46.1.21595",
-							"templateHash": "9528797425466052041"
+							"templateHash": "9807999787396490191"
 						}
 					},
 					"parameters": {
@@ -1258,6 +1315,13 @@
 							"type": "string",
 							"metadata": {
 								"description": "Project name for resource naming"
+							}
+						},
+						"resourceSuffix": {
+							"type": "string",
+							"defaultValue": "",
+							"metadata": {
+								"description": "Optional lowercase alphanumeric suffix appended to resource names"
 							}
 						},
 						"tags": {
@@ -1299,7 +1363,8 @@
 						}
 					},
 					"variables": {
-						"keyVaultName": "[format('kv-{0}-{1}', parameters('projectName'), parameters('environment'))]"
+						"nameSuffix": "[if(empty(parameters('resourceSuffix')), '', format('-{0}', parameters('resourceSuffix')))]",
+						"keyVaultName": "[format('kv-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]"
 					},
 					"resources": [
 						{
@@ -1308,27 +1373,7 @@
 							"name": "[variables('keyVaultName')]",
 							"location": "[parameters('location')]",
 							"tags": "[parameters('tags')]",
-							"properties": {
-								"tenantId": "[subscription().tenantId]",
-								"sku": {
-									"family": "A",
-									"name": "standard"
-								},
-								"enabledForDeployment": false,
-								"enabledForDiskEncryption": false,
-								"enabledForTemplateDeployment": true,
-								"enableSoftDelete": "[parameters('enableSoftDelete')]",
-								"softDeleteRetentionInDays": "[parameters('softDeleteRetentionDays')]",
-								"enablePurgeProtection": "[parameters('enablePurgeProtection')]",
-								"enableRbacAuthorization": true,
-								"publicNetworkAccess": "Enabled",
-								"networkAcls": {
-									"defaultAction": "Allow",
-									"bypass": "AzureServices",
-									"ipRules": [],
-									"virtualNetworkRules": []
-								}
-							}
+							"properties": "[union(createObject('tenantId', subscription().tenantId, 'sku', createObject('family', 'A', 'name', 'standard'), 'enabledForDeployment', false(), 'enabledForDiskEncryption', false(), 'enabledForTemplateDeployment', true(), 'enableSoftDelete', parameters('enableSoftDelete'), 'softDeleteRetentionInDays', parameters('softDeleteRetentionDays'), 'enableRbacAuthorization', true(), 'publicNetworkAccess', 'Enabled', 'networkAcls', createObject('defaultAction', 'Allow', 'bypass', 'AzureServices', 'ipRules', createArray(), 'virtualNetworkRules', createArray())), if(parameters('enablePurgeProtection'), createObject('enablePurgeProtection', true()), createObject()))]"
 						},
 						{
 							"condition": "[not(equals(parameters('containerAppPrincipalId'), ''))]",
@@ -1472,8 +1517,14 @@
 					"projectName": {
 						"value": "[parameters('projectName')]"
 					},
+					"resourceSuffix": {
+						"value": "[parameters('resourceSuffix')]"
+					},
 					"tags": {
 						"value": "[parameters('tags')]"
+					},
+					"enableCdn": {
+						"value": "[parameters('enableCdn')]"
 					},
 					"enableCustomDomain": {
 						"value": "[parameters('enableCdnCustomDomain')]"
@@ -1489,7 +1540,7 @@
 						"_generator": {
 							"name": "bicep",
 							"version": "0.46.1.21595",
-							"templateHash": "14045473953912812670"
+							"templateHash": "2830714918503112871"
 						}
 					},
 					"parameters": {
@@ -1509,6 +1560,13 @@
 							"type": "string",
 							"metadata": {
 								"description": "Project name for resource naming"
+							}
+						},
+						"resourceSuffix": {
+							"type": "string",
+							"defaultValue": "",
+							"metadata": {
+								"description": "Optional lowercase alphanumeric suffix appended to resource names"
 							}
 						},
 						"tags": {
@@ -1531,12 +1589,20 @@
 							"metadata": {
 								"description": "Custom domain name for SPA"
 							}
+						},
+						"enableCdn": {
+							"type": "bool",
+							"defaultValue": false,
+							"metadata": {
+								"description": "Enable Azure CDN (deprecated - use Azure Front Door instead)"
+							}
 						}
 					},
 					"variables": {
-						"storageAccountName": "[format('st{0}{1}', parameters('projectName'), parameters('environment'))]",
-						"cdnProfileName": "[format('cdn-{0}-{1}', parameters('projectName'), parameters('environment'))]",
-						"cdnEndpointName": "[format('{0}-{1}', parameters('projectName'), parameters('environment'))]"
+						"nameSuffix": "[if(empty(parameters('resourceSuffix')), '', format('-{0}', parameters('resourceSuffix')))]",
+						"storageAccountName": "[format('st{0}{1}{2}', parameters('projectName'), parameters('environment'), parameters('resourceSuffix'))]",
+						"cdnProfileName": "[format('cdn-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]",
+						"cdnEndpointName": "[format('{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]"
 					},
 					"resources": [
 						{
@@ -1594,16 +1660,18 @@
 							]
 						},
 						{
+							"condition": "[parameters('enableCdn')]",
 							"type": "Microsoft.Cdn/profiles",
 							"apiVersion": "2023-05-01",
 							"name": "[variables('cdnProfileName')]",
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"sku": {
-								"name": "Standard_Microsoft"
+								"name": "Standard_Akamai"
 							}
 						},
 						{
+							"condition": "[parameters('enableCdn')]",
 							"type": "Microsoft.Cdn/profiles/endpoints",
 							"apiVersion": "2023-05-01",
 							"name": "[format('{0}/{1}', variables('cdnProfileName'), variables('cdnEndpointName'))]",
@@ -1702,15 +1770,15 @@
 						},
 						"cdnEndpointUrl": {
 							"type": "string",
-							"value": "[format('https://{0}', reference(resourceId('Microsoft.Cdn/profiles/endpoints', variables('cdnProfileName'), variables('cdnEndpointName')), '2023-05-01').hostName)]"
+							"value": "[if(parameters('enableCdn'), format('https://{0}', reference(resourceId('Microsoft.Cdn/profiles/endpoints', variables('cdnProfileName'), variables('cdnEndpointName')), '2023-05-01').hostName), reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').primaryEndpoints.web)]"
 						},
 						"cdnEndpointName": {
 							"type": "string",
-							"value": "[variables('cdnEndpointName')]"
+							"value": "[if(parameters('enableCdn'), variables('cdnEndpointName'), 'cdn-disabled')]"
 						},
 						"cdnProfileName": {
 							"type": "string",
-							"value": "[variables('cdnProfileName')]"
+							"value": "[if(parameters('enableCdn'), variables('cdnProfileName'), 'cdn-disabled')]"
 						}
 					}
 				}
@@ -1735,12 +1803,13 @@
 					"projectName": {
 						"value": "[parameters('projectName')]"
 					},
+					"resourceSuffix": {
+						"value": "[parameters('resourceSuffix')]"
+					},
 					"tags": {
 						"value": "[parameters('tags')]"
 					},
-					"containerAppId": {
-						"value": "[reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppId.value]"
-					},
+					"containerAppId": "[if(parameters('deployContainerApps'), createObject('value', reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppId.value), createObject('value', ''))]",
 					"storageAccountId": {
 						"value": "[reference(resourceId('Microsoft.Resources/deployments', 'storage-deployment'), '2025-04-01').outputs.storageAccountId.value]"
 					},
@@ -1758,7 +1827,7 @@
 						"_generator": {
 							"name": "bicep",
 							"version": "0.46.1.21595",
-							"templateHash": "13761396433487794892"
+							"templateHash": "7000052673897818550"
 						}
 					},
 					"parameters": {
@@ -1778,6 +1847,13 @@
 							"type": "string",
 							"metadata": {
 								"description": "Project name for resource naming"
+							}
+						},
+						"resourceSuffix": {
+							"type": "string",
+							"defaultValue": "",
+							"metadata": {
+								"description": "Optional lowercase alphanumeric suffix appended to resource names"
 							}
 						},
 						"tags": {
@@ -1820,9 +1896,10 @@
 						}
 					},
 					"variables": {
-						"logAnalyticsName": "[format('log-{0}-{1}', parameters('projectName'), parameters('environment'))]",
-						"appInsightsName": "[format('appi-{0}-{1}', parameters('projectName'), parameters('environment'))]",
-						"actionGroupName": "[format('ag-{0}-{1}', parameters('projectName'), parameters('environment'))]"
+						"nameSuffix": "[if(empty(parameters('resourceSuffix')), '', format('-{0}', parameters('resourceSuffix')))]",
+						"logAnalyticsName": "[format('log-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]",
+						"appInsightsName": "[format('appi-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]",
+						"actionGroupName": "[format('ag-{0}-{1}{2}', parameters('projectName'), parameters('environment'), variables('nameSuffix'))]"
 					},
 					"resources": [
 						{
@@ -1873,7 +1950,7 @@
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
-								"groupShortName": "[substring(parameters('projectName'), 0, 12)]",
+								"groupShortName": "[substring(parameters('projectName'), 0, min(length(parameters('projectName')), 12))]",
 								"enabled": true,
 								"emailReceivers": [
 									{
@@ -1888,7 +1965,7 @@
 							"condition": "[not(equals(parameters('containerAppId'), ''))]",
 							"type": "Microsoft.Insights/metricAlerts",
 							"apiVersion": "2018-03-01",
-							"name": "[format('alert-api-response-time-{0}', parameters('environment'))]",
+							"name": "[format('alert-api-response-time-{0}{1}', parameters('environment'), variables('nameSuffix'))]",
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
@@ -1926,7 +2003,7 @@
 							"condition": "[not(equals(parameters('containerAppId'), ''))]",
 							"type": "Microsoft.Insights/metricAlerts",
 							"apiVersion": "2018-03-01",
-							"name": "[format('alert-api-error-rate-{0}', parameters('environment'))]",
+							"name": "[format('alert-api-error-rate-{0}{1}', parameters('environment'), variables('nameSuffix'))]",
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
@@ -1971,7 +2048,7 @@
 							"condition": "[not(equals(parameters('storageAccountId'), ''))]",
 							"type": "Microsoft.Insights/metricAlerts",
 							"apiVersion": "2018-03-01",
-							"name": "[format('alert-storage-availability-{0}', parameters('environment'))]",
+							"name": "[format('alert-storage-availability-{0}{1}', parameters('environment'), variables('nameSuffix'))]",
 							"location": "Global",
 							"tags": "[parameters('tags')]",
 							"properties": {
@@ -2063,15 +2140,15 @@
 		},
 		"apiUrl": {
 			"type": "string",
-			"value": "[reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppUrl.value]"
+			"value": "[if(parameters('deployContainerApps'), reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppUrl.value, 'not-deployed')]"
 		},
 		"apiFqdn": {
 			"type": "string",
-			"value": "[reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppFqdn.value]"
+			"value": "[if(parameters('deployContainerApps'), reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppFqdn.value, 'not-deployed')]"
 		},
 		"containerAppName": {
 			"type": "string",
-			"value": "[reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppName.value]"
+			"value": "[if(parameters('deployContainerApps'), reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppName.value, 'not-deployed')]"
 		},
 		"acrLoginServer": {
 			"type": "string",
@@ -2112,8 +2189,8 @@
 				"environment": "[parameters('environment')]",
 				"location": "[parameters('location')]",
 				"spaUrl": "[reference(resourceId('Microsoft.Resources/deployments', 'storage-deployment'), '2025-04-01').outputs.cdnEndpointUrl.value]",
-				"apiUrl": "[reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppUrl.value]",
-				"scaleToZero": "[equals(parameters('containerAppMinReplicas'), 0)]",
+				"apiUrl": "[if(parameters('deployContainerApps'), reference(resourceId('Microsoft.Resources/deployments', 'containerapps-deployment'), '2025-04-01').outputs.containerAppUrl.value, 'not-deployed')]",
+				"scaleToZero": "[and(parameters('deployContainerApps'), equals(parameters('containerAppMinReplicas'), 0))]",
 				"estimatedMonthlyCostIdle": "$5-10",
 				"estimatedMonthlyCostActive100h": "$50-60"
 			}

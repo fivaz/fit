@@ -6,10 +6,13 @@
 			"value": "dev"
 		},
 		"location": {
-			"value": "eastus"
+			"value": "northeurope"
 		},
 		"projectName": {
 			"value": "fittracker"
+		},
+		"enableKeyVaultPurgeProtection": {
+			"value": false
 		},
 		"containerAppMinReplicas": {
 			"value": 0

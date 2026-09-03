@@ -42,7 +42,7 @@ This Bicep configuration deploys a complete Azure infrastructure optimized for c
 ```bash
 az group create \
   --name rg-fittracker-prod \
-  --location westeurope \
+  --location northeurope \
   --tags Project="Fit Tracker" Environment="Production"
 ```
 
@@ -124,6 +124,31 @@ main.bicep                       # Orchestrator (entry point)
 | `customDomainName`      | `''`    | SPA domain (e.g., `fittracker.com`)     |
 | `apiCustomDomainName`   | `''`    | API domain (e.g., `api.fittracker.com`) |
 
+### Dev Iteration (Recreate/Teardown)
+
+| Parameter                       | Default | Description                                                                                                                                                       |
+| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resourceSuffix`                | `''`    | Lowercase alphanumeric suffix (max 5 chars) appended to every resource name. Use for a throwaway parallel stack that can't collide with the main deployment.      |
+| `enableKeyVaultPurgeProtection` | `true`  | Set `false` for dev (already the default in `params.dev.json`) so a deleted Key Vault can be purged immediately instead of blocking recreation for up to 90 days. |
+
+`params.dev.json` ships with `enableKeyVaultPurgeProtection: false`, so `deploy.sh` and `teardown.sh` can freely delete and recreate the dev environment:
+
+```bash
+# Tear down dev (deletes the resource group and purges the Key Vault)
+./teardown.sh dev
+
+# Recreate dev from scratch
+./deploy.sh dev
+```
+
+If a dev Key Vault was created _before_ this setting existed, it may still have purge protection on and will block recreation until Azure auto-purges it (`teardown.sh` prints the exact date). In that case, deploy with a random suffix instead of waiting:
+
+```bash
+./deploy.sh dev northeurope random
+```
+
+This creates a fully separate `rg-fittracker-dev-<suffix>` resource group that won't touch your main dev stack.
+
 ## Deployment Commands
 
 ### Production Deployment
@@ -139,7 +164,7 @@ az deployment group create \
 
 ```bash
 # Create dev resource group
-az group create --name rg-fittracker-dev --location westeurope
+az group create --name rg-fittracker-dev --location northeurope
 
 # Deploy with dev parameters
 az deployment group create \
