@@ -125,7 +125,7 @@ resource responseTimeAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (co
         {
           criterionType: 'StaticThresholdCriterion'
           name: 'ResponseTimeHigh'
-          metricName: 'RequestDuration'
+          metricName: 'ResponseTime'
           metricNamespace: 'Microsoft.App/containerApps'
           operator: 'GreaterThan'
           threshold: 2000 // 2 seconds in ms
@@ -161,13 +161,13 @@ resource errorRateAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (conta
         {
           criterionType: 'StaticThresholdCriterion'
           name: 'ErrorRateHigh'
-          metricName: 'RequestCount'
+          metricName: 'Requests'
           metricNamespace: 'Microsoft.App/containerApps'
           dimensions: [
             {
-              name: 'StatusCode'
+              name: 'statusCodeCategory'
               operator: 'Include'
-              values: ['5*'] // 5xx errors
+              values: ['5xx']
             }
           ]
           operator: 'GreaterThan'
