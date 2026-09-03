@@ -104,7 +104,7 @@ jobs:
             --parameters params.${{ steps.env.outputs.environment }}.json \
             --parameters resourceSuffix="${{ steps.env.outputs.suffix }}" \
             --parameters deployContainerApps=true \
-            --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository_owner }}" \
+            --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository }}" \
             --name "fittracker-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
 
       - name: Get deployment outputs

@@ -65,5 +65,8 @@ apps/web/ios/build/
 # Azure deployment output (regenerated on every deploy.sh run, leaks subscription/correlation IDs)
 infrastructure/bicep/deployment-output.json
 
+# Compiled ARM template, regenerate with `az bicep build --file main.bicep`
+infrastructure/bicep/main.json
+
 # Portable Cursor rules copied from ~/dotfiles/cursor (see .cursor/rules/README.md)
 .cursor/rules/imported/
