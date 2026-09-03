@@ -1,0 +1,131 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/fit-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write  # Required for pushing to ghcr.io
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.event.inputs.environment }}" != "" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy Infrastructure
+        run: |
+          cd infrastructure/bicep
+
+          # Deploy with Container Apps enabled (image was just built)
+          az deployment group create \
+            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --template-file main.bicep \
+            --parameters params.${{ steps.env.outputs.environment }}.json \
+            --parameters deployContainerApps=true \
+            --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository_owner }}" \
+            --name "fittracker-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
+
+      - name: Get deployment outputs
+        id: outputs
+        run: |
+          DEPLOYMENT_NAME=$(az deployment group list \
+            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --query "[0].name" -o tsv)
+
+          API_URL=$(az deployment group show \
+            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --name "$DEPLOYMENT_NAME" \
+            --query "properties.outputs.apiUrl.value" -o tsv)
+
+          SPA_URL=$(az deployment group show \
+            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --name "$DEPLOYMENT_NAME" \
+            --query "properties.outputs.staticWebsiteUrl.value" -o tsv)
+
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+          echo "spa_url=$SPA_URL" >> $GITHUB_OUTPUT
+
+      - name: Run database migrations
+        run: |
+          # Set DATABASE_URL from Azure Key Vault
+          DATABASE_URL=$(az keyvault secret show \
+            --vault-name kv-fittracker-${{ steps.env.outputs.environment }} \
+            --name DATABASE-URL \
+            --query "value" -o tsv)
+
+          export DATABASE_URL
+          pnpm install
+          pnpm run db:deploy
+        env:
+          NODE_ENV: production
+
+      - name: Deployment Summary
+        run: |
+          echo "## Deployment Successful! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**API URL:** ${{ steps.outputs.outputs.api_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**SPA URL:** ${{ steps.outputs.outputs.spa_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
