@@ -16,13 +16,23 @@ This project uses **GitHub Actions** for automated CI/CD with a two-phase deploy
 
 ## Setup (One-Time)
 
+> **Resource suffix:** `deploy.sh` accepts an optional 3rd argument that suffixes
+> every resource name (e.g. `./infrastructure/bicep/deploy.sh dev northeurope 139d`,
+> or `random` for a throwaway suffix) — this is how ephemeral/parallel dev stacks
+> avoid colliding. If you deployed with one, set it here and every command below
+> will pick it up automatically:
+>
+> ```bash
+> export SUFFIX="139d"   # leave empty ("") if you didn't use a suffix
+> ```
+
 ### 1. Create Azure Service Principal
 
 ```bash
 az ad sp create-for-rbac \
   --name "fit-tracker-github-actions" \
   --role contributor \
-  --scopes /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fittracker-dev \
+  --scopes /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --json-auth
 ```
 
@@ -50,7 +60,7 @@ Make sure this matches your GitHub username/org.
 Deploy base infrastructure WITHOUT Container Apps:
 
 ```bash
-./infrastructure/bicep/deploy.sh dev
+./infrastructure/bicep/deploy.sh dev northeurope "$SUFFIX"
 ```
 
 This deploys:
@@ -63,18 +73,38 @@ This deploys:
 
 **Cost**: ~$0.11/month (no ACR, no Container Apps running)
 
-### 5. Update Key Vault Secrets
+### 5. Grant Yourself Key Vault Secrets Access (RBAC)
+
+The Key Vault uses **RBAC authorization** (not access policies), and the Bicep
+template only grants the Container App's managed identity read access
+(`Key Vault Secrets User`) — nobody is granted write access. Setting secret
+values in the next step will fail with a `Forbidden` / `ForbiddenByRbac` error
+until you assign yourself a data-plane role:
+
+```bash
+az role assignment create \
+  --role "Key Vault Secrets Officer" \
+  --assignee $(az ad signed-in-user show --query id -o tsv) \
+  --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fittracker-dev${SUFFIX:+-$SUFFIX}/providers/Microsoft.KeyVault/vaults/kv-fittracker-dev${SUFFIX:+-$SUFFIX}
+```
+
+This requires `Microsoft.Authorization/roleAssignments/write` on the resource
+group (Owner or User Access Administrator) — ask whoever set up the
+subscription to run it if you don't have that permission. Role assignments can
+take a minute or two to propagate before the next step succeeds.
+
+### 6. Update Key Vault Secrets
 
 ```bash
 # Your actual Neon database URL
 az keyvault secret set \
-  --vault-name kv-fittracker-dev \
+  --vault-name kv-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --name DATABASE-URL \
   --value "postgresql://user:password@host/db?sslmode=require"
 
 # Generate auth secret
 az keyvault secret set \
-  --vault-name kv-fittracker-dev \
+  --vault-name kv-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --name BETTER-AUTH-SECRET \
   --value "$(openssl rand -base64 32)"
 ```
@@ -127,7 +157,7 @@ docker push ghcr.io/YOUR_USERNAME/fit-api:latest
 # Deploy with Container Apps enabled
 cd infrastructure/bicep
 az deployment group create \
-  --resource-group rg-fittracker-dev \
+  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --template-file main.bicep \
   --parameters params.dev.json \
   --parameters deployContainerApps=true \
@@ -173,14 +203,14 @@ az deployment group create \
 ```bash
 # Container App logs
 az containerapp logs show \
-  --name ca-fittracker-api-dev \
-  --resource-group rg-fittracker-dev \
+  --name ca-fittracker-api-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --follow
 
 # Application Insights
 az monitor app-insights query \
-  --app appi-fittracker-dev \
-  --resource-group rg-fittracker-dev \
+  --app appi-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --analytics-query "requests | take 10"
 ```
 
@@ -192,7 +222,7 @@ Or via CLI:
 
 ```bash
 az deployment group list \
-  --resource-group rg-fittracker-dev \
+  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --output table
 ```
 
@@ -212,8 +242,8 @@ Check Container App configuration:
 
 ```bash
 az containerapp show \
-  --name ca-fittracker-api-dev \
-  --resource-group rg-fittracker-dev \
+  --name ca-fittracker-api-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --query "properties.template.scale"
 ```
 
@@ -247,8 +277,9 @@ Should show `minReplicas: 0`.
 ## Next Steps
 
 1. ✅ Run initial deployment: `./infrastructure/bicep/deploy.sh dev`
-2. ✅ Update Key Vault secrets
-3. ✅ Push to `master` branch → triggers automated deployment
-4. 🎉 Your app is live!
+2. ✅ Grant yourself Key Vault Secrets Officer access (RBAC)
+3. ✅ Update Key Vault secrets
+4. ✅ Push to `master` branch → triggers automated deployment
+5. 🎉 Your app is live!
 
 For production deployment, create `params.prod.json` and deploy to a separate resource group.
