@@ -127,6 +127,15 @@ jobs:
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
           echo "spa_url=$SPA_URL" >> $GITHUB_OUTPUT
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
       - name: Run database migrations
         run: |
           # Set DATABASE_URL from Azure Key Vault
@@ -136,7 +145,7 @@ jobs:
             --query "value" -o tsv)
 
           export DATABASE_URL
-          pnpm install
+          pnpm install --frozen-lockfile
           pnpm run db:deploy
         env:
           NODE_ENV: production
