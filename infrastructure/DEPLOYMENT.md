@@ -45,7 +45,22 @@ Go to your GitHub repo → Settings → Secrets and variables → Actions → Ne
 **Name**: `AZURE_CREDENTIALS`
 **Value**: Paste the JSON from step 1
 
-### 3. Update Deployment Configuration
+### 3. Declare the Resource Suffix to GitHub
+
+The `azure-deploy.yml` workflow reads the same suffix from a repository
+**variable** (not a secret) so it targets the same resource group/Key Vault as
+your manual deployment, instead of an unsuffixed `rg-fittracker-dev` that
+doesn't exist:
+
+```bash
+gh variable set AZURE_RESOURCE_SUFFIX --body "$SUFFIX"
+```
+
+Or via GitHub UI: repo → Settings → Secrets and variables → Actions →
+Variables → New repository variable, Name `AZURE_RESOURCE_SUFFIX`, Value your
+suffix (leave it unset/empty if you're not using one).
+
+### 4. Update Deployment Configuration
 
 In `.github/workflows/azure-deploy.yml`, update line 18:
 
@@ -55,7 +70,7 @@ IMAGE_NAME: ${{ github.repository }}/fit-api
 
 Make sure this matches your GitHub username/org.
 
-### 4. Initial Infrastructure Deployment (Manual)
+### 5. Initial Infrastructure Deployment (Manual)
 
 Deploy base infrastructure WITHOUT Container Apps:
 
@@ -73,7 +88,7 @@ This deploys:
 
 **Cost**: ~$0.11/month (no ACR, no Container Apps running)
 
-### 5. Grant Yourself Key Vault Secrets Access (RBAC)
+### 6. Grant Yourself Key Vault Secrets Access (RBAC)
 
 The Key Vault uses **RBAC authorization** (not access policies), and the Bicep
 template only grants the Container App's managed identity read access
@@ -93,7 +108,7 @@ group (Owner or User Access Administrator) — ask whoever set up the
 subscription to run it if you don't have that permission. Role assignments can
 take a minute or two to propagate before the next step succeeds.
 
-### 6. Update Key Vault Secrets
+### 7. Update Key Vault Secrets
 
 ```bash
 # Your actual Neon database URL
@@ -252,8 +267,17 @@ Should show `minReplicas: 0`.
 ### "Deployment failed" in GitHub Actions
 
 1. Check `AZURE_CREDENTIALS` secret is set correctly
-2. Verify service principal has `Contributor` role on resource group
-3. Check Azure subscription has required resource providers registered
+2. Check the `AZURE_RESOURCE_SUFFIX` repo variable matches the suffix your
+   resource group actually uses (`gh variable list`) — an
+   `AuthorizationFailed` / "scope is invalid" error usually means the
+   workflow is targeting a resource group name that doesn't exist
+3. Verify service principal has `Contributor` role on resource group. If you
+   created the service principal (step 1) before setting a suffix, or changed
+   the suffix afterwards, re-scope it:
+   ```bash
+   az role assignment create --assignee <service-principal-appId> --role Contributor --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fittracker-dev${SUFFIX:+-$SUFFIX}
+   ```
+4. Check Azure subscription has required resource providers registered
 
 ## Cost Optimization
 
@@ -277,9 +301,10 @@ Should show `minReplicas: 0`.
 ## Next Steps
 
 1. ✅ Run initial deployment: `./infrastructure/bicep/deploy.sh dev`
-2. ✅ Grant yourself Key Vault Secrets Officer access (RBAC)
-3. ✅ Update Key Vault secrets
-4. ✅ Push to `master` branch → triggers automated deployment
-5. 🎉 Your app is live!
+2. ✅ Declare `AZURE_RESOURCE_SUFFIX` as a GitHub repo variable
+3. ✅ Grant yourself Key Vault Secrets Officer access (RBAC)
+4. ✅ Update Key Vault secrets
+5. ✅ Push to `master` branch → triggers automated deployment
+6. 🎉 Your app is live!
 
 For production deployment, create `params.prod.json` and deploy to a separate resource group.

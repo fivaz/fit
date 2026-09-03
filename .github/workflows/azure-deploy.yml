@@ -17,6 +17,9 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/fit-api
+  # Suffixes every Azure resource name (rg-fittracker-dev-<suffix>, kv-fittracker-dev-<suffix>, ...)
+  # so CI targets the same stack as manual `deploy.sh` runs. Set via repo Settings → Variables.
+  AZURE_RESOURCE_SUFFIX: ${{ vars.AZURE_RESOURCE_SUFFIX }}
 
 jobs:
   build-and-deploy:
@@ -69,10 +72,26 @@ jobs:
         id: env
         run: |
           if [ "${{ github.event.inputs.environment }}" != "" ]; then
-            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
           else
-            echo "environment=dev" >> $GITHUB_OUTPUT
+            ENVIRONMENT="dev"
           fi
+          SUFFIX="${AZURE_RESOURCE_SUFFIX}"
+          RG_NAME="rg-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          KV_NAME="kv-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "suffix=$SUFFIX" >> $GITHUB_OUTPUT
+          echo "rg_name=$RG_NAME" >> $GITHUB_OUTPUT
+          echo "kv_name=$KV_NAME" >> $GITHUB_OUTPUT
+
+      - name: Ensure resource group exists
+        run: |
+          az group create \
+            --name "${{ steps.env.outputs.rg_name }}" \
+            --location northeurope \
+            --tags Project="Fit Tracker" Environment="${{ steps.env.outputs.environment }}" ManagedBy="Bicep" \
+            --output none
 
       - name: Deploy Infrastructure
         run: |
@@ -80,9 +99,10 @@ jobs:
 
           # Deploy with Container Apps enabled (image was just built)
           az deployment group create \
-            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
             --template-file main.bicep \
             --parameters params.${{ steps.env.outputs.environment }}.json \
+            --parameters resourceSuffix="${{ steps.env.outputs.suffix }}" \
             --parameters deployContainerApps=true \
             --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository_owner }}" \
             --name "fittracker-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
@@ -91,16 +111,16 @@ jobs:
         id: outputs
         run: |
           DEPLOYMENT_NAME=$(az deployment group list \
-            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
             --query "[0].name" -o tsv)
 
           API_URL=$(az deployment group show \
-            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
             --name "$DEPLOYMENT_NAME" \
             --query "properties.outputs.apiUrl.value" -o tsv)
 
           SPA_URL=$(az deployment group show \
-            --resource-group rg-fittracker-${{ steps.env.outputs.environment }} \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
             --name "$DEPLOYMENT_NAME" \
             --query "properties.outputs.staticWebsiteUrl.value" -o tsv)
 
@@ -111,7 +131,7 @@ jobs:
         run: |
           # Set DATABASE_URL from Azure Key Vault
           DATABASE_URL=$(az keyvault secret show \
-            --vault-name kv-fittracker-${{ steps.env.outputs.environment }} \
+            --vault-name "${{ steps.env.outputs.kv_name }}" \
             --name DATABASE-URL \
             --query "value" -o tsv)
 
