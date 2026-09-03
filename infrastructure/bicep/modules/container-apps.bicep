@@ -201,10 +201,15 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
+// Reference existing ACR if name is provided
+resource existingAcr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = if (acrName != '') {
+  name: acrName
+}
+
 // Grant Container App managed identity permission to pull from ACR (only if using Azure ACR)
 resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (acrName != '') {
   name: guid(containerApp.id, acrName, 'AcrPull')
-  scope: resourceId('Microsoft.ContainerRegistry/registries', acrName)
+  scope: existingAcr
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull role
     principalId: containerApp.identity.principalId

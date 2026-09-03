@@ -6,7 +6,7 @@
 			"value": "dev"
 		},
 		"location": {
-			"value": "westeurope"
+			"value": "eastus"
 		},
 		"projectName": {
 			"value": "fittracker"
@@ -33,10 +33,13 @@
 			"value": ""
 		},
 		"deployAcr": {
-			"value": true
+			"value": false
 		},
 		"externalAcrLoginServer": {
-			"value": ""
+			"value": "ghcr.io"
+		},
+		"deployContainerApps": {
+			"value": false
 		},
 		"tags": {
 			"value": {

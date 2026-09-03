@@ -19,6 +19,9 @@ param enableCustomDomain bool = false
 @description('Custom domain name for SPA')
 param customDomainName string = ''
 
+@description('Enable Azure CDN (deprecated - use Azure Front Door instead)')
+param enableCdn bool = false
+
 // ============================================
 // Storage Account for Static Website
 // ============================================
@@ -77,19 +80,20 @@ resource webContainer 'Microsoft.Storage/storageAccounts/blobServices/containers
 }
 
 // ============================================
-// Azure CDN (Standard Microsoft)
+// Azure CDN (DEPRECATED - Optional, disabled by default)
+// Use Azure Front Door or external CDN (Cloudflare) instead
 // ============================================
 
-resource cdnProfile 'Microsoft.Cdn/profiles@2023-05-01' = {
+resource cdnProfile 'Microsoft.Cdn/profiles@2023-05-01' = if (enableCdn) {
   name: cdnProfileName
   location: 'Global'
   tags: tags
   sku: {
-    name: 'Standard_Microsoft'
+    name: 'Standard_Akamai'
   }
 }
 
-resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2023-05-01' = {
+resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2023-05-01' = if (enableCdn) {
   parent: cdnProfile
   name: cdnEndpointName
   location: 'Global'
@@ -175,6 +179,7 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2023-05-01' = {
 output storageAccountName string = storageAccount.name
 output storageAccountId string = storageAccount.id
 output staticWebsiteUrl string = storageAccount.properties.primaryEndpoints.web
-output cdnEndpointUrl string = 'https://${cdnEndpoint.properties.hostName}'
-output cdnEndpointName string = cdnEndpoint.name
-output cdnProfileName string = cdnProfile.name
+// When CDN is disabled, use static website URL directly
+output cdnEndpointUrl string = enableCdn ? 'https://${cdnEndpoint.properties.hostName}' : storageAccount.properties.primaryEndpoints.web
+output cdnEndpointName string = enableCdn ? cdnEndpoint.name : 'cdn-disabled'
+output cdnProfileName string = enableCdn ? cdnProfile.name : 'cdn-disabled'

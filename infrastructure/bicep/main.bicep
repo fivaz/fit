@@ -36,7 +36,10 @@ param containerCpuCores string = '0.5'
 
 @description('Memory per container')
 @allowed(['0.5Gi', '1.0Gi', '1.5Gi', '2.0Gi', '3.0Gi', '4.0Gi'])
-param containerMemory string = '1Gi'
+param containerMemory string = '1.0Gi'
+
+@description('Enable Azure CDN (deprecated - disabled by default)')
+param enableCdn bool = false
 
 @description('Enable custom domain for CDN')
 param enableCdnCustomDomain bool = false
@@ -52,6 +55,9 @@ param apiBaseUrl string = ''
 
 @description('CORS allowed origins (comma-separated)')
 param corsAllowedOrigins string = ''
+
+@description('Deploy Container Apps (set to false for initial infrastructure-only deployment)')
+param deployContainerApps bool = true
 
 @description('Deploy Azure Container Registry (set to false to save $5/month and use GitHub Container Registry instead)')
 param deployAcr bool = true
@@ -72,7 +78,8 @@ param tags object = {
 // ============================================
 
 var rgName = 'rg-${projectName}-${environment}'
-var computedApiBaseUrl = apiBaseUrl != '' ? apiBaseUrl : 'https://${containerApps.outputs.containerAppFqdn}'
+// Use custom API base URL if provided, otherwise empty (Container App will use its default FQDN)
+var computedApiBaseUrl = apiBaseUrl
 var computedCorsOrigins = corsAllowedOrigins != '' ? corsAllowedOrigins : 'https://${customDomainName},capacitor://localhost,ionic://localhost'
 
 // ============================================
@@ -102,7 +109,7 @@ module keyVault './modules/key-vault.bicep' = {
     location: location
     projectName: projectName
     tags: tags
-    enablePurgeProtection: environment == 'prod'
+    enablePurgeProtection: true
     enableSoftDelete: true
     softDeleteRetentionDays: 90
   }
@@ -124,10 +131,10 @@ module containerRegistry './modules/container-registry.bicep' = if (deployAcr) {
 }
 
 // ============================================
-// Module: Container Apps
+// Module: Container Apps (Optional - requires Docker image)
 // ============================================
 
-module containerApps './modules/container-apps.bicep' = {
+module containerApps './modules/container-apps.bicep' = if (deployContainerApps) {
   name: 'containerapps-deployment'
   params: {
     environment: environment
@@ -152,7 +159,7 @@ module containerApps './modules/container-apps.bicep' = {
 }
 
 // Grant Container App access to Key Vault (after Container App is created)
-module keyVaultAccess './modules/key-vault.bicep' = {
+module keyVaultAccess './modules/key-vault.bicep' = if (deployContainerApps) {
   name: 'keyvault-access-deployment'
   params: {
     environment: environment
@@ -160,7 +167,7 @@ module keyVaultAccess './modules/key-vault.bicep' = {
     projectName: projectName
     tags: tags
     containerAppPrincipalId: containerApps.outputs.containerAppPrincipalId
-    enablePurgeProtection: environment == 'prod'
+    enablePurgeProtection: true
     enableSoftDelete: true
     softDeleteRetentionDays: 90
   }
@@ -180,6 +187,7 @@ module storage './modules/storage.bicep' = {
     location: location
     projectName: projectName
     tags: tags
+    enableCdn: enableCdn
     enableCustomDomain: enableCdnCustomDomain
     customDomainName: customDomainName
   }
@@ -213,10 +221,10 @@ output staticWebsiteUrl string = storage.outputs.staticWebsiteUrl
 output cdnEndpointUrl string = storage.outputs.cdnEndpointUrl
 output storageAccountName string = storage.outputs.storageAccountName
 
-// Container Apps
-output apiUrl string = containerApps.outputs.containerAppUrl
-output apiF qdn string = containerApps.outputs.containerAppFqdn
-output containerAppName string = containerApps.outputs.containerAppName
+// Container Apps (conditional)
+output apiUrl string = deployContainerApps ? containerApps.outputs.containerAppUrl : 'not-deployed'
+output apiFqdn string = deployContainerApps ? containerApps.outputs.containerAppFqdn : 'not-deployed'
+output containerAppName string = deployContainerApps ? containerApps.outputs.containerAppName : 'not-deployed'
 
 // Container Registry (optional)
 output acrLoginServer string = deployAcr ? containerRegistry.outputs.acrLoginServer : externalAcrLoginServer
@@ -238,8 +246,8 @@ output deploymentSummary object = {
   environment: environment
   location: location
   spaUrl: storage.outputs.cdnEndpointUrl
-  apiUrl: containerApps.outputs.containerAppUrl
-  scaleToZero: containerAppMinReplicas == 0
+  apiUrl: deployContainerApps ? containerApps.outputs.containerAppUrl : 'not-deployed'
+  scaleToZero: deployContainerApps && containerAppMinReplicas == 0
   estimatedMonthlyCostIdle: '$5-10'
   estimatedMonthlyCostActive100h: '$50-60'
 }

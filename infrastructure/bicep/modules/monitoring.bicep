@@ -85,7 +85,7 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   location: 'Global'
   tags: tags
   properties: {
-    groupShortName: substring(projectName, 0, 12)
+    groupShortName: substring(projectName, 0, min(length(projectName), 12))
     enabled: true
     emailReceivers: [
       {
@@ -119,8 +119,10 @@ resource responseTimeAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (co
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
+          criterionType: 'StaticThresholdCriterion'
           name: 'ResponseTimeHigh'
           metricName: 'RequestDuration'
+          metricNamespace: 'Microsoft.App/containerApps'
           operator: 'GreaterThan'
           threshold: 2000 // 2 seconds in ms
           timeAggregation: 'Average'
@@ -153,8 +155,10 @@ resource errorRateAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (conta
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
+          criterionType: 'StaticThresholdCriterion'
           name: 'ErrorRateHigh'
           metricName: 'RequestCount'
+          metricNamespace: 'Microsoft.App/containerApps'
           dimensions: [
             {
               name: 'StatusCode'
@@ -194,10 +198,12 @@ resource storageAvailabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' =
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
+          criterionType: 'StaticThresholdCriterion'
           name: 'AvailabilityLow'
           metricName: 'Availability'
+          metricNamespace: 'Microsoft.Storage/storageAccounts'
           operator: 'LessThan'
-          threshold: 99.9
+          threshold: 99
           timeAggregation: 'Average'
         }
       ]

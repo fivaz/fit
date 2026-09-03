@@ -6,7 +6,7 @@
 			"value": "prod"
 		},
 		"location": {
-			"value": "westeurope"
+			"value": "eastus"
 		},
 		"projectName": {
 			"value": "fittracker"

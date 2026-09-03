@@ -11,9 +11,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Determine script directory (works from anywhere)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Configuration
 ENVIRONMENT="${1:-prod}"
-LOCATION="${2:-westeurope}"
+LOCATION="${2:-eastus}"
 PROJECT_NAME="fittracker"
 RG_NAME="rg-${PROJECT_NAME}-${ENVIRONMENT}"
 
@@ -60,8 +63,8 @@ echo ""
 echo -e "${BLUE}🔍 Validating Bicep template...${NC}"
 if az deployment group validate \
     --resource-group "$RG_NAME" \
-    --template-file main.bicep \
-    --parameters "params.${ENVIRONMENT}.json" \
+    --template-file "$SCRIPT_DIR/main.bicep" \
+    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json" \
     --output none 2>/dev/null; then
     echo -e "${GREEN}✓${NC} Template validation passed"
 else
@@ -74,8 +77,8 @@ echo ""
 echo -e "${BLUE}📋 Previewing deployment changes (what-if)...${NC}"
 az deployment group what-if \
     --resource-group "$RG_NAME" \
-    --template-file main.bicep \
-    --parameters "params.${ENVIRONMENT}.json"
+    --template-file "$SCRIPT_DIR/main.bicep" \
+    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json"
 echo ""
 
 # Confirm deployment
@@ -95,10 +98,10 @@ DEPLOYMENT_NAME="fittracker-${ENVIRONMENT}-$(date +%Y%m%d-%H%M%S)"
 
 if az deployment group create \
     --resource-group "$RG_NAME" \
-    --template-file main.bicep \
-    --parameters "params.${ENVIRONMENT}.json" \
+    --template-file "$SCRIPT_DIR/main.bicep" \
+    --parameters "$SCRIPT_DIR/params.${ENVIRONMENT}.json" \
     --name "$DEPLOYMENT_NAME" \
-    --output json > deployment-output.json; then
+    --output json > "$SCRIPT_DIR/deployment-output.json"; then
 
     echo ""
     echo -e "${GREEN}✅ Infrastructure deployment completed successfully!${NC}"
@@ -108,13 +111,13 @@ if az deployment group create \
     echo -e "${BLUE}📊 Deployment Outputs:${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-    SPA_URL=$(jq -r '.properties.outputs.cdnEndpointUrl.value // "N/A"' deployment-output.json)
-    API_URL=$(jq -r '.properties.outputs.apiUrl.value // "N/A"' deployment-output.json)
-    ACR_NAME=$(jq -r '.properties.outputs.acrName.value // "N/A"' deployment-output.json)
-    ACR_LOGIN=$(jq -r '.properties.outputs.acrLoginServer.value // "N/A"' deployment-output.json)
-    KV_NAME=$(jq -r '.properties.outputs.keyVaultName.value // "N/A"' deployment-output.json)
-    STORAGE_NAME=$(jq -r '.properties.outputs.storageAccountName.value // "N/A"' deployment-output.json)
-    APP_INSIGHTS=$(jq -r '.properties.outputs.appInsightsName.value // "N/A"' deployment-output.json)
+    SPA_URL=$(jq -r '.properties.outputs.cdnEndpointUrl.value // "N/A"' "$SCRIPT_DIR/deployment-output.json")
+    API_URL=$(jq -r '.properties.outputs.apiUrl.value // "N/A"' "$SCRIPT_DIR/deployment-output.json")
+    ACR_NAME=$(jq -r '.properties.outputs.acrName.value // "N/A"' "$SCRIPT_DIR/deployment-output.json")
+    ACR_LOGIN=$(jq -r '.properties.outputs.acrLoginServer.value // "N/A"' "$SCRIPT_DIR/deployment-output.json")
+    KV_NAME=$(jq -r '.properties.outputs.keyVaultName.value // "N/A"' "$SCRIPT_DIR/deployment-output.json")
+    STORAGE_NAME=$(jq -r '.properties.outputs.storageAccountName.value // "N/A"' "$SCRIPT_DIR/deployment-output.json")
+    APP_INSIGHTS=$(jq -r '.properties.outputs.appInsightsName.value // "N/A"' "$SCRIPT_DIR/deployment-output.json")
 
     echo -e "${GREEN}SPA URL:${NC} $SPA_URL"
     echo -e "${GREEN}API URL:${NC} $API_URL"
@@ -149,7 +152,7 @@ if az deployment group create \
     echo -e "${GREEN}✨ Infrastructure is ready!${NC}"
 
     # Save outputs to file
-    echo -e "${BLUE}💾 Deployment outputs saved to: deployment-output.json${NC}"
+    echo -e "${BLUE}💾 Deployment outputs saved to: $SCRIPT_DIR/deployment-output.json${NC}"
 
 else
     echo ""
