@@ -22,6 +22,9 @@ param containerAppPrincipalId string = ''
 @description('Enable purge protection (recommended for production)')
 param enablePurgeProtection bool = true
 
+@description('Create placeholder secret entries. Only needed on the initial bootstrap deploy — leave false on every subsequent deploy so it never overwrites real secret values.')
+param managePlaceholderSecrets bool = true
+
 @description('Enable soft delete (recommended for production)')
 param enableSoftDelete bool = true
 
@@ -86,7 +89,7 @@ resource secretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
 // Note: Actual secret values should be set via Azure Portal, CLI, or CI/CD
 // These are just placeholders to create the secret entries
 
-resource databaseUrlSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource databaseUrlSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
   name: 'DATABASE-URL'
   properties: {
@@ -98,7 +101,7 @@ resource databaseUrlSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource betterAuthSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource betterAuthSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
   name: 'BETTER-AUTH-SECRET'
   properties: {
@@ -110,7 +113,7 @@ resource betterAuthSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource openAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource openAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
   name: 'OPENAI-API-KEY'
   properties: {
@@ -122,7 +125,7 @@ resource openAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource googleClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource googleClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
   name: 'GOOGLE-CLIENT-ID'
   properties: {
@@ -134,7 +137,7 @@ resource googleClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource googleClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource googleClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
   name: 'GOOGLE-CLIENT-SECRET'
   properties: {
@@ -146,7 +149,7 @@ resource googleClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource githubClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource githubClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
   name: 'GITHUB-CLIENT-ID'
   properties: {
@@ -158,7 +161,7 @@ resource githubClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource githubClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource githubClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
   name: 'GITHUB-CLIENT-SECRET'
   properties: {

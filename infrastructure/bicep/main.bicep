@@ -121,6 +121,9 @@ module keyVault './modules/key-vault.bicep' = {
     enablePurgeProtection: enableKeyVaultPurgeProtection
     enableSoftDelete: true
     softDeleteRetentionDays: 90
+    // Only create placeholder secrets on the initial bootstrap deploy (deployContainerApps=false).
+    // CI's day-2 deploys must never touch secret values, or they'd wipe the real ones back to placeholders.
+    managePlaceholderSecrets: !deployContainerApps
   }
 }
 
@@ -182,6 +185,7 @@ module keyVaultAccess './modules/key-vault.bicep' = if (deployContainerApps) {
     enablePurgeProtection: enableKeyVaultPurgeProtection
     enableSoftDelete: true
     softDeleteRetentionDays: 90
+    managePlaceholderSecrets: false
   }
   dependsOn: [
     containerApps
