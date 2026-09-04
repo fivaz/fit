@@ -124,8 +124,14 @@ jobs:
             --name "$DEPLOYMENT_NAME" \
             --query "properties.outputs.staticWebsiteUrl.value" -o tsv)
 
+          STORAGE_ACCOUNT_NAME=$(az deployment group show \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --name "$DEPLOYMENT_NAME" \
+            --query "properties.outputs.storageAccountName.value" -o tsv)
+
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
           echo "spa_url=$SPA_URL" >> $GITHUB_OUTPUT
+          echo "storage_account_name=$STORAGE_ACCOUNT_NAME" >> $GITHUB_OUTPUT
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -136,6 +142,9 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Run database migrations
         run: |
           # Set DATABASE_URL from Azure Key Vault
@@ -145,10 +154,40 @@ jobs:
             --query "value" -o tsv)
 
           export DATABASE_URL
-          pnpm install --frozen-lockfile
           pnpm run db:deploy
         env:
           NODE_ENV: production
+
+      - name: Build static frontend
+        run: pnpm run build:static
+        env:
+          NODE_ENV: production
+          API_BASE_URL: ${{ steps.outputs.outputs.api_url }}
+
+      - name: Deploy static frontend
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name "${{ steps.outputs.outputs.storage_account_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --query "[0].value" -o tsv)
+
+          # Idempotent: enabling static website hosting is a data-plane setting,
+          # not a declarative ARM/Bicep resource property, so it's done here on every deploy.
+          az storage blob service-properties update \
+            --account-name "${{ steps.outputs.outputs.storage_account_name }}" \
+            --account-key "$STORAGE_KEY" \
+            --static-website \
+            --index-document index.html \
+            --404-document 404.html \
+            --output none
+
+          az storage blob upload-batch \
+            --account-name "${{ steps.outputs.outputs.storage_account_name }}" \
+            --account-key "$STORAGE_KEY" \
+            --destination '$web' \
+            --source ./apps/web/out \
+            --overwrite \
+            --output none
 
       - name: Deployment Summary
         run: |
