@@ -94,8 +94,12 @@ jobs:
             --output none
 
       - name: Deploy Infrastructure
+        id: deploy
         run: |
           cd infrastructure/bicep
+
+          DEPLOYMENT_NAME="fittracker-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
+          echo "deployment_name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
 
           # Deploy with Container Apps enabled (image was just built)
           az deployment group create \
@@ -105,28 +109,28 @@ jobs:
             --parameters resourceSuffix="${{ steps.env.outputs.suffix }}" \
             --parameters deployContainerApps=true \
             --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository }}" \
-            --name "fittracker-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
+            --name "$DEPLOYMENT_NAME"
 
       - name: Get deployment outputs
         id: outputs
         run: |
-          DEPLOYMENT_NAME=$(az deployment group list \
-            --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --query "[0].name" -o tsv)
-
+          # Use the exact deployment name we generated above — `az deployment group list`
+          # returns every nested module deployment at this RG scope too, with no
+          # guaranteed ordering, so picking "[0]" can silently return the wrong (or an
+          # output-less) deployment.
           API_URL=$(az deployment group show \
             --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --name "$DEPLOYMENT_NAME" \
+            --name "${{ steps.deploy.outputs.deployment_name }}" \
             --query "properties.outputs.apiUrl.value" -o tsv)
 
           SPA_URL=$(az deployment group show \
             --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --name "$DEPLOYMENT_NAME" \
+            --name "${{ steps.deploy.outputs.deployment_name }}" \
             --query "properties.outputs.staticWebsiteUrl.value" -o tsv)
 
           STORAGE_ACCOUNT_NAME=$(az deployment group show \
             --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --name "$DEPLOYMENT_NAME" \
+            --name "${{ steps.deploy.outputs.deployment_name }}" \
             --query "properties.outputs.storageAccountName.value" -o tsv)
 
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
