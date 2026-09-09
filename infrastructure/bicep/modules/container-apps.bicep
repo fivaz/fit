@@ -186,6 +186,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: corsAllowedOrigins
             }
             {
+              name: 'BETTER_AUTH_TRUSTED_ORIGINS'
+              value: corsAllowedOrigins
+            }
+            {
               name: 'API_PORT'
               value: '3001'
             }
