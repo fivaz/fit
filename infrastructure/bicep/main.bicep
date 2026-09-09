@@ -54,6 +54,9 @@ param enableCdnCustomDomain bool = false
 @description('Custom domain name for SPA (e.g., fittracker.com)')
 param customDomainName string = ''
 
+@description('Enable custom domain binding for the API (fronted by Cloudflare)')
+param enableApiCustomDomain bool = false
+
 @description('Custom domain name for API (e.g., api.fittracker.com)')
 param apiCustomDomainName string = ''
 
@@ -165,6 +168,8 @@ module containerApps './modules/container-apps.bicep' = if (deployContainerApps)
     memory: containerMemory
     apiBaseUrl: computedApiBaseUrl
     corsAllowedOrigins: computedCorsOrigins
+    enableApiCustomDomain: enableApiCustomDomain
+    apiCustomDomainName: apiCustomDomainName
   }
   dependsOn: [
     monitoring

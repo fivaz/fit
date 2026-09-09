@@ -52,6 +52,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       defaultAction: 'Allow'
       bypass: 'AzureServices'
     }
+    // customDomain is intentionally NOT set declaratively here: Azure re-verifies the
+    // CNAME against live public DNS on every deployment (not just on change), and once
+    // Cloudflare proxies the record that public CNAME is masked behind Cloudflare's own
+    // IPs, so every future `az deployment group create` would fail preflight validation.
+    // Register the custom domain out-of-band instead (one-time, with the record briefly
+    // set to DNS-only): az storage account update --name <account> --custom-domain <domain>
   }
 }
 

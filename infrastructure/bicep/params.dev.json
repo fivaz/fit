@@ -32,8 +32,11 @@
 		"customDomainName": {
 			"value": ""
 		},
+		"enableApiCustomDomain": {
+			"value": false
+		},
 		"apiCustomDomainName": {
-			"value": ""
+			"value": "api-fit-dev.sfivaz.com"
 		},
 		"deployAcr": {
 			"value": false

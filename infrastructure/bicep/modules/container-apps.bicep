@@ -50,6 +50,12 @@ param apiBaseUrl string
 @description('CORS allowed origins (comma-separated)')
 param corsAllowedOrigins string = 'https://fittracker.com,capacitor://localhost'
 
+@description('Enable custom domain binding for the API (fronted by Cloudflare)')
+param enableApiCustomDomain bool = false
+
+@description('Custom domain name for the API (e.g., api.fittracker.com). The asuid TXT and CNAME records must already exist in DNS before this is enabled.')
+param apiCustomDomainName string = ''
+
 // ============================================
 // Container Apps Environment
 // ============================================
@@ -71,6 +77,20 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
       }
     }
     zoneRedundant: false // Not needed for portfolio, saves cost
+  }
+}
+
+// ============================================
+// Managed certificate for the custom domain (validated via the asuid TXT record)
+// ============================================
+
+resource apiManagedCertificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableApiCustomDomain && apiCustomDomainName != '') {
+  parent: containerAppEnvironment
+  name: 'mc-${replace(apiCustomDomainName, '.', '-')}'
+  location: location
+  properties: {
+    subjectName: apiCustomDomainName
+    domainControlValidation: 'TXT'
   }
 }
 
@@ -100,6 +120,13 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             weight: 100
           }
         ]
+        customDomains: (enableApiCustomDomain && apiCustomDomainName != '') ? [
+          {
+            name: apiCustomDomainName
+            certificateId: apiManagedCertificate.id
+            bindingType: 'SniEnabled'
+          }
+        ] : []
       }
       registries: acrName != '' ? [
         {
