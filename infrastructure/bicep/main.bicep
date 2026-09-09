@@ -57,6 +57,9 @@ param customDomainName string = ''
 @description('Suffix for this revision (e.g. short git SHA), enabling blue-green deploys. Leave empty for an Azure-generated suffix.')
 param revisionSuffix string = ''
 
+@description('Name of the revision currently holding the "production" label. See container-apps.bicep for why this exists.')
+param currentProductionRevisionName string = ''
+
 @description('API base URL (will use Container App FQDN if not provided)')
 param apiBaseUrl string = ''
 
@@ -166,6 +169,7 @@ module containerApps './modules/container-apps.bicep' = if (deployContainerApps)
     apiBaseUrl: computedApiBaseUrl
     corsAllowedOrigins: computedCorsOrigins
     revisionSuffix: revisionSuffix
+    currentProductionRevisionName: currentProductionRevisionName
   }
   dependsOn: [
     monitoring

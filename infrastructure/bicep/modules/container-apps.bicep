@@ -53,6 +53,9 @@ param corsAllowedOrigins string = 'https://fittracker.com,capacitor://localhost'
 @description('Suffix for this revision (e.g. short git SHA). Enables blue-green: the revision provisions with zero traffic until the "production" label is moved to it via `az containerapp revision label add`.')
 param revisionSuffix string = ''
 
+@description('Name of the revision currently holding the "production" label. CI reads this from live state before each deploy. Empty means bootstrap mode (no revision holds the label yet — route by latestRevision instead, since ARM rejects a traffic weight with a label but no revisionName). Non-empty pins traffic at that revision, leaving the newly-deployed revision at 0% until CI\'s post-deploy cutover step re-points the label (and this parameter, next run) at it.')
+param currentProductionRevisionName string = ''
+
 // ============================================
 // Container Apps Environment
 // ============================================
@@ -105,13 +108,21 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 3001
         transport: 'http'
         allowInsecure: false // HTTPS only
-        // WIP: label-based blue-green traffic routing is not finished yet (label alone isn't
-        // a valid ARM traffic target — it needs a revisionName or latestRevision to resolve
-        // against, and nothing bootstraps the "production" label onto a revision beforehand).
-        // Until that's built out, route 100% of traffic to whatever revision just deployed.
-        traffic: [
+        // Traffic stays pinned at whichever revision currently holds the "production" label,
+        // not whatever deployed most recently — that's what lets the blue-green cutover
+        // (azure-deploy.yml's containerapp-bluegreen-cutover action) smoke-test the new
+        // revision at 0% traffic before moving the label. currentProductionRevisionName empty
+        // is CI's bootstrap escape hatch for the one deploy where nothing holds that label yet
+        // (see the param description — ARM rejects label without an explicit revisionName).
+        traffic: empty(currentProductionRevisionName) ? [
           {
             latestRevision: true
+            weight: 100
+          }
+        ] : [
+          {
+            revisionName: currentProductionRevisionName
+            label: 'production'
             weight: 100
           }
         ]

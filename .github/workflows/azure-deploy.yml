@@ -133,23 +133,22 @@ jobs:
       - name: Determine traffic routing mode
         id: traffic-mode
         run: |
-          # Bicep can't tell on its own whether some revision already holds the "production"
-          # label — a label-targeted traffic rule can't resolve against a label nothing holds
-          # yet, so that has to be true only until CI's post-deploy label-assignment step (below)
-          # has run at least once. Check live state directly: does the container app (if it
-          # exists yet) already have a traffic rule with label=='production'?
-          LABELED=$(az containerapp show \
+          # Bicep can't tell on its own which revision (if any) currently holds the "production"
+          # label — ARM rejects a traffic weight that has a label but no explicit revisionName,
+          # so that revisionName has to come from CI reading live state. Empty means bootstrap
+          # mode: no revision holds the label yet, so route by latestRevision instead.
+          PROD_REVISION=$(az containerapp show \
             --name "${{ steps.env.outputs.ca_name }}" \
             --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --query "length(properties.configuration.ingress.traffic[?label=='production'])" \
-            -o tsv 2>/dev/null || echo "0")
+            --query "properties.configuration.ingress.traffic[?label=='production'].revisionName | [0]" \
+            -o tsv 2>/dev/null || echo "")
 
-          if [ "$LABELED" = "0" ] || [ -z "$LABELED" ]; then
+          if [ -z "$PROD_REVISION" ] || [ "$PROD_REVISION" = "None" ]; then
             echo "No 'production'-labeled revision yet — bootstrapping with latestRevision routing"
-            echo "use_latest=true" >> $GITHUB_OUTPUT
+            echo "current_production_revision=" >> $GITHUB_OUTPUT
           else
-            echo "'production' label already assigned — using label-based blue-green routing"
-            echo "use_latest=false" >> $GITHUB_OUTPUT
+            echo "'production' label currently on $PROD_REVISION — pinning traffic there until cutover"
+            echo "current_production_revision=$PROD_REVISION" >> $GITHUB_OUTPUT
           fi
 
       - name: Deploy Infrastructure
@@ -171,7 +170,7 @@ jobs:
             --parameters deployContainerApps=true \
             --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository }}" \
             --parameters revisionSuffix="${{ steps.env.outputs.revision_suffix }}" \
-            --parameters useLatestRevisionTraffic="${{ steps.traffic-mode.outputs.use_latest }}" \
+            --parameters currentProductionRevisionName="${{ steps.traffic-mode.outputs.current_production_revision }}" \
             --name "$DEPLOYMENT_NAME"
 
       - name: Get deployment outputs
