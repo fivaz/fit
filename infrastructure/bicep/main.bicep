@@ -60,6 +60,9 @@ param enableApiCustomDomain bool = false
 @description('Custom domain name for API (e.g., api.fittracker.com)')
 param apiCustomDomainName string = ''
 
+@description('Suffix for this revision (e.g. short git SHA), enabling blue-green deploys. Leave empty for an Azure-generated suffix.')
+param revisionSuffix string = ''
+
 @description('API base URL (will use Container App FQDN if not provided)')
 param apiBaseUrl string = ''
 
@@ -170,6 +173,7 @@ module containerApps './modules/container-apps.bicep' = if (deployContainerApps)
     corsAllowedOrigins: computedCorsOrigins
     enableApiCustomDomain: enableApiCustomDomain
     apiCustomDomainName: apiCustomDomainName
+    revisionSuffix: revisionSuffix
   }
   dependsOn: [
     monitoring
@@ -247,6 +251,8 @@ output storageAccountName string = storage.outputs.storageAccountName
 // Container Apps (conditional)
 output apiUrl string = deployContainerApps ? containerApps.outputs.containerAppUrl : 'not-deployed'
 output apiFqdn string = deployContainerApps ? containerApps.outputs.containerAppFqdn : 'not-deployed'
+output apiRevisionName string = deployContainerApps ? containerApps.outputs.revisionName : 'not-deployed'
+output apiCustomDomainVerificationId string = deployContainerApps ? containerApps.outputs.customDomainVerificationId : 'not-deployed'
 output containerAppName string = deployContainerApps ? containerApps.outputs.containerAppName : 'not-deployed'
 
 // Container Registry (optional)

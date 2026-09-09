@@ -1,0 +1,100 @@
+name: 'Cloudflare DNS record sync'
+description: 'Idempotently ensures a single Cloudflare DNS record exists with the desired content/proxy state (create if missing, update if different, no-op if it already matches)'
+
+inputs:
+  zone_id:
+    description: 'Cloudflare zone ID'
+    required: true
+  api_token:
+    description: 'Cloudflare API token, scoped to Zone:DNS:Edit on this zone'
+    required: true
+  record_type:
+    description: 'CNAME or TXT'
+    required: true
+  record_name:
+    description: 'Fully qualified record name, e.g. fit-staging.sfivaz.com'
+    required: true
+  record_content:
+    description: 'Target hostname (CNAME) or value (TXT)'
+    required: true
+  proxied:
+    description: 'true/false — ignored for TXT records, which Cloudflare can never proxy'
+    required: false
+    default: 'false'
+
+outputs:
+  changed:
+    description: 'true if the record was created or updated, false if it already matched'
+    value: ${{ steps.sync.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - id: sync
+      shell: bash
+      env:
+        CF_ZONE_ID: ${{ inputs.zone_id }}
+        CF_API_TOKEN: ${{ inputs.api_token }}
+        RECORD_TYPE: ${{ inputs.record_type }}
+        RECORD_NAME: ${{ inputs.record_name }}
+        RECORD_CONTENT: ${{ inputs.record_content }}
+        PROXIED: ${{ inputs.proxied }}
+      run: |
+        set -euo pipefail
+
+        api() {
+          local method="$1" path="$2" body="${3:-}"
+          if [ -n "$body" ]; then
+            curl -sS -X "$method" "https://api.cloudflare.com/client/v4/$path" \
+              -H "Authorization: Bearer $CF_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "$body"
+          else
+            curl -sS -X "$method" "https://api.cloudflare.com/client/v4/$path" \
+              -H "Authorization: Bearer $CF_API_TOKEN" \
+              -H "Content-Type: application/json"
+          fi
+        }
+
+        existing=$(api GET "zones/$CF_ZONE_ID/dns_records?type=$RECORD_TYPE&name=$RECORD_NAME")
+        if [ "$(echo "$existing" | jq -r '.success')" != "true" ]; then
+          echo "::error::Cloudflare lookup failed: $(echo "$existing" | jq -c '.errors')"
+          exit 1
+        fi
+
+        if [ "$RECORD_TYPE" = "TXT" ]; then
+          desired_body=$(jq -n --arg type "$RECORD_TYPE" --arg name "$RECORD_NAME" --arg content "$RECORD_CONTENT" \
+            '{type: $type, name: $name, content: $content, ttl: 300}')
+        else
+          desired_body=$(jq -n --arg type "$RECORD_TYPE" --arg name "$RECORD_NAME" --arg content "$RECORD_CONTENT" --argjson proxied "$PROXIED" \
+            '{type: $type, name: $name, content: $content, proxied: $proxied, ttl: 1}')
+        fi
+
+        count=$(echo "$existing" | jq '.result | length')
+
+        if [ "$count" = "0" ]; then
+          echo "Creating $RECORD_TYPE record $RECORD_NAME"
+          result=$(api POST "zones/$CF_ZONE_ID/dns_records" "$desired_body")
+          if [ "$(echo "$result" | jq -r '.success')" != "true" ]; then
+            echo "::error::Failed to create record: $(echo "$result" | jq -c '.errors')"
+            exit 1
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        else
+          record_id=$(echo "$existing" | jq -r '.result[0].id')
+          current_content=$(echo "$existing" | jq -r '.result[0].content')
+          current_proxied=$(echo "$existing" | jq -r '.result[0].proxied')
+
+          if [ "$current_content" = "$RECORD_CONTENT" ] && { [ "$RECORD_TYPE" = "TXT" ] || [ "$current_proxied" = "$PROXIED" ]; }; then
+            echo "$RECORD_TYPE record $RECORD_NAME already matches, skipping"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Updating $RECORD_TYPE record $RECORD_NAME"
+            result=$(api PATCH "zones/$CF_ZONE_ID/dns_records/$record_id" "$desired_body")
+            if [ "$(echo "$result" | jq -r '.success')" != "true" ]; then
+              echo "::error::Failed to update record: $(echo "$result" | jq -c '.errors')"
+              exit 1
+            fi
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+        fi

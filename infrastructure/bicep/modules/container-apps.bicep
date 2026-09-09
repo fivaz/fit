@@ -56,6 +56,9 @@ param enableApiCustomDomain bool = false
 @description('Custom domain name for the API (e.g., api.fittracker.com). The asuid TXT and CNAME records must already exist in DNS before this is enabled.')
 param apiCustomDomainName string = ''
 
+@description('Suffix for this revision (e.g. short git SHA). Enables blue-green: the revision provisions with zero traffic until the "production" label is moved to it via `az containerapp revision label add`.')
+param revisionSuffix string = ''
+
 // ============================================
 // Container Apps Environment
 // ============================================
@@ -108,15 +111,19 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     managedEnvironmentId: containerAppEnvironment.id
     configuration: {
-      activeRevisionsMode: 'Single' // Only one revision active at a time
+      activeRevisionsMode: 'Multiple' // Enables blue-green: new revisions provision with 0% traffic until labeled
       ingress: {
         external: true // Public internet access
         targetPort: 3001
         transport: 'http'
         allowInsecure: false // HTTPS only
+        // Traffic follows whichever revision holds the "production" label, not whatever
+        // deployed most recently. The label must be assigned once per environment after
+        // its first deploy (`az containerapp revision label add --label production ...`);
+        // after that, cutover is a single label move, not a redeploy.
         traffic: [
           {
-            latestRevision: true
+            label: 'production'
             weight: 100
           }
         ]
@@ -148,6 +155,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ]
     }
     template: {
+      revisionSuffix: empty(revisionSuffix) ? null : revisionSuffix
       containers: [
         {
           name: 'fit-api'
@@ -258,3 +266,7 @@ output containerAppFqdn string = containerApp.properties.configuration.ingress.f
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 output containerAppPrincipalId string = containerApp.identity.principalId
 output containerAppEnvironmentName string = containerAppEnvironment.name
+// Name of the revision just deployed (empty-suffix deploys get an Azure-generated suffix instead,
+// visible only after deployment — pass revisionSuffix explicitly to make this predictable for CI).
+output revisionName string = empty(revisionSuffix) ? '' : '${containerAppName}--${revisionSuffix}'
+output customDomainVerificationId string = containerApp.properties.customDomainVerificationId

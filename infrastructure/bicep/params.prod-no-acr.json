@@ -27,10 +27,13 @@
 			"value": false
 		},
 		"customDomainName": {
-			"value": "fittracker.com"
+			"value": "fit.sfivaz.com"
+		},
+		"enableApiCustomDomain": {
+			"value": false
 		},
 		"apiCustomDomainName": {
-			"value": "api.fittracker.com"
+			"value": "api.sfivaz.com"
 		},
 		"deployAcr": {
 			"value": false

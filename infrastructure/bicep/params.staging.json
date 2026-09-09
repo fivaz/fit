@@ -3,7 +3,7 @@
 	"contentVersion": "1.0.0.0",
 	"parameters": {
 		"environment": {
-			"value": "prod"
+			"value": "staging"
 		},
 		"location": {
 			"value": "northeurope"
@@ -11,40 +11,46 @@
 		"projectName": {
 			"value": "fittracker"
 		},
+		"enableKeyVaultPurgeProtection": {
+			"value": false
+		},
 		"containerAppMinReplicas": {
 			"value": 0
 		},
 		"containerAppMaxReplicas": {
-			"value": 3
+			"value": 2
 		},
 		"containerCpuCores": {
-			"value": "0.5"
+			"value": "0.25"
 		},
 		"containerMemory": {
-			"value": "1Gi"
+			"value": "0.5Gi"
 		},
 		"enableCdnCustomDomain": {
 			"value": false
 		},
 		"customDomainName": {
-			"value": "fit.sfivaz.com"
+			"value": ""
 		},
 		"enableApiCustomDomain": {
 			"value": false
 		},
 		"apiCustomDomainName": {
-			"value": "api.sfivaz.com"
+			"value": "api-fit-staging.sfivaz.com"
 		},
 		"deployAcr": {
-			"value": true
+			"value": false
 		},
 		"externalAcrLoginServer": {
-			"value": ""
+			"value": "ghcr.io"
+		},
+		"deployContainerApps": {
+			"value": false
 		},
 		"tags": {
 			"value": {
 				"Project": "Fit Tracker",
-				"Environment": "Production",
+				"Environment": "Staging",
 				"ManagedBy": "Bicep",
 				"CostCenter": "Portfolio"
 			}

@@ -1,0 +1,65 @@
+name: 'Container Apps blue-green cutover'
+description: 'Smoke-tests a freshly deployed revision directly (zero live traffic), then moves the "production" traffic label onto it only if the smoke test passes. Requires az CLI already logged in (e.g. via azure/login earlier in the job).'
+
+inputs:
+  resource_group:
+    description: 'Resource group containing the Container App'
+    required: true
+  container_app_name:
+    description: 'Container App name'
+    required: true
+  revision_name:
+    description: 'Name of the newly deployed revision to test and (on success) label as production'
+    required: true
+  health_check_url:
+    description: "The new revision's direct FQDN health endpoint, bypassing the production label entirely"
+    required: true
+  max_attempts:
+    description: 'Smoke test retry attempts (the revision may take a few seconds to become ready after deployment succeeds)'
+    required: false
+    default: '10'
+  retry_delay_seconds:
+    required: false
+    default: '5'
+
+runs:
+  using: composite
+  steps:
+    - id: smoke-test
+      shell: bash
+      env:
+        HEALTH_CHECK_URL: ${{ inputs.health_check_url }}
+        MAX_ATTEMPTS: ${{ inputs.max_attempts }}
+        RETRY_DELAY_SECONDS: ${{ inputs.retry_delay_seconds }}
+      run: |
+        set -euo pipefail
+        echo "Smoke-testing new revision directly at $HEALTH_CHECK_URL (production traffic is untouched during this check)"
+        attempt=1
+        until curl -fsS "$HEALTH_CHECK_URL" > /dev/null; do
+          if [ "$attempt" -ge "$MAX_ATTEMPTS" ]; then
+            echo "::error::Smoke test failed after $MAX_ATTEMPTS attempts — refusing to move the production label. Live traffic stays on the previous revision."
+            exit 1
+          fi
+          echo "Attempt $attempt/$MAX_ATTEMPTS failed, retrying in ${RETRY_DELAY_SECONDS}s..."
+          attempt=$((attempt + 1))
+          sleep "$RETRY_DELAY_SECONDS"
+        done
+        echo "Smoke test passed"
+
+    - id: cutover
+      shell: bash
+      env:
+        RESOURCE_GROUP: ${{ inputs.resource_group }}
+        CONTAINER_APP_NAME: ${{ inputs.container_app_name }}
+        REVISION_NAME: ${{ inputs.revision_name }}
+      run: |
+        set -euo pipefail
+        echo "Smoke test passed — moving 'production' label to $REVISION_NAME"
+        az containerapp revision label add \
+          --label production \
+          --revision "$REVISION_NAME" \
+          --name "$CONTAINER_APP_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          --yes
+        echo "Cutover complete. Live traffic now serving from $REVISION_NAME."
+        echo "Rollback (if needed later): re-run this command with --revision <previous-revision-name>."

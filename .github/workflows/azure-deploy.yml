@@ -3,6 +3,7 @@ name: Deploy to Azure
 on:
   push:
     branches: ['**']
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       environment:
@@ -12,14 +13,18 @@ on:
         type: choice
         options:
           - dev
+          - staging
           - prod
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/fit-api
-  # Suffixes every Azure resource name (rg-fittracker-dev-<suffix>, kv-fittracker-dev-<suffix>, ...)
+  # Suffixes every Azure resource name (rg-fittracker-<env>-<suffix>, kv-fittracker-<env>-<suffix>, ...)
   # so CI targets the same stack as manual `deploy.sh` runs. Set via repo Settings → Variables.
+  # Storage account names are globally unique across Azure, so each environment needs its own suffix.
   AZURE_RESOURCE_SUFFIX: ${{ vars.AZURE_RESOURCE_SUFFIX }}
+  AZURE_RESOURCE_SUFFIX_STAGING: ${{ vars.AZURE_RESOURCE_SUFFIX_STAGING }}
+  AZURE_RESOURCE_SUFFIX_PROD: ${{ vars.AZURE_RESOURCE_SUFFIX_PROD }}
 
 jobs:
   build-and-deploy:
@@ -49,6 +54,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
+            type=ref,event=tag
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -73,17 +79,44 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.environment }}" != "" ]; then
             ENVIRONMENT="${{ github.event.inputs.environment }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            ENVIRONMENT="prod"
+          elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
+            ENVIRONMENT="staging"
           else
             ENVIRONMENT="dev"
           fi
-          SUFFIX="${AZURE_RESOURCE_SUFFIX}"
+
+          # Per-environment resource suffix and public hostnames (Cloudflare-fronted).
+          case "$ENVIRONMENT" in
+            dev)
+              SUFFIX="${AZURE_RESOURCE_SUFFIX}"
+              FRONTEND_DOMAIN="fit-dev.sfivaz.com"
+              API_DOMAIN="api-fit-dev.sfivaz.com"
+              ;;
+            staging)
+              SUFFIX="${AZURE_RESOURCE_SUFFIX_STAGING}"
+              FRONTEND_DOMAIN="fit-staging.sfivaz.com"
+              API_DOMAIN="api-fit-staging.sfivaz.com"
+              ;;
+            prod)
+              SUFFIX="${AZURE_RESOURCE_SUFFIX_PROD}"
+              FRONTEND_DOMAIN="fit.sfivaz.com"
+              API_DOMAIN="api.sfivaz.com"
+              ;;
+          esac
+
           RG_NAME="rg-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           KV_NAME="kv-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
 
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
           echo "suffix=$SUFFIX" >> $GITHUB_OUTPUT
           echo "rg_name=$RG_NAME" >> $GITHUB_OUTPUT
           echo "kv_name=$KV_NAME" >> $GITHUB_OUTPUT
+          echo "frontend_domain=$FRONTEND_DOMAIN" >> $GITHUB_OUTPUT
+          echo "api_domain=$API_DOMAIN" >> $GITHUB_OUTPUT
+          echo "revision_suffix=$SHORT_SHA" >> $GITHUB_OUTPUT
 
       - name: Ensure resource group exists
         run: |
@@ -101,7 +134,9 @@ jobs:
           DEPLOYMENT_NAME="fittracker-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
           echo "deployment_name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
 
-          # Deploy with Container Apps enabled (image was just built)
+          # Deploy with Container Apps enabled (image was just built). revisionSuffix pins a
+          # predictable, addressable revision name so the blue-green cutover step below can
+          # smoke-test it directly before any production traffic reaches it.
           az deployment group create \
             --resource-group "${{ steps.env.outputs.rg_name }}" \
             --template-file main.bicep \
@@ -109,6 +144,7 @@ jobs:
             --parameters resourceSuffix="${{ steps.env.outputs.suffix }}" \
             --parameters deployContainerApps=true \
             --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository }}" \
+            --parameters revisionSuffix="${{ steps.env.outputs.revision_suffix }}" \
             --name "$DEPLOYMENT_NAME"
 
       - name: Get deployment outputs
@@ -118,24 +154,133 @@ jobs:
           # returns every nested module deployment at this RG scope too, with no
           # guaranteed ordering, so picking "[0]" can silently return the wrong (or an
           # output-less) deployment.
-          API_URL=$(az deployment group show \
-            --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --name "${{ steps.deploy.outputs.deployment_name }}" \
-            --query "properties.outputs.apiUrl.value" -o tsv)
+          get_output() {
+            az deployment group show \
+              --resource-group "${{ steps.env.outputs.rg_name }}" \
+              --name "${{ steps.deploy.outputs.deployment_name }}" \
+              --query "properties.outputs.$1.value" -o tsv
+          }
 
-          SPA_URL=$(az deployment group show \
-            --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --name "${{ steps.deploy.outputs.deployment_name }}" \
-            --query "properties.outputs.staticWebsiteUrl.value" -o tsv)
+          API_URL=$(get_output apiUrl)
+          API_FQDN=$(get_output apiFqdn)
+          API_REVISION_NAME=$(get_output apiRevisionName)
+          API_VERIFICATION_ID=$(get_output apiCustomDomainVerificationId)
+          CONTAINER_APP_NAME=$(get_output containerAppName)
+          SPA_URL=$(get_output staticWebsiteUrl)
+          STORAGE_ACCOUNT_NAME=$(get_output storageAccountName)
 
-          STORAGE_ACCOUNT_NAME=$(az deployment group show \
-            --resource-group "${{ steps.env.outputs.rg_name }}" \
-            --name "${{ steps.deploy.outputs.deployment_name }}" \
-            --query "properties.outputs.storageAccountName.value" -o tsv)
+          # Derived values for the Cloudflare/blue-green steps below.
+          STORAGE_WEB_HOST=$(echo "$SPA_URL" | sed -E 's#^https?://##; s#/$##')
+          API_FQDN_SUFFIX="${API_FQDN#*.}"
 
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+          echo "api_fqdn=$API_FQDN" >> $GITHUB_OUTPUT
+          echo "api_fqdn_suffix=$API_FQDN_SUFFIX" >> $GITHUB_OUTPUT
+          echo "api_revision_name=$API_REVISION_NAME" >> $GITHUB_OUTPUT
+          echo "api_verification_id=$API_VERIFICATION_ID" >> $GITHUB_OUTPUT
+          echo "container_app_name=$CONTAINER_APP_NAME" >> $GITHUB_OUTPUT
           echo "spa_url=$SPA_URL" >> $GITHUB_OUTPUT
+          echo "storage_web_host=$STORAGE_WEB_HOST" >> $GITHUB_OUTPUT
           echo "storage_account_name=$STORAGE_ACCOUNT_NAME" >> $GITHUB_OUTPUT
+
+      # ============================================
+      # Cloudflare DNS — idempotent, safe to run on every deploy (no-op once records match)
+      # ============================================
+
+      - name: 'Cloudflare: sync API ownership TXT record'
+        uses: ./.github/actions/cloudflare-dns-record
+        with:
+          zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          record_type: TXT
+          record_name: asuid.${{ steps.env.outputs.api_domain }}
+          record_content: ${{ steps.outputs.outputs.api_verification_id }}
+
+      - name: 'Cloudflare: sync API CNAME'
+        uses: ./.github/actions/cloudflare-dns-record
+        with:
+          zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          record_type: CNAME
+          record_name: ${{ steps.env.outputs.api_domain }}
+          record_content: ${{ steps.outputs.outputs.api_fqdn }}
+          proxied: 'true'
+
+      - name: 'Cloudflare: sync frontend CNAME'
+        uses: ./.github/actions/cloudflare-dns-record
+        with:
+          zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          record_type: CNAME
+          record_name: ${{ steps.env.outputs.frontend_domain }}
+          record_content: ${{ steps.outputs.outputs.storage_web_host }}
+          proxied: 'true'
+
+      # ============================================
+      # Storage custom domain — Azure re-verifies this CNAME against live public DNS on
+      # every deployment, which fails while Cloudflare proxies it. So this stays a manual,
+      # idempotent (check-before-set) step here rather than a declarative Bicep property —
+      # it only ever does real work once per environment.
+      # ============================================
+
+      - name: Check storage custom domain status
+        id: domain-check
+        run: |
+          CURRENT=$(az storage account show \
+            --name "${{ steps.outputs.outputs.storage_account_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --query "customDomain.name" -o tsv 2>/dev/null || echo "")
+          DESIRED="${{ steps.env.outputs.frontend_domain }}"
+
+          if [ "$CURRENT" = "$DESIRED" ]; then
+            echo "Storage custom domain already set to $DESIRED, skipping"
+            echo "needs_bind=false" >> $GITHUB_OUTPUT
+          else
+            echo "Storage custom domain not yet set (current: '${CURRENT:-<none>}'), will bind $DESIRED"
+            echo "needs_bind=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 'Cloudflare: temporarily un-proxy frontend CNAME for domain verification'
+        if: steps.domain-check.outputs.needs_bind == 'true'
+        uses: ./.github/actions/cloudflare-dns-record
+        with:
+          zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          record_type: CNAME
+          record_name: ${{ steps.env.outputs.frontend_domain }}
+          record_content: ${{ steps.outputs.outputs.storage_web_host }}
+          proxied: 'false'
+
+      - name: Register storage custom domain
+        if: steps.domain-check.outputs.needs_bind == 'true'
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if az storage account update \
+              --name "${{ steps.outputs.outputs.storage_account_name }}" \
+              --resource-group "${{ steps.env.outputs.rg_name }}" \
+              --custom-domain "${{ steps.env.outputs.frontend_domain }}" \
+              --output none; then
+              echo "Custom domain registered"
+              break
+            fi
+            if [ "$attempt" -eq 5 ]; then
+              echo "::error::Failed to register storage custom domain after 5 attempts. The CNAME stays un-proxied (no CDN) until this succeeds on a future run."
+              exit 1
+            fi
+            echo "Attempt $attempt failed (DNS may still be propagating), retrying in 15s..."
+            sleep 15
+          done
+
+      - name: 'Cloudflare: re-proxy frontend CNAME'
+        if: steps.domain-check.outputs.needs_bind == 'true'
+        uses: ./.github/actions/cloudflare-dns-record
+        with:
+          zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          record_type: CNAME
+          record_name: ${{ steps.env.outputs.frontend_domain }}
+          record_content: ${{ steps.outputs.outputs.storage_web_host }}
+          proxied: 'true'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -161,6 +306,36 @@ jobs:
           pnpm run db:deploy
         env:
           NODE_ENV: production
+
+      # ============================================
+      # API traffic cutover — blue-green (staging/prod) vs. immediate (dev)
+      #
+      # Both revisionSuffix and the label-pinned traffic rule in container-apps.bicep mean the
+      # new revision deployed above receives zero traffic until explicitly labeled "production".
+      # Staging/prod gate that on a smoke test against the revision's own direct URL; dev skips
+      # the gate for fast, disposable iteration. Migrations must be expand/contract-safe (additive
+      # first, no destructive drop/rename in the same deploy that stops using the old shape) since
+      # both the old and new revision share one database until cutover completes.
+      # ============================================
+
+      - name: Assign production label (dev — immediate, no smoke-test gate)
+        if: steps.env.outputs.environment == 'dev'
+        run: |
+          az containerapp revision label add \
+            --label production \
+            --revision "${{ steps.outputs.outputs.api_revision_name }}" \
+            --name "${{ steps.outputs.outputs.container_app_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --yes
+
+      - name: Blue-green cutover (staging/prod)
+        if: steps.env.outputs.environment != 'dev'
+        uses: ./.github/actions/containerapp-bluegreen-cutover
+        with:
+          resource_group: ${{ steps.env.outputs.rg_name }}
+          container_app_name: ${{ steps.outputs.outputs.container_app_name }}
+          revision_name: ${{ steps.outputs.outputs.api_revision_name }}
+          health_check_url: https://${{ steps.outputs.outputs.api_revision_name }}.${{ steps.outputs.outputs.api_fqdn_suffix }}/api/health
 
       - name: Build static frontend
         run: pnpm run build:static
@@ -198,6 +373,8 @@ jobs:
           echo "## Deployment Successful! 🚀" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "**API URL:** ${{ steps.outputs.outputs.api_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "**SPA URL:** ${{ steps.outputs.outputs.spa_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend:** https://${{ steps.env.outputs.frontend_domain }}" >> $GITHUB_STEP_SUMMARY
+          echo "**API:** https://${{ steps.env.outputs.api_domain }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Raw API URL:** ${{ steps.outputs.outputs.api_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Revision:** ${{ steps.outputs.outputs.api_revision_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Docker Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY

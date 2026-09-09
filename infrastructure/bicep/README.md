@@ -116,13 +116,43 @@ main.bicep                       # Orchestrator (entry point)
 | `containerCpuCores`       | `0.5`   | CPU per container                 |
 | `containerMemory`         | `1Gi`   | Memory per container              |
 
-### Custom Domain (Optional)
+### Custom Domain (Cloudflare-fronted)
 
-| Parameter               | Default | Description                             |
-| ----------------------- | ------- | --------------------------------------- |
-| `enableCdnCustomDomain` | `false` | Enable custom domain setup              |
-| `customDomainName`      | `''`    | SPA domain (e.g., `fittracker.com`)     |
-| `apiCustomDomainName`   | `''`    | API domain (e.g., `api.fittracker.com`) |
+Every environment's frontend and API sit behind [Cloudflare](https://cloudflare.com) (DNS, CDN, TLS) rather than Azure CDN — `sfivaz.com`'s nameservers are delegated to Cloudflare. `azure-deploy.yml` syncs the required DNS records automatically on every deploy (idempotent — a no-op once records already match).
+
+| Parameter               | Default | Description                                                                                                                            |
+| ----------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `enableCdnCustomDomain` | `false` | Legacy Azure CDN flag — unrelated to the Cloudflare setup below, kept `false` everywhere. See `storage.bicep`'s deprecated CDN module. |
+| `customDomainName`      | `''`    | Frontend hostname, e.g. `fit-staging.sfivaz.com`. **Never set declaratively via Bicep for the storage account** — see the note below.  |
+| `enableApiCustomDomain` | `false` | When `true`, provisions a Container Apps managed certificate (TXT-validated) and binds the API's custom hostname.                      |
+| `apiCustomDomainName`   | `''`    | API hostname, e.g. `api-fit-staging.sfivaz.com`.                                                                                       |
+
+**Why the frontend's custom domain is never set in `storage.bicep`:** Azure Storage re-verifies the `customDomain` property's CNAME against live public DNS on _every_ ARM deployment, not just on change. Since Cloudflare proxies that CNAME (masking the real target behind Cloudflare's own IPs), every deployment after the first would fail with `StorageDomainNameCouldNotVerify`. `azure-deploy.yml`'s "Register storage custom domain" step instead does this imperatively and idempotently: check the current value, and only if it doesn't match, briefly flip the CNAME to DNS-only, run `az storage account update --custom-domain`, then flip it back to proxied. Once set, it's stable and this step becomes a no-op.
+
+**Why the API's custom domain is safe to declare in Bicep:** unlike the storage account, the Container Apps managed certificate (`container-apps.bicep`'s `apiManagedCertificate` resource) validates via a TXT record (`domainControlValidation: 'TXT'`), and Cloudflare can't proxy TXT records — so the validation stays visible regardless of proxy state, and redeploying never re-triggers a failure.
+
+#### Bootstrap runbook (one-time per new environment)
+
+The Container Apps managed certificate is created _and validated_ during the same Bicep deployment that has `enableApiCustomDomain=true` — so the DNS records it validates against must already exist, or that deployment fails. Sequence for a brand-new environment:
+
+1. Deploy once with `deployContainerApps=true`, `enableApiCustomDomain=false` (the default in every `params.<env>.json` until bootstrapped).
+2. `azure-deploy.yml` reads `apiFqdn` and `apiCustomDomainVerificationId` from the deployment outputs and syncs the `asuid.<hostname>` TXT + API CNAME + frontend CNAME via the `cloudflare-dns-record` composite action automatically — no manual DNS step needed.
+3. **Watch for a second TXT record requirement:** requesting the managed certificate (step 5 below) prints its own `validationToken`, separate from the `asuid` ownership token, that must be added as a TXT record at `_dnsauth.<hostname>` with that exact value. This was discovered the hard way bootstrapping dev — `az containerapp env certificate list` shows `provisioningState: Pending` and the `validationToken` field if a cert gets stuck.
+4. Flip `enableApiCustomDomain: true` in `params.<env>.json` (a real commit) once the `_dnsauth` record is in place.
+5. Redeploy — the managed certificate now validates and binds successfully.
+6. Assign the initial `production` revision label: `az containerapp revision label add --label production --revision <name> --name <app> --resource-group <rg> --yes`. There's no prior labeled revision on an environment's first deploy for the label-pinned traffic rule (see Blue-Green below) to target.
+
+Everything above is one-time per environment. Every deploy after this runbook is fully automatic.
+
+### Blue-Green Deployment (staging/prod)
+
+`container-apps.bicep` runs in `activeRevisionsMode: 'Multiple'` with ingress traffic pinned to whichever revision holds the `production` label (`ingress.traffic: [{ label: 'production', weight: 100 }]`), not whatever deployed most recently. Each deploy passes `revisionSuffix` (the short git SHA) so the new revision is addressable directly, at its own FQDN, before it receives any live traffic.
+
+- **Staging/prod:** `azure-deploy.yml` smoke-tests the new revision's `/api/health` directly (via the `containerapp-bluegreen-cutover` composite action), and only moves the `production` label — the actual traffic cutover — if that passes. A failed smoke test leaves live traffic untouched on the old revision.
+- **Dev:** skips the smoke-test gate and moves the label immediately, for fast disposable iteration.
+- **Rollback:** re-run the label-add command pointed at the previous revision name — no rebuild, seconds not minutes.
+- **Migration requirement:** both the old and new revision share one database until cutover completes, so staging/prod migrations must be expand/contract-safe (additive first — never a destructive drop/rename in the same deploy that stops using the old shape). A destructive migration breaks the still-live old revision the instant it runs, regardless of traffic weight.
+- **The frontend does not get blue-green treatment** — a true swap would need dual storage accounts and would re-trigger the CNAME verification cost above on every deploy. It keeps a direct `$web` overwrite, which is already near-atomic since Next.js content-hashes `_next/static/*` filenames; rollback is redeploying the previous static export.
 
 ### Dev Iteration (Recreate/Teardown)
 
