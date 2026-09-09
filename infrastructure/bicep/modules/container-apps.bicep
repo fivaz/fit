@@ -117,13 +117,13 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 3001
         transport: 'http'
         allowInsecure: false // HTTPS only
-        // Traffic follows whichever revision holds the "production" label, not whatever
-        // deployed most recently. The label must be assigned once per environment after
-        // its first deploy (`az containerapp revision label add --label production ...`);
-        // after that, cutover is a single label move, not a redeploy.
+        // WIP: label-based blue-green traffic routing is not finished yet (label alone isn't
+        // a valid ARM traffic target — it needs a revisionName or latestRevision to resolve
+        // against, and nothing bootstraps the "production" label onto a revision beforehand).
+        // Until that's built out, route 100% of traffic to whatever revision just deployed.
         traffic: [
           {
-            label: 'production'
+            latestRevision: true
             weight: 100
           }
         ]
