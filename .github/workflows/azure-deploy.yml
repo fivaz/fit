@@ -109,6 +109,7 @@ jobs:
           RG_NAME="rg-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           KV_NAME="kv-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           CAE_NAME="cae-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          CA_NAME="ca-fittracker-api-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           SHORT_SHA="${GITHUB_SHA:0:7}"
 
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
@@ -116,6 +117,7 @@ jobs:
           echo "rg_name=$RG_NAME" >> $GITHUB_OUTPUT
           echo "kv_name=$KV_NAME" >> $GITHUB_OUTPUT
           echo "cae_name=$CAE_NAME" >> $GITHUB_OUTPUT
+          echo "ca_name=$CA_NAME" >> $GITHUB_OUTPUT
           echo "frontend_domain=$FRONTEND_DOMAIN" >> $GITHUB_OUTPUT
           echo "api_domain=$API_DOMAIN" >> $GITHUB_OUTPUT
           echo "revision_suffix=$SHORT_SHA" >> $GITHUB_OUTPUT
@@ -127,6 +129,28 @@ jobs:
             --location northeurope \
             --tags Project="Fit Tracker" Environment="${{ steps.env.outputs.environment }}" ManagedBy="Bicep" \
             --output none
+
+      - name: Determine traffic routing mode
+        id: traffic-mode
+        run: |
+          # Bicep can't tell on its own whether some revision already holds the "production"
+          # label — a label-targeted traffic rule can't resolve against a label nothing holds
+          # yet, so that has to be true only until CI's post-deploy label-assignment step (below)
+          # has run at least once. Check live state directly: does the container app (if it
+          # exists yet) already have a traffic rule with label=='production'?
+          LABELED=$(az containerapp show \
+            --name "${{ steps.env.outputs.ca_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --query "length(properties.configuration.ingress.traffic[?label=='production'])" \
+            -o tsv 2>/dev/null || echo "0")
+
+          if [ "$LABELED" = "0" ] || [ -z "$LABELED" ]; then
+            echo "No 'production'-labeled revision yet — bootstrapping with latestRevision routing"
+            echo "use_latest=true" >> $GITHUB_OUTPUT
+          else
+            echo "'production' label already assigned — using label-based blue-green routing"
+            echo "use_latest=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Deploy Infrastructure
         id: deploy
@@ -147,6 +171,7 @@ jobs:
             --parameters deployContainerApps=true \
             --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository }}" \
             --parameters revisionSuffix="${{ steps.env.outputs.revision_suffix }}" \
+            --parameters useLatestRevisionTraffic="${{ steps.traffic-mode.outputs.use_latest }}" \
             --name "$DEPLOYMENT_NAME"
 
       - name: Get deployment outputs
@@ -217,6 +242,26 @@ jobs:
           record_name: ${{ steps.env.outputs.frontend_domain }}
           record_content: ${{ steps.outputs.outputs.storage_web_host }}
           proxied: 'true'
+
+      # ============================================
+      # SPA rewrite worker — Azure Storage static website hosting only resolves requests by
+      # exact blob name (no extensionless-path resolution, no SPA fallback beyond one global
+      # 404 document), but the Next.js static export writes each route as a flat "<route>.html"
+      # file. Without this, a direct navigation to e.g. "/programs" 404s, and so does Next's own
+      # client-router HEAD prefetch check for every <Link>. This worker rewrites bare route
+      # requests to their matching ".html" file at the edge before they reach Azure. See
+      # infrastructure/cloudflare/spa-rewrite-worker.js for the full explanation.
+      # ============================================
+
+      - name: 'Cloudflare: sync SPA rewrite worker route'
+        uses: ./.github/actions/cloudflare-worker-route
+        with:
+          account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+          script_name: fit-spa-rewrite-${{ steps.env.outputs.environment }}
+          script_path: infrastructure/cloudflare/spa-rewrite-worker.js
+          route_domain: ${{ steps.env.outputs.frontend_domain }}
 
       # ============================================
       # Storage custom domain — Azure re-verifies this CNAME against live public DNS on
