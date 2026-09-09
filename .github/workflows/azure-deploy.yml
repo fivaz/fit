@@ -108,12 +108,14 @@ jobs:
 
           RG_NAME="rg-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           KV_NAME="kv-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          CAE_NAME="cae-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           SHORT_SHA="${GITHUB_SHA:0:7}"
 
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
           echo "suffix=$SUFFIX" >> $GITHUB_OUTPUT
           echo "rg_name=$RG_NAME" >> $GITHUB_OUTPUT
           echo "kv_name=$KV_NAME" >> $GITHUB_OUTPUT
+          echo "cae_name=$CAE_NAME" >> $GITHUB_OUTPUT
           echo "frontend_domain=$FRONTEND_DOMAIN" >> $GITHUB_OUTPUT
           echo "api_domain=$API_DOMAIN" >> $GITHUB_OUTPUT
           echo "revision_suffix=$SHORT_SHA" >> $GITHUB_OUTPUT
@@ -281,6 +283,54 @@ jobs:
           record_name: ${{ steps.env.outputs.frontend_domain }}
           record_content: ${{ steps.outputs.outputs.storage_web_host }}
           proxied: 'true'
+
+      # ============================================
+      # API custom domain — purely imperative (see container-apps.bicep's comment above the
+      # containerApp resource: `az deployment group what-if` proved ARM replaces the ingress
+      # object wholesale on every deploy, so Bicep can never safely own this). Idempotent: skips
+      # entirely once already bound. Best-effort on first bind — Azure's managed certificate
+      # issuance is a genuinely slow, occasionally flaky async process (observed up to 20 min,
+      # sometimes needing a delete-and-retry cycle with a fresh validation token — see README's
+      # bootstrap runbook) — so this never fails the deploy; the API stays reachable at its raw
+      # *.azurecontainerapps.io URL regardless, and a future run picks up where this left off.
+      # ============================================
+
+      - name: Check API custom domain status
+        id: api-domain-check
+        run: |
+          BINDING=$(az containerapp hostname list \
+            --name "${{ steps.outputs.outputs.container_app_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --query "[?name=='${{ steps.env.outputs.api_domain }}'].bindingType" -o tsv 2>/dev/null || echo "")
+
+          if [ "$BINDING" = "SniEnabled" ]; then
+            echo "API custom domain already bound, skipping"
+            echo "needs_bind=false" >> $GITHUB_OUTPUT
+          else
+            echo "API custom domain not yet bound (current: '${BINDING:-<none>}')"
+            echo "needs_bind=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bind API custom domain (best-effort, does not fail the deploy)
+        if: steps.api-domain-check.outputs.needs_bind == 'true'
+        continue-on-error: true
+        run: |
+          az containerapp hostname add \
+            --hostname "${{ steps.env.outputs.api_domain }}" \
+            --name "${{ steps.outputs.outputs.container_app_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --output none
+
+          if az containerapp hostname bind \
+            --hostname "${{ steps.env.outputs.api_domain }}" \
+            --name "${{ steps.outputs.outputs.container_app_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --environment "${{ steps.env.outputs.cae_name }}" \
+            --validation-method TXT; then
+            echo "API custom domain bound"
+          else
+            echo "::warning::API custom domain bind did not complete this run (Azure's managed certificate issuance can take up to 20 minutes, or need a fresh validation TXT token after a delete/retry — see README). The API remains reachable at its raw *.azurecontainerapps.io URL; a future deploy will retry."
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

@@ -50,12 +50,6 @@ param apiBaseUrl string
 @description('CORS allowed origins (comma-separated)')
 param corsAllowedOrigins string = 'https://fittracker.com,capacitor://localhost'
 
-@description('Enable custom domain binding for the API (fronted by Cloudflare)')
-param enableApiCustomDomain bool = false
-
-@description('Custom domain name for the API (e.g., api.fittracker.com). The asuid TXT and CNAME records must already exist in DNS before this is enabled.')
-param apiCustomDomainName string = ''
-
 @description('Suffix for this revision (e.g. short git SHA). Enables blue-green: the revision provisions with zero traffic until the "production" label is moved to it via `az containerapp revision label add`.')
 param revisionSuffix string = ''
 
@@ -84,21 +78,15 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' 
 }
 
 // ============================================
-// Managed certificate for the custom domain (validated via the asuid TXT record)
-// ============================================
-
-resource apiManagedCertificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableApiCustomDomain && apiCustomDomainName != '') {
-  parent: containerAppEnvironment
-  name: 'mc-${replace(apiCustomDomainName, '.', '-')}'
-  location: location
-  properties: {
-    subjectName: apiCustomDomainName
-    domainControlValidation: 'TXT'
-  }
-}
-
-// ============================================
 // Container App (API)
+//
+// The API custom domain (managed certificate + ingress.customDomains binding) is
+// intentionally NOT managed here. `az deployment group what-if` proved that ARM replaces
+// containerApps' `ingress` object wholesale on every deploy — even omitting the
+// `customDomains` key entirely still clears an existing binding, it doesn't preserve it.
+// So, like the storage account's custom domain, this stays a purely imperative, idempotent
+// step in azure-deploy.yml (`az containerapp hostname add`/`hostname bind`, re-run after
+// every Bicep deploy, cheap no-op once already bound) — see README's bootstrap runbook.
 // ============================================
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
@@ -127,13 +115,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             weight: 100
           }
         ]
-        customDomains: (enableApiCustomDomain && apiCustomDomainName != '') ? [
-          {
-            name: apiCustomDomainName
-            certificateId: apiManagedCertificate.id
-            bindingType: 'SniEnabled'
-          }
-        ] : []
+        // customDomains is deliberately absent — see the comment above the containerApp
+        // resource. Bound imperatively in CI, not here.
       }
       registries: acrName != '' ? [
         {
