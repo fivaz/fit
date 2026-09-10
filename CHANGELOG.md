@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/fivaz/fit/compare/v1.0.0...v1.0.1) (2026-09-10)
+
+### 🐛 Bug Fixes
+
+* **ci:** use one resource suffix across all environments, not one per env ([2dfa35e](https://github.com/fivaz/fit/commit/2dfa35ea4ed3aea97e6a49b4c60a2e199b14548b))
+
 ## 1.0.0 (2026-09-10)
 
 ### ✨ Features
