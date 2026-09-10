@@ -38,9 +38,8 @@ param softDeleteRetentionDays int = 90
 // ============================================
 
 var nameSuffix = empty(resourceSuffix) ? '' : '-${resourceSuffix}'
-// Key Vault names cap at 24 characters. 'kv-fittracker-staging-139d' (26 chars) once overflowed
-// that, but staging/prod now use the shorter 'fit' project name specifically so this — and the
-// whole class of naming-length problem — doesn't come up; no per-environment shortening needed.
+// Key Vault names cap at 24 characters — projectName is kept short enough that
+// '<projectName>-<environment>-<suffix>' never approaches the limit.
 var keyVaultName = 'kv-${projectName}-${environment}${nameSuffix}'
 
 // The Key Vault API rejects an explicit "enablePurgeProtection: false" (only

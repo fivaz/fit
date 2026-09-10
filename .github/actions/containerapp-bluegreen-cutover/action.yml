@@ -62,9 +62,8 @@ runs:
           --resource-group "$RESOURCE_GROUP" \
           --yes
 
-        # `revision label add` only tags the revision with the label — it does NOT move
-        # traffic weight onto it (confirmed live: the label moved but the old revision kept
-        # 100% weight until this ran). This is the step that actually cuts traffic over.
+        # `revision label add` only tags the revision — it does not move traffic weight.
+        # This is the step that actually cuts traffic over.
         az containerapp ingress traffic set \
           --name "$CONTAINER_APP_NAME" \
           --resource-group "$RESOURCE_GROUP" \
