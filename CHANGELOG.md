@@ -1,3 +1,13 @@
+## [1.3.0](https://github.com/fivaz/fit/compare/v1.2.0...v1.3.0) (2026-09-10)
+
+### ✨ Features
+
+* **ci:** auto-sync DATABASE-URL from GitHub secrets on first deploy of a new environment ([b849be5](https://github.com/fivaz/fit/commit/b849be564b1c43f517328a89e6f4197e70f5c708))
+
+### 📝 Documentation
+
+* trim narrative comments to durable facts across CI, Bicep, and README ([f85d612](https://github.com/fivaz/fit/commit/f85d61290fd4a0aff76cd7c2c6804b9339df3b1a))
+
 ## [1.2.0](https://github.com/fivaz/fit/compare/v1.1.0...v1.2.0) (2026-09-10)
 
 ### ✨ Features
