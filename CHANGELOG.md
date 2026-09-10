@@ -1,3 +1,13 @@
+## [1.2.0](https://github.com/fivaz/fit/compare/v1.1.0...v1.2.0) (2026-09-10)
+
+### ✨ Features
+
+* **infra:** migrate dev to fit naming, matching staging/prod ([8f658a5](https://github.com/fivaz/fit/commit/8f658a5c2a7aed52dd35654c64e836681ffe865d))
+
+### 🐛 Bug Fixes
+
+* **infra:** restore staging's customDomainName, fixes broken CORS allowlist ([d92f592](https://github.com/fivaz/fit/commit/d92f592a11f2d567a867b547fb45534f1dde865d))
+
 ## [1.1.0](https://github.com/fivaz/fit/compare/v1.0.2...v1.1.0) (2026-09-10)
 
 ### ✨ Features
