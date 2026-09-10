@@ -1,0 +1,90 @@
+# .dockerignore - Exclude unnecessary files from Docker build context
+# Reduces build context size and improves build performance
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (will be installed in container)
+node_modules
+.pnpm-store
+.pnpm-debug.log*
+
+# Build outputs (will be generated in container)
+dist
+build
+out
+.next
+.next-static
+.static-build-tmp
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+test-results
+playwright-report
+.playwright-browsers
+coverage
+*.test.ts
+*.spec.ts
+
+# Environment files (use Azure Key Vault instead)
+.env
+.env.*
+!.env.example
+.secrets
+
+# IDE
+.idea
+.vscode
+.cursor
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Documentation
+*.md
+!README.md
+docs
+
+# CI/CD
+.github
+.gitlab-ci.yml
+azure-pipelines.yml
+.act-cache
+
+# Mobile/iOS (not needed in API container)
+apps/web/ios
+apps/web/android
+apps/web/capacitor.config.ts
+ios-deploy.config*.json
+
+# Web app (not needed in API container)
+apps/web
+!apps/web/package.json
+
+# Infrastructure as Code (not needed in runtime)
+infrastructure
+*.bicep
+*.tf
+*.tfvars
+
+# Misc
+.vercel
+.sentry-build-plugin
+exercises-full.json
+apps/web/public/exercises/*

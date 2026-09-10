@@ -2,8 +2,12 @@
 build
 coverage
 .next
+.next-static
+out
+dist
 node_modules
 .idea
 pnpm-lock.yaml
 *.hbs
 CHANGELOG.md
+apps/api/src/generated
