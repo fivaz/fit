@@ -21,7 +21,7 @@
 			"value": "0.5"
 		},
 		"containerMemory": {
-			"value": "1Gi"
+			"value": "1.0Gi"
 		},
 		"enableCdnCustomDomain": {
 			"value": false

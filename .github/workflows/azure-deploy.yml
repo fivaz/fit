@@ -19,11 +19,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/fit-api
-  # Suffixes every Azure resource name (rg-fittracker-<env>-<suffix>, kv-fittracker-<env>-<suffix>, ...)
+  # Suffixes every Azure resource name (rg-<project>-<env>-<suffix>, kv-<project>-<env>-<suffix>, ...)
   # so CI targets the same stack as manual `deploy.sh` runs. Set via repo Settings → Variables.
-  # Shared across dev/staging/prod deliberately: $ENVIRONMENT already makes resource names
-  # unique between them (e.g. "stfittrackerdev139d" vs "...staging139d") — this suffix's job
-  # is only to disambiguate parallel stacks of the *same* environment, not different environments.
   AZURE_RESOURCE_SUFFIX: ${{ vars.AZURE_RESOURCE_SUFFIX }}
 
 jobs:
@@ -87,21 +84,11 @@ jobs:
             ENVIRONMENT="dev"
           fi
 
-          # Same suffix across all environments is safe: the storage account name pattern
-          # already embeds $ENVIRONMENT ("stfittrackerdev139d" vs "...staging139d" vs
-          # "...prod139d"), which is what actually keeps them globally unique from each
-          # other — the suffix's job is only to disambiguate *parallel* stacks of the *same*
-          # environment (e.g. two throwaway dev stacks), not to separate dev/staging/prod.
+          # The suffix disambiguates parallel stacks of the *same* environment; $ENVIRONMENT
+          # itself already keeps dev/staging/prod's resource names unique from each other.
           SUFFIX="${AZURE_RESOURCE_SUFFIX}"
 
-          # All three environments share northeurope. Hit a Free Trial-tier restriction here
-          # earlier (MaxNumberOfRegionalEnvironmentsInSubExceeded, 1 Container App Environment
-          # per region) — resolved by upgrading the subscription to Pay-As-You-Go, confirmed live
-          # by deploying a second environment in northeurope successfully. Must match the
-          # "location" value in the corresponding params.<env>.json exactly.
-          # All three environments now use the shorter "fit" project name — dev was migrated
-          # from "fittracker" after staging/prod had already switched (decided once
-          # "fittracker" combined with "staging" overflowed Key Vault's 24-char name limit).
+          # RG_LOCATION must match the "location" value in the corresponding params.<env>.json.
           case "$ENVIRONMENT" in
             dev)
               PROJECT_NAME="fit"
@@ -347,14 +334,11 @@ jobs:
           proxied: 'true'
 
       # ============================================
-      # API custom domain — purely imperative (see container-apps.bicep's comment above the
-      # containerApp resource: `az deployment group what-if` proved ARM replaces the ingress
-      # object wholesale on every deploy, so Bicep can never safely own this). Idempotent: skips
-      # entirely once already bound. Best-effort on first bind — Azure's managed certificate
-      # issuance is a genuinely slow, occasionally flaky async process (observed up to 20 min,
-      # sometimes needing a delete-and-retry cycle with a fresh validation token — see README's
-      # bootstrap runbook) — so this never fails the deploy; the API stays reachable at its raw
-      # *.azurecontainerapps.io URL regardless, and a future run picks up where this left off.
+      # API custom domain — purely imperative, never Bicep-managed (see container-apps.bicep).
+      # Idempotent: skips once already bound. Best-effort — managed certificate issuance can
+      # take up to 20 minutes and occasionally needs a manual retry (README's bootstrap runbook),
+      # so this never fails the deploy; the API stays reachable at its raw *.azurecontainerapps.io
+      # URL regardless, and a future run picks up where this left off.
       # ============================================
 
       - name: Check API custom domain status
@@ -406,6 +390,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Idempotent: fires automatically exactly once, the first time a brand-new environment's
+      # Key Vault still has the Bicep-bootstrap placeholder instead of a real DATABASE-URL — a
+      # complete no-op on every routine deploy afterward. Deliberate password rotation later is
+      # a separate, manual step (sync-secrets-to-keyvault.yml), not handled here.
+      - name: Sync DATABASE-URL from GitHub secret if still a placeholder
+        run: |
+          CURRENT=$(az keyvault secret show \
+            --vault-name "${{ steps.env.outputs.kv_name }}" \
+            --name DATABASE-URL \
+            --query "value" -o tsv 2>/dev/null || echo "")
+
+          if [ -z "$CURRENT" ] || [ "$CURRENT" = "placeholder-update-via-portal-or-cli" ]; then
+            echo "DATABASE-URL not yet set for this environment, syncing from GitHub secret"
+            az keyvault secret set \
+              --vault-name "${{ steps.env.outputs.kv_name }}" \
+              --name DATABASE-URL \
+              --value "$DB_URL_SECRET" \
+              --output none
+          else
+            echo "DATABASE-URL already set, skipping"
+          fi
+        env:
+          DB_URL_SECRET: ${{ steps.env.outputs.environment == 'dev' && secrets.DATABASE_URL_DEV || secrets.DATABASE_URL }}
+
       - name: Run database migrations
         run: |
           # Set DATABASE_URL from Azure Key Vault
@@ -440,9 +448,8 @@ jobs:
             --resource-group "${{ steps.env.outputs.rg_name }}" \
             --yes
 
-          # `revision label add` only tags the revision with the label — it does NOT move
-          # traffic weight onto it (confirmed live: the label moved but the old revision kept
-          # 100% weight until this ran). This is the step that actually cuts traffic over.
+          # `revision label add` only tags the revision — it does not move traffic weight.
+          # This is the step that actually cuts traffic over.
           az containerapp ingress traffic set \
             --name "${{ steps.outputs.outputs.container_app_name }}" \
             --resource-group "${{ steps.env.outputs.rg_name }}" \
