@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/fivaz/fit/compare/v1.0.1...v1.0.2) (2026-09-10)
+
+### 🐛 Bug Fixes
+
+* **infra:** shorten staging's Key Vault name to fit Azure's 24-char limit ([06a0cf9](https://github.com/fivaz/fit/commit/06a0cf9307011c012f2e1fc9c99beb48826f93b6))
+
 ## [1.0.1](https://github.com/fivaz/fit/compare/v1.0.0...v1.0.1) (2026-09-10)
 
 ### 🐛 Bug Fixes
