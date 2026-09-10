@@ -23,39 +23,25 @@ Azure Container Registry costs $5/month even when idle (Basic tier). For a portf
 
 ### How to Skip ACR
 
-#### Method A: Use the no-ACR parameter file
+### `params.prod.json` already skips ACR by default
+
+`deployAcr` is `false` and `externalAcrLoginServer` is `ghcr.io` out of the box — no separate no-ACR params file needed anymore (the old `params.prod-no-acr.json` was removed as redundant once this became the default):
 
 ```bash
-# Deploy without ACR using the pre-configured params file
 az deployment group create \
   --resource-group rg-fittracker-prod \
   --template-file main.bicep \
-  --parameters params.prod-no-acr.json
+  --parameters params.prod.json
 ```
 
-#### Method B: Modify your existing params file
-
-Update `params.prod.json`:
-
-```json
-{
-	"deployAcr": {
-		"value": false
-	},
-	"externalAcrLoginServer": {
-		"value": "ghcr.io"
-	}
-}
-```
-
-#### Method C: Override at deployment time
+If you ever want ACR back instead, override it explicitly:
 
 ```bash
 az deployment group create \
   --resource-group rg-fittracker-prod \
   --template-file main.bicep \
   --parameters params.prod.json \
-  --parameters deployAcr=false externalAcrLoginServer=ghcr.io
+  --parameters deployAcr=true
 ```
 
 ### Using GitHub Container Registry
@@ -174,7 +160,7 @@ For dev/staging environments, use smaller resource sizes:
 az deployment group create \
   --resource-group rg-fittracker-prod \
   --template-file main.bicep \
-  --parameters params.prod-no-acr.json \
+  --parameters params.prod.json \
   --parameters containerCpuCores=0.25 containerMemory=0.5Gi \
   --parameters retentionInDays=30 dailyDataCapGb=1
 ```

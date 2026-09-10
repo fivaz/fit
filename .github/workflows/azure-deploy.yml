@@ -94,36 +94,47 @@ jobs:
           # environment (e.g. two throwaway dev stacks), not to separate dev/staging/prod.
           SUFFIX="${AZURE_RESOURCE_SUFFIX}"
 
+          # All three environments share northeurope. Hit a Free Trial-tier restriction here
+          # earlier (MaxNumberOfRegionalEnvironmentsInSubExceeded, 1 Container App Environment
+          # per region) — resolved by upgrading the subscription to Pay-As-You-Go, confirmed live
+          # by deploying a second environment in northeurope successfully. Must match the
+          # "location" value in the corresponding params.<env>.json exactly.
+          # dev keeps the original "fittracker" project name — its resources are already live
+          # and renaming would mean recreating them (new custom-domain/cert bootstrap from
+          # scratch). staging/prod use the shorter "fit" instead: decided after "fittracker"
+          # combined with "staging" overflowed Key Vault's 24-char name limit, and shorter names
+          # leave more headroom for that class of problem generally, not just this one instance.
           case "$ENVIRONMENT" in
             dev)
+              PROJECT_NAME="fittracker"
+              RG_LOCATION="northeurope"
               FRONTEND_DOMAIN="fit-dev.sfivaz.com"
               API_DOMAIN="api-fit-dev.sfivaz.com"
               ;;
             staging)
+              PROJECT_NAME="fit"
+              RG_LOCATION="northeurope"
               FRONTEND_DOMAIN="fit-staging.sfivaz.com"
               API_DOMAIN="api-fit-staging.sfivaz.com"
               ;;
             prod)
+              PROJECT_NAME="fit"
+              RG_LOCATION="northeurope"
               FRONTEND_DOMAIN="fit.sfivaz.com"
               API_DOMAIN="api.sfivaz.com"
               ;;
           esac
 
-          RG_NAME="rg-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
-          # Must match key-vault.bicep's envShort exactly — Key Vault names cap at 24 chars,
-          # which "kv-fittracker-staging-<suffix>" overflows (only staging is long enough to).
-          KV_ENV_SHORT="${ENVIRONMENT}"
-          if [ "$ENVIRONMENT" = "staging" ]; then
-            KV_ENV_SHORT="stg"
-          fi
-          KV_NAME="kv-fittracker-${KV_ENV_SHORT}${SUFFIX:+-$SUFFIX}"
-          CAE_NAME="cae-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
-          CA_NAME="ca-fittracker-api-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          RG_NAME="rg-${PROJECT_NAME}-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          KV_NAME="kv-${PROJECT_NAME}-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          CAE_NAME="cae-${PROJECT_NAME}-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          CA_NAME="ca-${PROJECT_NAME}-api-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           SHORT_SHA="${GITHUB_SHA:0:7}"
 
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
           echo "suffix=$SUFFIX" >> $GITHUB_OUTPUT
           echo "rg_name=$RG_NAME" >> $GITHUB_OUTPUT
+          echo "rg_location=$RG_LOCATION" >> $GITHUB_OUTPUT
           echo "kv_name=$KV_NAME" >> $GITHUB_OUTPUT
           echo "cae_name=$CAE_NAME" >> $GITHUB_OUTPUT
           echo "ca_name=$CA_NAME" >> $GITHUB_OUTPUT
@@ -135,7 +146,7 @@ jobs:
         run: |
           az group create \
             --name "${{ steps.env.outputs.rg_name }}" \
-            --location northeurope \
+            --location "${{ steps.env.outputs.rg_location }}" \
             --tags Project="Fit Tracker" Environment="${{ steps.env.outputs.environment }}" ManagedBy="Bicep" \
             --output none
 
