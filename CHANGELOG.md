@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/fivaz/fit/compare/v1.3.0...v1.3.1) (2026-09-10)
+
+### 🐛 Bug Fixes
+
+* **infra:** rename prod API domain to api-fit.sfivaz.com for naming consistency ([675d500](https://github.com/fivaz/fit/commit/675d500c0ba7e48e8ab789b34d2ebab15986d59e))
+
 ## [1.3.0](https://github.com/fivaz/fit/compare/v1.2.0...v1.3.0) (2026-09-10)
 
 ### ✨ Features
