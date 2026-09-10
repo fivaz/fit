@@ -106,7 +106,7 @@ jobs:
               PROJECT_NAME="fit"
               RG_LOCATION="northeurope"
               FRONTEND_DOMAIN="fit.sfivaz.com"
-              API_DOMAIN="api.sfivaz.com"
+              API_DOMAIN="api-fit.sfivaz.com"
               ;;
           esac
 
