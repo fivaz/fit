@@ -9,7 +9,7 @@
 			"value": "northeurope"
 		},
 		"projectName": {
-			"value": "fittracker"
+			"value": "fit"
 		},
 		"containerAppMinReplicas": {
 			"value": 0
@@ -30,10 +30,10 @@
 			"value": "fit.sfivaz.com"
 		},
 		"deployAcr": {
-			"value": true
+			"value": false
 		},
 		"externalAcrLoginServer": {
-			"value": ""
+			"value": "ghcr.io"
 		},
 		"tags": {
 			"value": {
