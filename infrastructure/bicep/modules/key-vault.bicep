@@ -38,7 +38,14 @@ param softDeleteRetentionDays int = 90
 // ============================================
 
 var nameSuffix = empty(resourceSuffix) ? '' : '-${resourceSuffix}'
-var keyVaultName = 'kv-${projectName}-${environment}${nameSuffix}'
+// Key Vault names cap at 24 characters — 'kv-fittracker-staging-139d' is 26, over the limit
+// (only 'staging' is long enough to overflow it; 'dev'/'prod' fit fine, which is why this went
+// unnoticed until staging's first real deploy). Shortened here only, not in the environment
+// param itself, and only for 'staging' — changing dev's or prod's actual resulting name would
+// rename/recreate an already-deployed vault. azure-deploy.yml's KV_NAME computation must stay
+// in sync with this exact mapping.
+var envShort = environment == 'staging' ? 'stg' : environment
+var keyVaultName = 'kv-${projectName}-${envShort}${nameSuffix}'
 
 // The Key Vault API rejects an explicit "enablePurgeProtection: false" (only
 // "true" or omitting the property are valid), so it's spliced in conditionally.

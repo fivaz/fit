@@ -110,7 +110,13 @@ jobs:
           esac
 
           RG_NAME="rg-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
-          KV_NAME="kv-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
+          # Must match key-vault.bicep's envShort exactly — Key Vault names cap at 24 chars,
+          # which "kv-fittracker-staging-<suffix>" overflows (only staging is long enough to).
+          KV_ENV_SHORT="${ENVIRONMENT}"
+          if [ "$ENVIRONMENT" = "staging" ]; then
+            KV_ENV_SHORT="stg"
+          fi
+          KV_NAME="kv-fittracker-${KV_ENV_SHORT}${SUFFIX:+-$SUFFIX}"
           CAE_NAME="cae-fittracker-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           CA_NAME="ca-fittracker-api-${ENVIRONMENT}${SUFFIX:+-$SUFFIX}"
           SHORT_SHA="${GITHUB_SHA:0:7}"
