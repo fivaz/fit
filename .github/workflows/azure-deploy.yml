@@ -21,10 +21,10 @@ env:
   IMAGE_NAME: ${{ github.repository }}/fit-api
   # Suffixes every Azure resource name (rg-fittracker-<env>-<suffix>, kv-fittracker-<env>-<suffix>, ...)
   # so CI targets the same stack as manual `deploy.sh` runs. Set via repo Settings → Variables.
-  # Storage account names are globally unique across Azure, so each environment needs its own suffix.
+  # Shared across dev/staging/prod deliberately: $ENVIRONMENT already makes resource names
+  # unique between them (e.g. "stfittrackerdev139d" vs "...staging139d") — this suffix's job
+  # is only to disambiguate parallel stacks of the *same* environment, not different environments.
   AZURE_RESOURCE_SUFFIX: ${{ vars.AZURE_RESOURCE_SUFFIX }}
-  AZURE_RESOURCE_SUFFIX_STAGING: ${{ vars.AZURE_RESOURCE_SUFFIX_STAGING }}
-  AZURE_RESOURCE_SUFFIX_PROD: ${{ vars.AZURE_RESOURCE_SUFFIX_PROD }}
 
 jobs:
   build-and-deploy:
@@ -87,20 +87,23 @@ jobs:
             ENVIRONMENT="dev"
           fi
 
-          # Per-environment resource suffix and public hostnames (Cloudflare-fronted).
+          # Same suffix across all environments is safe: the storage account name pattern
+          # already embeds $ENVIRONMENT ("stfittrackerdev139d" vs "...staging139d" vs
+          # "...prod139d"), which is what actually keeps them globally unique from each
+          # other — the suffix's job is only to disambiguate *parallel* stacks of the *same*
+          # environment (e.g. two throwaway dev stacks), not to separate dev/staging/prod.
+          SUFFIX="${AZURE_RESOURCE_SUFFIX}"
+
           case "$ENVIRONMENT" in
             dev)
-              SUFFIX="${AZURE_RESOURCE_SUFFIX}"
               FRONTEND_DOMAIN="fit-dev.sfivaz.com"
               API_DOMAIN="api-fit-dev.sfivaz.com"
               ;;
             staging)
-              SUFFIX="${AZURE_RESOURCE_SUFFIX_STAGING}"
               FRONTEND_DOMAIN="fit-staging.sfivaz.com"
               API_DOMAIN="api-fit-staging.sfivaz.com"
               ;;
             prod)
-              SUFFIX="${AZURE_RESOURCE_SUFFIX_PROD}"
               FRONTEND_DOMAIN="fit.sfivaz.com"
               API_DOMAIN="api.sfivaz.com"
               ;;
