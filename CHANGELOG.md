@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/fivaz/fit/compare/v1.0.2...v1.1.0) (2026-09-10)
+
+### ✨ Features
+
+* **infra:** consolidate all environments to northeurope, rename staging/prod to fit ([9ed88dc](https://github.com/fivaz/fit/commit/9ed88dc1143b9795df30301a8a62c848ee765b46))
+
 ## [1.0.2](https://github.com/fivaz/fit/compare/v1.0.1...v1.0.2) (2026-09-10)
 
 ### 🐛 Bug Fixes
