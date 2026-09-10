@@ -99,14 +99,12 @@ jobs:
           # per region) — resolved by upgrading the subscription to Pay-As-You-Go, confirmed live
           # by deploying a second environment in northeurope successfully. Must match the
           # "location" value in the corresponding params.<env>.json exactly.
-          # dev keeps the original "fittracker" project name — its resources are already live
-          # and renaming would mean recreating them (new custom-domain/cert bootstrap from
-          # scratch). staging/prod use the shorter "fit" instead: decided after "fittracker"
-          # combined with "staging" overflowed Key Vault's 24-char name limit, and shorter names
-          # leave more headroom for that class of problem generally, not just this one instance.
+          # All three environments now use the shorter "fit" project name — dev was migrated
+          # from "fittracker" after staging/prod had already switched (decided once
+          # "fittracker" combined with "staging" overflowed Key Vault's 24-char name limit).
           case "$ENVIRONMENT" in
             dev)
-              PROJECT_NAME="fittracker"
+              PROJECT_NAME="fit"
               RG_LOCATION="northeurope"
               FRONTEND_DOMAIN="fit-dev.sfivaz.com"
               API_DOMAIN="api-fit-dev.sfivaz.com"
