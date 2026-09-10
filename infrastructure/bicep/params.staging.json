@@ -30,7 +30,7 @@
 			"value": false
 		},
 		"customDomainName": {
-			"value": ""
+			"value": "fit-staging.sfivaz.com"
 		},
 		"deployAcr": {
 			"value": false

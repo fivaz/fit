@@ -9,7 +9,7 @@
 			"value": "northeurope"
 		},
 		"projectName": {
-			"value": "fittracker"
+			"value": "fit"
 		},
 		"enableKeyVaultPurgeProtection": {
 			"value": false
