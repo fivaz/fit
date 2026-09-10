@@ -422,6 +422,14 @@ jobs:
             --resource-group "${{ steps.env.outputs.rg_name }}" \
             --yes
 
+          # `revision label add` only tags the revision with the label — it does NOT move
+          # traffic weight onto it (confirmed live: the label moved but the old revision kept
+          # 100% weight until this ran). This is the step that actually cuts traffic over.
+          az containerapp ingress traffic set \
+            --name "${{ steps.outputs.outputs.container_app_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --label-weight production=100
+
       - name: Blue-green cutover (staging/prod)
         if: steps.env.outputs.environment != 'dev'
         uses: ./.github/actions/containerapp-bluegreen-cutover
