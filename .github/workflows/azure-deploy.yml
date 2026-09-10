@@ -406,6 +406,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Idempotent: fires automatically exactly once, the first time a brand-new environment's
+      # Key Vault still has the Bicep-bootstrap placeholder instead of a real DATABASE-URL — a
+      # complete no-op on every routine deploy afterward. Deliberate password rotation later is
+      # a separate, manual step (sync-secrets-to-keyvault.yml), not handled here.
+      - name: Sync DATABASE-URL from GitHub secret if still a placeholder
+        run: |
+          CURRENT=$(az keyvault secret show \
+            --vault-name "${{ steps.env.outputs.kv_name }}" \
+            --name DATABASE-URL \
+            --query "value" -o tsv 2>/dev/null || echo "")
+
+          if [ -z "$CURRENT" ] || [ "$CURRENT" = "placeholder-update-via-portal-or-cli" ]; then
+            echo "DATABASE-URL not yet set for this environment, syncing from GitHub secret"
+            az keyvault secret set \
+              --vault-name "${{ steps.env.outputs.kv_name }}" \
+              --name DATABASE-URL \
+              --value "$DB_URL_SECRET" \
+              --output none
+          else
+            echo "DATABASE-URL already set, skipping"
+          fi
+        env:
+          DB_URL_SECRET: ${{ steps.env.outputs.environment == 'dev' && secrets.DATABASE_URL_DEV || secrets.DATABASE_URL }}
+
       - name: Run database migrations
         run: |
           # Set DATABASE_URL from Azure Key Vault
