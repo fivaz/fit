@@ -58,8 +58,9 @@ The API origin must point at Nest (default `http://localhost:3001` in local dev)
 - Sign in while online, then disable network.
 - Create/edit/delete exercises while offline.
 - Create/edit/reorder programs while offline.
-- Start and log a workout while offline.
+- **Log sets on an already-started workout while offline** (edit reps/weight, background/foreground, kill and relaunch — the active workout and its sets are cached locally and resume correctly).
 - Kill and relaunch the app while still offline; confirm local data is present.
+- Starting a **brand-new** workout requires connectivity — the server assigns the workout id, so `Start Workout` while offline shows an error toast rather than silently failing (see `apps/web/lib/offline/data-adapters.ts`). This is a known limitation, not yet supported.
 - Re-enable network; confirm queued changes sync.
 - Background the app during offline edits, foreground after reconnect, and confirm sync retries.
 - Toggle network repeatedly during a save operation; confirm the UI remains usable and data is not duplicated.
