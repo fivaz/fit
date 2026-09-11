@@ -75,3 +75,14 @@ export async function signOut(options?: SignOutOptions) {
 	await clearMobileAuthToken();
 	return result;
 }
+
+type DeleteAccountOptions = { password: string };
+
+/** Permanently deletes the signed-in user and all owned data (cascades at the DB level). */
+export async function deleteAccount({ password }: DeleteAccountOptions) {
+	const result = await authClient.deleteUser({ password });
+	if (!result.error) {
+		await clearMobileAuthToken();
+	}
+	return result;
+}

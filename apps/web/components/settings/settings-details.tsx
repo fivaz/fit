@@ -4,9 +4,19 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { motion } from "framer-motion";
-import { Activity, ChevronRight, Dumbbell, LogOut, Palette, Scale, Zap } from "lucide-react";
+import {
+	Activity,
+	ChevronRight,
+	Dumbbell,
+	LogOut,
+	Palette,
+	Scale,
+	Trash2,
+	Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 
+import { DeleteAccountDrawer } from "@/components/settings/delete-account-drawer";
 import { MetricsForm } from "@/components/settings/metrics-form";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { UserForm } from "@/components/settings/user-form";
@@ -41,6 +51,7 @@ export function SettingsDetailsInternal() {
 
 	const [isUserOpen, setIsUserOpen] = useState(false);
 	const [isMetricsOpen, setIsMetricsOpen] = useState(false);
+	const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
 	const router = useRouter();
 	const { firstItem: bodyMetrics } = useBodyMetricsStore();
 
@@ -173,6 +184,14 @@ export function SettingsDetailsInternal() {
 					>
 						<LogOut className="mr-2 h-5 w-5" /> Sign Out
 					</Button>
+					<Button
+						onClick={() => setIsDeleteAccountOpen(true)}
+						variant="ghost"
+						aria-label="Delete Account"
+						className="mb-6 h-12 w-full rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10"
+					>
+						<Trash2 className="mr-2 h-5 w-5" /> Delete Account
+					</Button>
 					<div className="opacity-30">
 						<span className="text-[10px] font-bold tracking-widest uppercase dark:text-white">
 							Built with Passion
@@ -200,6 +219,11 @@ export function SettingsDetailsInternal() {
 				isOpen={isMetricsOpen}
 				onClose={() => setIsMetricsOpen(false)}
 				bodyMetrics={bodyMetrics}
+			/>
+
+			<DeleteAccountDrawer
+				isOpen={isDeleteAccountOpen}
+				onClose={() => setIsDeleteAccountOpen(false)}
 			/>
 		</>
 	);
