@@ -12,6 +12,7 @@ const requiredFiles = [
 	"scripts/ios-deploy.mjs",
 	"ios/App/App.xcodeproj/project.pbxproj",
 	"ios/App/App/Info.plist",
+	"ios/App/App/PrivacyInfo.xcprivacy",
 	"ios/WorkoutLiveActivityWidget/WorkoutLiveActivityWidgetLiveActivity.swift",
 	"ios/WorkoutLiveActivityWidget/GenericAttributes.swift",
 	"ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png",
@@ -19,12 +20,7 @@ const requiredFiles = [
 	"../../docs/ios-qa-release-checklist.md",
 ];
 
-const requiredPackageScripts = [
-	"generate-ios-assets",
-	"ios:build",
-	"ios:sync",
-	"ios:open",
-];
+const requiredPackageScripts = ["generate-ios-assets", "ios:build", "ios:sync", "ios:open"];
 
 let hasFailures = false;
 
@@ -81,7 +77,11 @@ for (const script of requiredPackageScripts) {
 }
 
 const infoPlist = await readFile(path.join(rootDir, "ios/App/App/Info.plist"), "utf8");
-for (const key of ["NSSupportsLiveActivities", "NSCameraUsageDescription", "NSPhotoLibraryUsageDescription"]) {
+for (const key of [
+	"NSSupportsLiveActivities",
+	"NSCameraUsageDescription",
+	"NSPhotoLibraryUsageDescription",
+]) {
 	if (infoPlist.includes(`<key>${key}</key>`)) {
 		pass(`Info.plist declares ${key}`);
 	} else {
@@ -93,6 +93,21 @@ if (infoPlist.includes("<key>NSAllowsArbitraryLoads</key>\n\t<true/>")) {
 	fail("Info.plist enables arbitrary App Transport Security loads");
 } else {
 	pass("Info.plist does not enable arbitrary App Transport Security loads");
+}
+
+const projectPbxproj = await readFile(
+	path.join(rootDir, "ios/App/App.xcodeproj/project.pbxproj"),
+	"utf8",
+);
+if (
+	projectPbxproj.includes("PrivacyInfo.xcprivacy in Resources") &&
+	projectPbxproj.includes("PrivacyInfo.xcprivacy */ = {isa = PBXFileReference;")
+) {
+	pass("PrivacyInfo.xcprivacy is wired into the App target's Resources build phase");
+} else {
+	fail(
+		"PrivacyInfo.xcprivacy exists but is not bundled into the App target (check project.pbxproj)",
+	);
 }
 
 const iconSize = readPngSize(
