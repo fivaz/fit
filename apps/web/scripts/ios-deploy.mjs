@@ -287,6 +287,7 @@ function runXcodeBuild(target) {
 			destination,
 			"-derivedDataPath",
 			derivedDataPath,
+			"-allowProvisioningUpdates",
 			"build",
 		],
 		{ stdio: "inherit" },
