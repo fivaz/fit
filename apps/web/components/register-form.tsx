@@ -240,6 +240,14 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 						{loading ? <Loader2 className="size-4 animate-spin" /> : "Create an account"}
 					</Button>
 
+					<FieldDescription className="text-center">
+						By creating an account, you agree to our{" "}
+						<Link href={ROUTES.PRIVACY} className="underline underline-offset-4">
+							Privacy Policy
+						</Link>
+						.
+					</FieldDescription>
+
 					{!hideSocialAuth ? (
 						<>
 							<FieldSeparator>Or sign up with</FieldSeparator>

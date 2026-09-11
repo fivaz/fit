@@ -10,6 +10,7 @@ export const ROUTES = {
 	LOGIN: "/login",
 	REGISTER: "/register",
 	SETTINGS: "/settings",
+	PRIVACY: "/privacy",
 };
 
 export const PAGE_SIZE = SHARED_PAGE_SIZE;

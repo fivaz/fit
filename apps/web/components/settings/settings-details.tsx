@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { motion } from "framer-motion";
@@ -192,6 +193,12 @@ export function SettingsDetailsInternal() {
 					>
 						<Trash2 className="mr-2 h-5 w-5" /> Delete Account
 					</Button>
+					<Link
+						href={ROUTES.PRIVACY}
+						className="mb-6 block text-sm text-gray-400 underline underline-offset-4 dark:text-gray-500"
+					>
+						Privacy Policy
+					</Link>
 					<div className="opacity-30">
 						<span className="text-[10px] font-bold tracking-widest uppercase dark:text-white">
 							Built with Passion
