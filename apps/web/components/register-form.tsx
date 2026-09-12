@@ -7,27 +7,21 @@ import { useRouter } from "next/navigation";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { GithubIcon } from "@/components/icons/github-icon";
-import { GoogleIcon } from "@/components/icons/google-icon";
+// Social auth (Google/GitHub) is temporarily disabled; re-enable alongside Sign in with Apple.
+// import { GithubIcon } from "@/components/icons/github-icon";
+// import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-	Field,
-	FieldDescription,
-	FieldGroup,
-	FieldLabel,
-	FieldSeparator,
-} from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
 	scrollFieldIntoView,
 	scrollPrimaryActionIntoView,
 } from "@/hooks/use-software-keyboard-scroll";
-import { signIn } from "@/lib/auth-client";
+// import { signIn } from "@/lib/auth-client";
 import { APP_NAME, ROUTES } from "@/lib/consts";
 import { signUpWithEmailForMobile } from "@/lib/mobile/auth";
-import { isEmailPasswordOnlyAuthScope } from "@/lib/mobile/auth-scope";
 import { cn } from "@/lib/utils";
 
 export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
@@ -39,11 +33,9 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 	const [image, setImage] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
 	const router = useRouter();
 	const submitRef = useRef<HTMLButtonElement>(null);
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	const hideSocialAuth = isEmailPasswordOnlyAuthScope();
 
 	const handleFieldFocus = (element: HTMLElement) => {
 		scrollFieldIntoView(element);
@@ -66,19 +58,19 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 		}
 	};
 
-	const handleSocialLogin = async (provider: "google" | "github") => {
-		setSocialLoading(provider);
-		try {
-			await signIn.social({
-				provider,
-				callbackURL: ROUTES.HOME,
-			});
-		} catch (error) {
-			console.log(error);
-			toast.error(`${provider} sign up failed.`);
-			setSocialLoading(null);
-		}
-	};
+	// const handleSocialLogin = async (provider: "google" | "github") => {
+	// 	setSocialLoading(provider);
+	// 	try {
+	// 		await signIn.social({
+	// 			provider,
+	// 			callbackURL: ROUTES.HOME,
+	// 		});
+	// 	} catch (error) {
+	// 		console.log(error);
+	// 		toast.error(`${provider} sign up failed.`);
+	// 		setSocialLoading(null);
+	// 	}
+	// };
 
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
@@ -231,12 +223,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 						</div>
 					</Field>
 
-					<Button
-						ref={submitRef}
-						type="submit"
-						className="w-full"
-						disabled={loading || !!socialLoading}
-					>
+					<Button ref={submitRef} type="submit" className="w-full" disabled={loading}>
 						{loading ? <Loader2 className="size-4 animate-spin" /> : "Create an account"}
 					</Button>
 
@@ -248,42 +235,40 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 						.
 					</FieldDescription>
 
-					{!hideSocialAuth ? (
-						<>
-							<FieldSeparator>Or sign up with</FieldSeparator>
+					{/* Social auth (Google/GitHub) temporarily disabled; re-enable alongside Sign in with Apple.
+					<FieldSeparator>Or sign up with</FieldSeparator>
 
-							<Field className="grid gap-4 sm:grid-cols-2">
-								<Button
-									variant="outline"
-									type="button"
-									disabled={loading || !!socialLoading}
-									onClick={() => handleSocialLogin("github")}
-								>
-									{socialLoading === "github" ? (
-										<Loader2 className="size-4 animate-spin" />
-									) : (
-										<>
-											<GithubIcon className="size-5" /> GitHub
-										</>
-									)}
-								</Button>
-								<Button
-									variant="outline"
-									type="button"
-									disabled={loading || !!socialLoading}
-									onClick={() => handleSocialLogin("google")}
-								>
-									{socialLoading === "google" ? (
-										<Loader2 className="size-4 animate-spin" />
-									) : (
-										<>
-											<GoogleIcon className="size-5" /> Google
-										</>
-									)}
-								</Button>
-							</Field>
-						</>
-					) : null}
+					<Field className="grid gap-4 sm:grid-cols-2">
+						<Button
+							variant="outline"
+							type="button"
+							disabled={loading || !!socialLoading}
+							onClick={() => handleSocialLogin("github")}
+						>
+							{socialLoading === "github" ? (
+								<Loader2 className="size-4 animate-spin" />
+							) : (
+								<>
+									<GithubIcon className="size-5" /> GitHub
+								</>
+							)}
+						</Button>
+						<Button
+							variant="outline"
+							type="button"
+							disabled={loading || !!socialLoading}
+							onClick={() => handleSocialLogin("google")}
+						>
+							{socialLoading === "google" ? (
+								<Loader2 className="size-4 animate-spin" />
+							) : (
+								<>
+									<GoogleIcon className="size-5" /> Google
+								</>
+							)}
+						</Button>
+					</Field>
+					*/}
 				</FieldGroup>
 			</form>
 		</div>
