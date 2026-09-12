@@ -260,9 +260,11 @@ For off-LAN development with HTTPS origins:
 ## iOS v1 Scope
 
 **Included:** Email/password auth, exercise library, programs, workout sessions, body metrics
-**Deferred:** Social auth, advanced analytics, server-coupled features
+**Deferred:** Social auth, push notifications, advanced analytics, server-coupled features
 
-Offline capability is planned but not fully implemented in v1.
+Offline capability covers programs, exercises, body metrics, and logging sets on an
+already-started workout. Starting a brand-new workout still requires connectivity (the
+server assigns the workout id); see `apps/web/lib/offline/data-adapters.ts`.
 
 ## CI/CD
 
