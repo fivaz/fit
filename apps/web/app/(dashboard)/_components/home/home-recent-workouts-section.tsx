@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ChevronRight, Dumbbell, Loader2 } from "lucide-react";
 
 import { useHomeRecentWorkouts } from "@/app/(dashboard)/_components/home/use-home-recent-workouts";
+import { ProgramThumbnail } from "@/components/program/program-thumbnail";
 import { ROUTES } from "@/lib/consts";
 import { programsDetailHref } from "@/lib/programs/navigation";
 import { formatWorkoutEndedCaption } from "@/lib/progress/utils";
@@ -72,11 +73,15 @@ export function HomeRecentWorkoutsSection() {
 									{formatWorkoutEndedCaption(endedAt)}
 								</time>
 								<div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl">
-									<img
-										src={workout.programImageUrl || "/exercise.jpg"}
-										alt=""
-										className="h-full w-full object-cover"
-									/>
+									{workout.programImageUrl ? (
+										<img
+											src={workout.programImageUrl}
+											alt=""
+											className="h-full w-full object-cover"
+										/>
+									) : (
+										<ProgramThumbnail muscles={workout.programMuscles} />
+									)}
 								</div>
 								<div className="min-w-0 flex-1 pt-1">
 									<h4 className="truncate pr-2 font-semibold text-gray-900 dark:text-white">
