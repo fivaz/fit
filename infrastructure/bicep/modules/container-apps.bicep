@@ -146,6 +146,11 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/BETTER-AUTH-SECRET'
           identity: 'system'
         }
+        {
+          name: 'openai-api-key'
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/OPENAI-API-KEY'
+          identity: 'system'
+        }
       ]
     }
     template: {
@@ -166,6 +171,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'BETTER_AUTH_SECRET'
               secretRef: 'better-auth-secret'
+            }
+            {
+              name: 'OPENAI_API_KEY'
+              secretRef: 'openai-api-key'
             }
             {
               name: 'API_BASE_URL'

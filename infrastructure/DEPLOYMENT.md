@@ -122,7 +122,21 @@ az keyvault secret set \
   --vault-name kv-fittracker-dev${SUFFIX:+-$SUFFIX} \
   --name BETTER-AUTH-SECRET \
   --value "$(openssl rand -base64 32)"
+
+# Required for AI program generation (apps/api/src/program/generate.ts) — without
+# this the Container App falls back to the Key Vault placeholder and the API
+# returns "AI program generation is not configured"
+az keyvault secret set \
+  --vault-name kv-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --name OPENAI-API-KEY \
+  --value "sk-..."
 ```
+
+Alternatively, run the `Sync Secrets to Key Vault` GitHub Actions workflow
+(`.github/workflows/sync-secrets-to-keyvault.yml`, manual `workflow_dispatch`)
+after setting the `OPENAI_API_KEY_DEV` (dev) / `OPENAI_API_KEY` (staging + prod)
+repo secrets — it pushes `DATABASE-URL` and `OPENAI-API-KEY` into the matching
+environment's Key Vault the same way.
 
 ## Automated Deployment (Every Push to Master)
 
