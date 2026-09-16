@@ -1,3 +1,26 @@
+## [1.4.0](https://github.com/fivaz/fit/compare/v1.3.1...v1.4.0) (2026-09-16)
+
+### ✨ Features
+
+* **auth:** add in-app account deletion ([0311bb5](https://github.com/fivaz/fit/commit/0311bb50c88fa62547b5408766a7d1fa82a487ce))
+* **ios:** add PrivacyInfo.xcprivacy manifest for App Store compliance ([5d821df](https://github.com/fivaz/fit/commit/5d821dfd52efeabbbf1dbc45b27a4d264e46562e))
+* **web:** add privacy policy page and link it from signup/settings ([ceb2e31](https://github.com/fivaz/fit/commit/ceb2e31d09be50939bb7f345276597c140525ee8))
+* **web:** show muscle-group photo instead of repeated placeholder image ([4cb3e57](https://github.com/fivaz/fit/commit/4cb3e573e01e7959ae0db70962c156540b1d250e))
+
+### 🐛 Bug Fixes
+
+* **ios:** pass -allowProvisioningUpdates to xcodebuild for CLI deploys ([f4013e6](https://github.com/fivaz/fit/commit/f4013e6a2416b77f2b84568715ba058b6657cae5))
+* **offline:** cache active workout locally so it survives offline relaunch ([6aca740](https://github.com/fivaz/fit/commit/6aca740e1ebd64ee75d66aa9cf4bf29248fcfb4c))
+
+### 🧹 Chores
+
+* **auth:** disable social login UI pending Sign in with Apple support ([063cd87](https://github.com/fivaz/fit/commit/063cd87ed3030f6b318054cc01c76c5c0b8f280b))
+* **ios:** defer push notifications to v2, pre-declare export compliance ([78e169e](https://github.com/fivaz/fit/commit/78e169e78b768f5c47f283acfb2b5fb0f29dbe56))
+
+### 🔧 Continuous Integration
+
+* **ios:** add unsigned simulator build workflow to catch breakage on PRs ([a6d9951](https://github.com/fivaz/fit/commit/a6d99515d4307e3b284d64fd505a3b6913b24551))
+
 ## [1.3.1](https://github.com/fivaz/fit/compare/v1.3.0...v1.3.1) (2026-09-10)
 
 ### 🐛 Bug Fixes
