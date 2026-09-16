@@ -43,14 +43,6 @@ export const auth = betterAuth({
 	},
 	trustedOrigins,
 	database: prismaAdapter(prisma, { provider: "postgresql" }),
-	user: {
-		additionalFields: {
-			timezone: {
-				type: "string",
-				required: false,
-			},
-		},
-	},
 	session: {
 		cookieCache: {
 			enabled: true,
@@ -61,6 +53,17 @@ export const auth = betterAuth({
 		enabled: true,
 		async sendResetPassword(_data, _request) {
 			// Send an email to the user with a link to reset their password
+		},
+	},
+	user: {
+		additionalFields: {
+			timezone: {
+				type: "string",
+				required: false,
+			},
+		},
+		deleteUser: {
+			enabled: true,
 		},
 	},
 	plugins: [bearer()],

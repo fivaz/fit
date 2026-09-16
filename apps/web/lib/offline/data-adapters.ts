@@ -25,6 +25,10 @@ type OfflineStore = {
 	exercises: ExerciseUI[];
 	bodyMetrics: BodyMetricsUI | null;
 	workoutSetsByWorkoutId: Record<string, WorkoutSetMap>;
+	/** Last full workout fetched per id — the offline fallback for `getWorkoutById`. */
+	workoutsById: Record<string, WorkoutWithMappedSets>;
+	/** Last workout id confirmed active by the server — the offline fallback for `getActiveWorkout`. */
+	activeWorkoutId: string | null;
 	pendingOperations: PendingOperation[];
 };
 
@@ -36,6 +40,8 @@ const emptyStore: OfflineStore = {
 	exercises: [],
 	bodyMetrics: null,
 	workoutSetsByWorkoutId: {},
+	workoutsById: {},
+	activeWorkoutId: null,
 	pendingOperations: [],
 };
 
@@ -81,6 +87,8 @@ function readStore(): OfflineStore {
 			exercises: parsed.exercises ?? [],
 			bodyMetrics: parsed.bodyMetrics ?? null,
 			workoutSetsByWorkoutId: parsed.workoutSetsByWorkoutId ?? {},
+			workoutsById: parsed.workoutsById ?? {},
+			activeWorkoutId: parsed.activeWorkoutId ?? null,
 			pendingOperations: parsed.pendingOperations ?? [],
 		};
 	} catch {
@@ -535,10 +543,15 @@ export const offlineDataAdapters = {
 					...store.workoutSetsByWorkoutId,
 					[workoutId]: merged.exerciseSets,
 				},
+				workoutsById: {
+					...store.workoutsById,
+					[workoutId]: merged,
+				},
 			}));
 			return merged;
 		} catch {
-			return null;
+			const cached = readStore().workoutsById[workoutId];
+			return cached ? applyCachedWorkoutSets(cached, workoutId) : null;
 		}
 	},
 
@@ -548,9 +561,12 @@ export const offlineDataAdapters = {
 		}
 		await flushPendingOperations();
 		try {
-			return (await apiFetch<{ id: string } | null>("/api/workouts/active")) ?? null;
+			const active = (await apiFetch<{ id: string } | null>("/api/workouts/active")) ?? null;
+			updateStore((store) => ({ ...store, activeWorkoutId: active?.id ?? null }));
+			return active;
 		} catch {
-			return null;
+			const activeWorkoutId = readStore().activeWorkoutId;
+			return activeWorkoutId ? { id: activeWorkoutId } : null;
 		}
 	},
 
@@ -562,13 +578,21 @@ export const offlineDataAdapters = {
 			});
 		}
 		await flushPendingOperations();
-		return apiFetch<{ id: string }>("/api/workouts", {
+		const workout = await apiFetch<{ id: string }>("/api/workouts", {
 			method: "POST",
 			body: { programId },
 		});
+		updateStore((store) => ({ ...store, activeWorkoutId: workout.id }));
+		return workout;
 	},
 
 	async finishWorkout(workoutId: string) {
+		if (isOfflineEnabled()) {
+			updateStore((store) => ({
+				...store,
+				activeWorkoutId: store.activeWorkoutId === workoutId ? null : store.activeWorkoutId,
+			}));
+		}
 		await runOrQueue({
 			url: `/api/workouts/${workoutId}/finish`,
 			method: "POST",

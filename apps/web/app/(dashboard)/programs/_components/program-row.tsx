@@ -5,6 +5,7 @@ import * as React from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { GripVertical } from "lucide-react";
 
+import { ProgramThumbnail } from "@/components/program/program-thumbnail";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ProgramUI } from "@/lib/program/type";
@@ -42,11 +43,18 @@ export function ProgramRow({ program, index, sectionId, onOpen }: ProgramRowProp
 				>
 					<GripVertical className="size-5" />
 				</button>
-				<img
-					src={program.imageUrl || "/exercise.jpg"}
-					alt=""
-					className="h-full w-full object-cover transition-transform group-hover:scale-105"
-				/>
+				{program.imageUrl ? (
+					<img
+						src={program.imageUrl}
+						alt=""
+						className="h-full w-full object-cover transition-transform group-hover:scale-105"
+					/>
+				) : (
+					<ProgramThumbnail
+						muscles={program.muscles}
+						className="transition-transform group-hover:scale-105"
+					/>
+				)}
 				<div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-end bg-linear-to-t from-black/80 via-transparent to-transparent p-4">
 					<h3 className="text-lg font-bold text-white">{program.name}</h3>
 					<div className="mt-1 flex flex-wrap gap-1">

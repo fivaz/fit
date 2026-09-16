@@ -4,10 +4,12 @@ import { FormEvent, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { LoaderCircleIcon, TimerIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useExerciseMutations, useExercisesStore } from "@/hooks/exercise/store";
 import { ROUTES } from "@/lib/consts";
+import { logError } from "@/lib/logger";
 import { startWorkout } from "@/lib/workout/api";
 
 type StartWorkoutButtonProps = {
@@ -24,8 +26,13 @@ export function StartWorkoutButton({ programId }: StartWorkoutButtonProps) {
 	const handleStart = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		startTransition(async () => {
-			await startWorkout(programId);
-			router.push(ROUTES.HOME);
+			try {
+				await startWorkout(programId);
+				router.push(ROUTES.HOME);
+			} catch (error) {
+				logError(error, "StartWorkoutButton#handleStart");
+				toast.error("Starting a workout requires a connection. Please try again once online.");
+			}
 		});
 	};
 
