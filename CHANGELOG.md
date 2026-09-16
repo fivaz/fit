@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/fivaz/fit/compare/v1.4.0...v1.4.1) (2026-09-16)
+
+### 🐛 Bug Fixes
+
+* **ci:** use PAT for semantic-release so tag push triggers prod deploy ([d8686fb](https://github.com/fivaz/fit/commit/d8686fb49cdd16d3fb38bda9c2e39ab1d04ed173))
+* **infra:** wire OPENAI_API_KEY from Key Vault into Container App ([34f9cb8](https://github.com/fivaz/fit/commit/34f9cb811011267c431109d42ed247c10e5cc657))
+
 ## [1.4.0](https://github.com/fivaz/fit/compare/v1.3.1...v1.4.0) (2026-09-16)
 
 ### ✨ Features
