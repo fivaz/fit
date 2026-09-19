@@ -11,7 +11,7 @@ const TREND_ICONS = { up: TrendingUp, down: TrendingDown, equal: Minus } as cons
 const TREND_WORDS = { up: "Increased", down: "Decreased", equal: "Unchanged" } as const;
 
 type MetricTrendProps = {
-	metric: "weight" | "reps";
+	metric: "volume" | "weight" | "reps";
 	trend: Trend | undefined;
 };
 
@@ -42,6 +42,7 @@ export function ExerciseProgressCard({ exercise }: ExerciseProgressCardProps) {
 			const previous = sessions[index - 1];
 			return {
 				session,
+				volumeTrend: previous ? getTrend(session.volume, previous.volume) : undefined,
 				weightTrend: previous ? getTrend(session.maxWeight, previous.maxWeight) : undefined,
 				repsTrend: previous ? getTrend(session.maxReps, previous.maxReps) : undefined,
 			};
@@ -61,6 +62,7 @@ export function ExerciseProgressCard({ exercise }: ExerciseProgressCardProps) {
 						{sessions.length} {sessions.length === 1 ? "session" : "sessions"} logged
 					</p>
 					<div className="mb-3 flex flex-col gap-4">
+						<ExerciseMetricChart exerciseName={name} metric="volume" sessions={sessions} />
 						<ExerciseMetricChart exerciseName={name} metric="weight" sessions={sessions} />
 						<ExerciseMetricChart exerciseName={name} metric="reps" sessions={sessions} />
 					</div>
@@ -73,6 +75,9 @@ export function ExerciseProgressCard({ exercise }: ExerciseProgressCardProps) {
 										Date
 									</th>
 									<th scope="col" className="pb-1 font-medium">
+										Volume
+									</th>
+									<th scope="col" className="pb-1 font-medium">
 										Weight
 									</th>
 									<th scope="col" className="pb-1 font-medium">
@@ -81,13 +86,19 @@ export function ExerciseProgressCard({ exercise }: ExerciseProgressCardProps) {
 								</tr>
 							</thead>
 							<tbody className="text-gray-900 dark:text-white">
-								{history.map(({ session, weightTrend, repsTrend }) => (
+								{history.map(({ session, volumeTrend, weightTrend, repsTrend }) => (
 									<tr
 										key={session.workoutId}
 										className="border-t border-gray-100 dark:border-gray-700"
 									>
 										<td className="py-2 text-gray-600 dark:text-gray-300">
 											{format(new Date(session.date), "MMM d, yyyy")}
+										</td>
+										<td className="py-2">
+											<span className="flex items-center gap-1.5">
+												{session.volume.toLocaleString()}
+												<MetricTrend metric="volume" trend={volumeTrend} />
+											</span>
 										</td>
 										<td className="py-2">
 											<span className="flex items-center gap-1.5">

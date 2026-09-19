@@ -45,6 +45,24 @@ describe("buildExerciseProgress", () => {
 		);
 	});
 
+	it("sums weight × reps over the logged working sets as volume", () => {
+		const result = buildExerciseProgress(exercises, [
+			{
+				exerciseId: "bench",
+				workoutId: "w1",
+				endDate: new Date("2026-01-01T10:00:00Z"),
+				sets: [
+					logged(10, 60),
+					logged(8, 62.5),
+					logged(15, 20, true),
+					{ reps: 12, weight: 100, time: null, isWarmup: false },
+				],
+			},
+		]);
+
+		assert.equal(result[0]?.sessions[0]?.volume, 1100);
+	});
+
 	it("ignores warm-up sets and sets without a completion time", () => {
 		const result = buildExerciseProgress(exercises, [
 			{

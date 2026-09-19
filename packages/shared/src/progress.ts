@@ -34,12 +34,14 @@ export type HomeRecentWorkoutUI = {
 	programImageUrl: string | null;
 };
 
-/** Best logged working set of one exercise in one finished workout. */
+/** Best weight and reps, and total volume, of one exercise in one finished workout. */
 export type ExerciseProgressSessionUI = {
 	workoutId: string;
 	date: string;
 	maxWeight: number;
 	maxReps: number;
+	/** Sum of weight × reps over the logged working sets. */
+	volume: number;
 };
 
 export type ProgramExerciseProgressUI = {

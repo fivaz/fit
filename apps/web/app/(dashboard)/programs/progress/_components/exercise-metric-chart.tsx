@@ -18,9 +18,10 @@ import { ExerciseProgressSessionUI } from "@/lib/progress/type";
 const TREND_ICONS = { up: TrendingUp, down: TrendingDown, equal: Minus } as const;
 const TREND_WORDS = { up: "Increased", down: "Decreased", equal: "Unchanged" } as const;
 
-export type ExerciseMetric = "weight" | "reps";
+export type ExerciseMetric = "volume" | "weight" | "reps";
 
 const METRICS = {
+	volume: { label: "Volume", dataKey: "volume", colorVar: "var(--chart-series-volume)" },
 	weight: { label: "Weight", dataKey: "maxWeight", colorVar: "var(--chart-series-weight)" },
 	reps: { label: "Reps", dataKey: "maxReps", colorVar: "var(--chart-series-reps)" },
 } as const;
@@ -111,7 +112,8 @@ export function ExerciseMetricChart({ exerciseName, metric, sessions }: Exercise
 							padding={{ left: 12, right: 12 }}
 						/>
 						<YAxis
-							width={36}
+							width={44}
+							tickFormatter={(value: number) => value.toLocaleString()}
 							tickLine={false}
 							axisLine={false}
 							tick={{ fill: "var(--chart-axis-text)", fontSize: 11 }}

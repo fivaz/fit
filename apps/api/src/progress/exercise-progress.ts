@@ -37,6 +37,7 @@ export function buildExerciseProgress(
 						date: entry.endDate.toISOString(),
 						maxWeight: Math.max(...logged.map((set) => set.weight ?? 0)),
 						maxReps: Math.max(...logged.map((set) => set.reps)),
+						volume: Math.round(logged.reduce((sum, set) => sum + (set.weight ?? 0) * set.reps, 0)),
 					},
 				];
 			});
