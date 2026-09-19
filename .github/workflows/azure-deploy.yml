@@ -464,11 +464,34 @@ jobs:
           revision_name: ${{ steps.outputs.outputs.api_revision_name }}
           health_check_url: https://${{ steps.outputs.outputs.api_revision_name }}.${{ steps.outputs.outputs.api_fqdn_suffix }}/api/health
 
+      # Bake the branded API domain into the frontend once it's bound and actually serving.
+      # Falls back to the raw *.azurecontainerapps.io URL otherwise (e.g. the managed
+      # certificate is still being issued), so a build never points at a dead domain.
+      - name: Resolve frontend API URL
+        id: frontend-api
+        run: |
+          API_URL="${{ steps.outputs.outputs.api_url }}"
+          DOMAIN="${{ steps.env.outputs.api_domain }}"
+
+          BINDING=$(az containerapp hostname list \
+            --name "${{ steps.outputs.outputs.container_app_name }}" \
+            --resource-group "${{ steps.env.outputs.rg_name }}" \
+            --query "[?name=='$DOMAIN'].bindingType" -o tsv 2>/dev/null || echo "")
+
+          if [ "$BINDING" = "SniEnabled" ] && curl -fsS --max-time 10 "https://$DOMAIN/api/health" > /dev/null; then
+            API_URL="https://$DOMAIN"
+          else
+            echo "::warning::Custom API domain $DOMAIN not ready (binding: '${BINDING:-<none>}'); frontend will use the raw API URL."
+          fi
+
+          echo "Frontend API URL: $API_URL"
+          echo "url=$API_URL" >> $GITHUB_OUTPUT
+
       - name: Build static frontend
         run: pnpm run build:static
         env:
           NODE_ENV: production
-          API_BASE_URL: ${{ steps.outputs.outputs.api_url }}
+          API_BASE_URL: ${{ steps.frontend-api.outputs.url }}
 
       - name: Deploy static frontend
         run: |
