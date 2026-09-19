@@ -1,0 +1,143 @@
+"use client";
+
+import { format } from "date-fns";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+
+import { ExerciseMetricChart } from "@/app/(dashboard)/programs/progress/_components/exercise-metric-chart";
+import { getTrend, type Trend } from "@/lib/progress/trend";
+import { ProgramExerciseProgressUI } from "@/lib/progress/type";
+
+const TREND_ICONS = { up: TrendingUp, down: TrendingDown, equal: Minus } as const;
+const TREND_WORDS = { up: "Increased", down: "Decreased", equal: "Unchanged" } as const;
+
+type MetricTrendProps = {
+	metric: "volume" | "weight" | "reps";
+	trend: Trend | undefined;
+};
+
+function MetricTrend({ metric, trend }: MetricTrendProps) {
+	if (!trend) return <span className="h-4 w-4" aria-hidden />;
+
+	const Icon = TREND_ICONS[trend];
+	return (
+		<Icon
+			role="img"
+			aria-label={`${TREND_WORDS[trend]} ${metric} from previous session`}
+			className="h-4 w-4 text-gray-500 dark:text-gray-400"
+		/>
+	);
+}
+
+type ExerciseProgressCardProps = {
+	exercise: ProgramExerciseProgressUI;
+};
+
+export function ExerciseProgressCard({ exercise }: ExerciseProgressCardProps) {
+	const { name, sessions } = exercise;
+	const latest = sessions.at(-1);
+
+	// Newest first, each row compared with the session that came before it.
+	const history = sessions
+		.map((session, index) => {
+			const previous = sessions[index - 1];
+			return {
+				session,
+				volumeTrend: previous ? getTrend(session.volume, previous.volume) : undefined,
+				weightTrend: previous ? getTrend(session.maxWeight, previous.maxWeight) : undefined,
+				repsTrend: previous ? getTrend(session.maxReps, previous.maxReps) : undefined,
+			};
+		})
+		.reverse();
+
+	return (
+		<article
+			aria-label={`Progress for ${name}`}
+			className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800"
+		>
+			<div className="mb-3 flex items-center gap-4">
+				<div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+					<img
+						src={exercise.imageUrl || "/exercise.jpg"}
+						alt={name}
+						className="h-full w-full object-cover"
+					/>
+				</div>
+				<div className="min-w-0 flex-1">
+					<h2 className="truncate font-semibold text-gray-900 capitalize dark:text-white">
+						{name}
+					</h2>
+					{latest && (
+						<p className="text-sm text-gray-500 dark:text-gray-400">
+							{sessions.length} {sessions.length === 1 ? "session" : "sessions"} logged
+						</p>
+					)}
+				</div>
+			</div>
+
+			{latest ? (
+				<>
+					<div className="mb-3 flex flex-col gap-4">
+						<ExerciseMetricChart exerciseName={name} metric="volume" sessions={sessions} />
+						<ExerciseMetricChart exerciseName={name} metric="weight" sessions={sessions} />
+						<ExerciseMetricChart exerciseName={name} metric="reps" sessions={sessions} />
+					</div>
+					<details className="text-sm">
+						<summary className="cursor-pointer text-gray-500 dark:text-gray-400">View data</summary>
+						<table className="mt-2 w-full text-sm">
+							<thead>
+								<tr className="text-left text-xs text-gray-500 dark:text-gray-400">
+									<th scope="col" className="pb-1 font-medium">
+										Date
+									</th>
+									<th scope="col" className="pb-1 font-medium">
+										Volume
+									</th>
+									<th scope="col" className="pb-1 font-medium">
+										Weight
+									</th>
+									<th scope="col" className="pb-1 font-medium">
+										Reps
+									</th>
+								</tr>
+							</thead>
+							<tbody className="text-gray-900 dark:text-white">
+								{history.map(({ session, volumeTrend, weightTrend, repsTrend }) => (
+									<tr
+										key={session.workoutId}
+										className="border-t border-gray-100 dark:border-gray-700"
+									>
+										<td className="py-2 text-gray-600 dark:text-gray-300">
+											{format(new Date(session.date), "MMM d, yyyy")}
+										</td>
+										<td className="py-2">
+											<span className="flex items-center gap-1.5">
+												{session.volume.toLocaleString()}
+												<MetricTrend metric="volume" trend={volumeTrend} />
+											</span>
+										</td>
+										<td className="py-2">
+											<span className="flex items-center gap-1.5">
+												{session.maxWeight}
+												<MetricTrend metric="weight" trend={weightTrend} />
+											</span>
+										</td>
+										<td className="py-2">
+											<span className="flex items-center gap-1.5">
+												{session.maxReps}
+												<MetricTrend metric="reps" trend={repsTrend} />
+											</span>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</details>
+				</>
+			) : (
+				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					No finished workouts with this exercise yet.
+				</p>
+			)}
+		</article>
+	);
+}

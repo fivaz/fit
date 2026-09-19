@@ -15,12 +15,20 @@ import { MuscleGroupType } from "@/lib/muscle/type";
 interface ExerciseSelectorListProps {
 	muscles: MuscleGroupType[];
 	selected: ExerciseUI[];
+	/** Exercises shown first, in place of their entries from the paginated results. */
+	pinned: ExerciseUI[];
 	onToggle: (exercise: ExerciseUI) => void;
 }
 
-export function ExerciseSelectorList({ selected, onToggle, muscles }: ExerciseSelectorListProps) {
+export function ExerciseSelectorList({
+	selected,
+	pinned,
+	onToggle,
+	muscles,
+}: ExerciseSelectorListProps) {
 	const filterData = useExerciseFilters(muscles);
-	const { isLoading, hasNextPage, fetchNextPage, filteredExercises } = filterData;
+	const { isLoading, hasNextPage, fetchNextPage, filteredExercises, searchQuery, selectedMuscles } =
+		filterData;
 
 	const { isIntersecting, ref: bottomRef } = useIntersectionObserver({ threshold: 0.1 });
 
@@ -31,7 +39,22 @@ export function ExerciseSelectorList({ selected, onToggle, muscles }: ExerciseSe
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isIntersecting, hasNextPage, isLoading]);
 
-	const sortedExercises = filteredExercises.toSorted((a, b) => a.name.localeCompare(b.name));
+	const byName = (a: ExerciseUI, b: ExerciseUI) => a.name.localeCompare(b.name);
+
+	// Pinned exercises are matched against the active filters locally, since they may not be
+	// in the fetched pages yet.
+	const query = searchQuery.trim().toLowerCase();
+	const pinnedIds = new Set(pinned.map(({ id }) => id));
+	const pinnedMatches = pinned
+		.filter(
+			(exercise) =>
+				exercise.name.toLowerCase().includes(query) &&
+				(selectedMuscles.length === 0 ||
+					exercise.muscles.some((muscle) => selectedMuscles.includes(muscle))),
+		)
+		.toSorted(byName);
+	const others = filteredExercises.filter(({ id }) => !pinnedIds.has(id)).toSorted(byName);
+	const sortedExercises = [...pinnedMatches, ...others];
 
 	return (
 		<div className="relative pt-2">

@@ -3,121 +3,92 @@ import { describe, it } from "node:test";
 
 import {
 	DEFAULT_GROUP_NAME,
-	type GeneratedPrograms,
+	filterCatalogByMuscles,
+	type GeneratedPlan,
 	hasInvalidPrograms,
 	MIN_EXERCISES_PER_PROGRAM,
-	sanitizeGeneratedPrograms,
+	resolveGroupName,
+	sanitizeExerciseIds,
 } from "./generate-schema";
 
-describe("sanitizeGeneratedPrograms", () => {
-	const catalogIdSet = new Set(["ex-1", "ex-2", "ex-3", "ex-4"]);
+describe("filterCatalogByMuscles", () => {
+	const catalog = [
+		{ id: "bench", muscles: ["chest", "triceps"] as const },
+		{ id: "squat", muscles: ["quads"] as const },
+		{ id: "row", muscles: ["back"] as const },
+	].map((exercise) => ({ ...exercise, muscles: [...exercise.muscles] }));
 
-	const raw: GeneratedPrograms = {
-		groupName: null,
-		programs: [
-			{
-				name: "Upper A",
-				muscles: ["chest", "back"],
-				exerciseIds: ["ex-1", "ex-2", "ex-3"],
-			},
-		],
-	};
+	it("keeps only exercises targeting at least one of the muscles", () => {
+		const result = filterCatalogByMuscles(catalog, ["chest", "back"]);
+		assert.deepEqual(
+			result.map(({ id }) => id),
+			["bench", "row"],
+		);
+	});
+
+	it("returns nothing when no exercise matches", () => {
+		assert.deepEqual(filterCatalogByMuscles(catalog, ["calves"]), []);
+	});
+});
+
+describe("sanitizeExerciseIds", () => {
+	const allowed = new Set(["ex-1", "ex-2", "ex-3", "ex-4"]);
 
 	it("keeps valid exercise IDs in order", () => {
-		const result = sanitizeGeneratedPrograms(raw, catalogIdSet);
-		assert.deepEqual(result.programs[0]?.exerciseIds, ["ex-1", "ex-2", "ex-3"]);
-		assert.equal(result.groupName, null);
+		assert.deepEqual(sanitizeExerciseIds(["ex-1", "ex-2", "ex-3"], allowed, 5), [
+			"ex-1",
+			"ex-2",
+			"ex-3",
+		]);
 	});
 
-	it("drops hallucinated IDs", () => {
-		const withHallucination: GeneratedPrograms = {
-			groupName: null,
-			programs: [
-				{
-					name: "Upper A",
-					muscles: ["chest"],
-					exerciseIds: ["ex-1", "fake-id", "ex-2", "ex-3"],
-				},
-			],
-		};
-
-		const result = sanitizeGeneratedPrograms(withHallucination, catalogIdSet);
-		assert.deepEqual(result.programs[0]?.exerciseIds, ["ex-1", "ex-2", "ex-3"]);
+	it("drops IDs outside the allowed set", () => {
+		assert.deepEqual(sanitizeExerciseIds(["ex-1", "fake-id", "ex-2", "ex-3"], allowed, 5), [
+			"ex-1",
+			"ex-2",
+			"ex-3",
+		]);
 	});
 
-	it("dedupes exercise IDs within a program", () => {
-		const withDupes: GeneratedPrograms = {
-			groupName: null,
-			programs: [
-				{
-					name: "Upper A",
-					muscles: ["chest"],
-					exerciseIds: ["ex-1", "ex-1", "ex-2", "ex-3"],
-				},
-			],
-		};
+	it("dedupes IDs", () => {
+		assert.deepEqual(sanitizeExerciseIds(["ex-1", "ex-1", "ex-2", "ex-3"], allowed, 5), [
+			"ex-1",
+			"ex-2",
+			"ex-3",
+		]);
+	});
 
-		const result = sanitizeGeneratedPrograms(withDupes, catalogIdSet);
-		assert.deepEqual(result.programs[0]?.exerciseIds, ["ex-1", "ex-2", "ex-3"]);
+	it("caps the list at the limit", () => {
+		assert.deepEqual(sanitizeExerciseIds(["ex-1", "ex-2", "ex-3", "ex-4"], allowed, 3), [
+			"ex-1",
+			"ex-2",
+			"ex-3",
+		]);
 	});
 
 	it("flags programs with too few valid exercises", () => {
-		const tooFew: GeneratedPrograms = {
-			groupName: null,
-			programs: [
-				{
-					name: "Upper A",
-					muscles: ["chest"],
-					exerciseIds: ["ex-1", "fake-1", "fake-2"],
-				},
-			],
-		};
-
-		const result = sanitizeGeneratedPrograms(tooFew, catalogIdSet);
-		assert.equal(result.programs[0]?.exerciseIds.length, 1);
-		assert.equal(hasInvalidPrograms(result.programs), true);
+		const exerciseIds = sanitizeExerciseIds(["ex-1", "fake-1", "fake-2"], allowed, 5);
+		assert.equal(exerciseIds.length, 1);
+		assert.equal(hasInvalidPrograms([{ name: "Upper A", muscles: ["chest"], exerciseIds }]), true);
 		assert.equal(MIN_EXERCISES_PER_PROGRAM, 3);
 	});
+});
 
-	it("assigns groupName for multi-program splits", () => {
-		const split: GeneratedPrograms = {
-			groupName: "4-Day Upper/Lower",
-			programs: [
-				{
-					name: "Upper A",
-					muscles: ["chest"],
-					exerciseIds: ["ex-1", "ex-2", "ex-3"],
-				},
-				{
-					name: "Lower A",
-					muscles: ["quads"],
-					exerciseIds: ["ex-2", "ex-3", "ex-4"],
-				},
-			],
-		};
+describe("resolveGroupName", () => {
+	const program = { name: "Day", muscles: ["chest" as const], exerciseCount: 4 };
 
-		const result = sanitizeGeneratedPrograms(split, catalogIdSet);
-		assert.equal(result.groupName, "4-Day Upper/Lower");
+	it("uses the AI's groupName for multi-program splits", () => {
+		const plan: GeneratedPlan = { groupName: "4-Day Upper/Lower", programs: [program, program] };
+		assert.equal(resolveGroupName(plan), "4-Day Upper/Lower");
 	});
 
 	it("uses default groupName when AI returns null for multiple programs", () => {
-		const split: GeneratedPrograms = {
-			groupName: null,
-			programs: [
-				{
-					name: "Upper A",
-					muscles: ["chest"],
-					exerciseIds: ["ex-1", "ex-2", "ex-3"],
-				},
-				{
-					name: "Lower A",
-					muscles: ["quads"],
-					exerciseIds: ["ex-2", "ex-3", "ex-4"],
-				},
-			],
-		};
+		const plan: GeneratedPlan = { groupName: null, programs: [program, program] };
+		assert.equal(resolveGroupName(plan), DEFAULT_GROUP_NAME);
+	});
 
-		const result = sanitizeGeneratedPrograms(split, catalogIdSet);
-		assert.equal(result.groupName, DEFAULT_GROUP_NAME);
+	it("returns null for a single program", () => {
+		const plan: GeneratedPlan = { groupName: "Ignored", programs: [program] };
+		assert.equal(resolveGroupName(plan), null);
 	});
 });

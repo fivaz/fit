@@ -7,19 +7,20 @@ export const generateProgramRequestSchema = z.object({
 	description: z.string().trim().min(10).max(2000),
 });
 
-export const generatedProgramSchema = z.object({
+export const plannedProgramSchema = z.object({
 	name: z.string().min(2).max(80),
 	muscles: z.array(z.enum(muscleGroupValues)).min(1),
-	exerciseIds: z
-		.array(z.string().min(1))
+	exerciseCount: z
+		.number()
+		.int()
 		.min(3)
 		.max(20)
 		.describe(
-			"Ordered exercise IDs from the catalog only; honor any requested count and keep the same length across all programs in a split",
+			"How many exercises this program gets; honor any requested count and keep it the same across all programs in a split",
 		),
 });
 
-export const generatedProgramsSchema = z.object({
+export const generatedPlanSchema = z.object({
 	groupName: z
 		.string()
 		.min(2)
@@ -28,15 +29,23 @@ export const generatedProgramsSchema = z.object({
 		.describe(
 			"Name for the program group when returning multiple programs; use null for a single program",
 		),
-	programs: z.array(generatedProgramSchema).min(1).max(7),
+	programs: z.array(plannedProgramSchema).min(1).max(7),
 });
 
-export type GeneratedProgram = z.infer<typeof generatedProgramSchema>;
-export type GeneratedPrograms = z.infer<typeof generatedProgramsSchema>;
+export const programExercisesSchema = z.object({
+	exerciseIds: z
+		.array(z.string().min(1))
+		.min(3)
+		.max(20)
+		.describe("Ordered exercise IDs from the provided catalog only"),
+});
+
+export type PlannedProgram = z.infer<typeof plannedProgramSchema>;
+export type GeneratedPlan = z.infer<typeof generatedPlanSchema>;
 
 export type SanitizedProgram = {
 	name: string;
-	muscles: GeneratedProgram["muscles"];
+	muscles: PlannedProgram["muscles"];
 	exerciseIds: string[];
 };
 
@@ -48,28 +57,31 @@ export type SanitizedGenerationResult = {
 export const MIN_EXERCISES_PER_PROGRAM = 3;
 export const DEFAULT_GROUP_NAME = "AI Generated Split";
 
-export function sanitizeGeneratedPrograms(
-	raw: GeneratedPrograms,
-	catalogIdSet: Set<string>,
-): SanitizedGenerationResult {
-	const programs = raw.programs.map((program) => {
-		const seen = new Set<string>();
-		const exerciseIds = program.exerciseIds.filter((id) => {
-			if (!catalogIdSet.has(id) || seen.has(id)) return false;
-			seen.add(id);
-			return true;
-		});
+/** Catalog entries that target at least one of the given muscles. */
+export function filterCatalogByMuscles<T extends { muscles: MuscleGroupType[] }>(
+	catalog: T[],
+	muscles: MuscleGroupType[],
+): T[] {
+	return catalog.filter((exercise) => exercise.muscles.some((muscle) => muscles.includes(muscle)));
+}
 
-		return {
-			name: program.name,
-			muscles: program.muscles,
-			exerciseIds,
-		};
+/** Keeps only allowed IDs, dedupes, and caps the list at `limit`, preserving order. */
+export function sanitizeExerciseIds(
+	ids: string[],
+	allowedIdSet: Set<string>,
+	limit: number,
+): string[] {
+	const seen = new Set<string>();
+	const valid = ids.filter((id) => {
+		if (!allowedIdSet.has(id) || seen.has(id)) return false;
+		seen.add(id);
+		return true;
 	});
+	return valid.slice(0, limit);
+}
 
-	const groupName = programs.length > 1 ? raw.groupName?.trim() || DEFAULT_GROUP_NAME : null;
-
-	return { groupName, programs };
+export function resolveGroupName(plan: GeneratedPlan): string | null {
+	return plan.programs.length > 1 ? plan.groupName?.trim() || DEFAULT_GROUP_NAME : null;
 }
 
 export function hasInvalidPrograms(programs: SanitizedProgram[]): boolean {

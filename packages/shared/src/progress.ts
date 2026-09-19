@@ -33,3 +33,26 @@ export type HomeRecentWorkoutUI = {
 	programMuscles: string[];
 	programImageUrl: string | null;
 };
+
+/** Best weight and reps, and total volume, of one exercise in one finished workout. */
+export type ExerciseProgressSessionUI = {
+	workoutId: string;
+	date: string;
+	maxWeight: number;
+	maxReps: number;
+	/** Sum of weight × reps over the logged working sets. */
+	volume: number;
+};
+
+export type ProgramExerciseProgressUI = {
+	exerciseId: string;
+	name: string;
+	imageUrl: string | null;
+	/** Oldest first. */
+	sessions: ExerciseProgressSessionUI[];
+};
+
+export type ProgramProgressUI = {
+	programName: string;
+	exercises: ProgramExerciseProgressUI[];
+};

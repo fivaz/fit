@@ -132,3 +132,24 @@
 		font-weight: inherit;
 	}
 }
+
+/* Tokens for the exercise progress charts. Series colors are slots 1 (blue) and 2 (orange) of the validated palette. */
+.chart-root {
+	--chart-surface: #ffffff;
+	--chart-grid: #e7e5e4;
+	--chart-cursor: #a8a29e;
+	--chart-axis-text: #6b6a67;
+	--chart-series-weight: #2a78d6;
+	--chart-series-reps: #eb6834;
+	--chart-series-volume: #1baf7a;
+}
+
+.dark .chart-root {
+	--chart-surface: #1f2937;
+	--chart-grid: #374151;
+	--chart-cursor: #6b7280;
+	--chart-axis-text: #c3c2b7;
+	--chart-series-weight: #3987e5;
+	--chart-series-reps: #d95926;
+	--chart-series-volume: #199e70;
+}

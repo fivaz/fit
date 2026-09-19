@@ -1,5 +1,11 @@
-import type { HomeRecentWorkoutUI, ProgressStatsUI, ProgressWorkoutLogUI } from "@fit/shared";
+import type {
+	HomeRecentWorkoutUI,
+	ProgramProgressUI,
+	ProgressStatsUI,
+	ProgressWorkoutLogUI,
+} from "@fit/shared";
 
+import { ApiError } from "@/api-error";
 import { prisma } from "@/prisma/client";
 import {
 	calculateProgressStats,
@@ -7,6 +13,7 @@ import {
 	calculateWorkoutVolume,
 	countExercisesWithCompletedSets,
 } from "@/progress/calculate-stats";
+import { buildExerciseProgress } from "@/progress/exercise-progress";
 
 export async function getProgressStats(
 	userId: string,
@@ -143,4 +150,49 @@ export async function getRecentWorkoutsForHome(
 			programImageUrl: workout.program?.imageUrl ?? null,
 		};
 	});
+}
+
+export async function getProgramExerciseProgress(
+	userId: string,
+	programId: string,
+): Promise<ProgramProgressUI> {
+	const program = await prisma.program.findFirst({
+		where: { id: programId, userId },
+		select: {
+			name: true,
+			exercises: {
+				orderBy: { order: "asc" },
+				select: { exercise: { select: { id: true, name: true, imageUrl: true } } },
+			},
+		},
+	});
+
+	if (!program) throw new ApiError("Program not found", 404);
+
+	const exercises = program.exercises.map(({ exercise }) => exercise);
+
+	const workoutExercises = await prisma.workoutExercise.findMany({
+		where: {
+			exerciseId: { in: exercises.map(({ id }) => id) },
+			workout: { userId, endDate: { not: null } },
+		},
+		select: {
+			exerciseId: true,
+			workout: { select: { id: true, endDate: true } },
+			sets: { select: { reps: true, weight: true, time: true, isWarmup: true } },
+		},
+	});
+
+	return {
+		programName: program.name,
+		exercises: buildExerciseProgress(
+			exercises,
+			workoutExercises.map((entry) => ({
+				exerciseId: entry.exerciseId,
+				workoutId: entry.workout.id,
+				endDate: entry.workout.endDate!,
+				sets: entry.sets,
+			})),
+		),
+	};
 }

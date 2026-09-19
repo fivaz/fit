@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { DumbbellIcon, EditIcon, MoreVertical, Trash2 } from "lucide-react";
+import { DumbbellIcon, EditIcon, MoreVertical, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddExerciseForm } from "@/app/(dashboard)/programs/[id]/_components/add-exercise-form";
@@ -24,6 +25,7 @@ import { ROUTES } from "@/lib/consts";
 import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { deleteProgram } from "@/lib/program/api";
 import { ProgramWithExercises } from "@/lib/program/type";
+import { programProgressHref } from "@/lib/programs/navigation";
 
 type ProgramDetailProps = {
 	program: ProgramWithExercises;
@@ -46,9 +48,12 @@ export function ProgramDetails({ program, onClose }: ProgramDetailProps) {
 export function ProgramDetailsInternal({
 	program: programProp,
 	onClose,
+	exercisesLoading = false,
 }: {
 	program?: ProgramWithExercises;
 	onClose?: () => void;
+	/** True while the program's exercises are still being fetched. */
+	exercisesLoading?: boolean;
 }) {
 	const { firstItem } = useProgramsStore();
 	const { deleteItem } = useProgramMutations();
@@ -90,27 +95,39 @@ export function ProgramDetailsInternal({
 						</div>
 					</div>
 
-					<DropdownMenu modal={false}>
-						<DropdownMenuTrigger asChild>
-							<Button aria-label="Program actions" variant="outline" size="icon">
-								<MoreVertical className="size-5" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={() => setShowAddExerciseForm(true)}>
-								<DumbbellIcon className="size-4" />
-								<span>Add Exercises</span>
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setShowProgramForm(true)}>
-								<EditIcon className="size-4" />
-								<span>Edit Program</span>
-							</DropdownMenuItem>
-							<DropdownMenuItem variant="destructive" onClick={handleDelete}>
-								<Trash2 className="size-4" />
-								<span>Delete Program</span>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<div className="flex items-center gap-2">
+						<Button asChild aria-label="Exercise progress" variant="outline" size="icon">
+							<Link href={programProgressHref(program.id)}>
+								<TrendingUp className="size-5" />
+							</Link>
+						</Button>
+						<DropdownMenu modal={false}>
+							<DropdownMenuTrigger asChild>
+								<Button aria-label="Program actions" variant="outline" size="icon">
+									<MoreVertical className="size-5" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{/* Until the exercises load the store is empty, so confirming would replace them all,
+							    and the late response would overwrite the change. */}
+								<DropdownMenuItem
+									disabled={exercisesLoading}
+									onClick={() => setShowAddExerciseForm(true)}
+								>
+									<DumbbellIcon className="size-4" />
+									<span>Add Exercises</span>
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setShowProgramForm(true)}>
+									<EditIcon className="size-4" />
+									<span>Edit Program</span>
+								</DropdownMenuItem>
+								<DropdownMenuItem variant="destructive" onClick={handleDelete}>
+									<Trash2 className="size-4" />
+									<span>Delete Program</span>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
 				</div>
 
 				<ExercisesProvider initialItems={program.exercises}>

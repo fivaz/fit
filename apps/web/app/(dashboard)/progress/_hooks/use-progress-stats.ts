@@ -2,18 +2,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { subWeeks } from "date-fns";
+
 import { getProgressStats } from "@/lib/progress/api";
 import { emptyProgressStats, ProgressStatsUI } from "@/lib/progress/type";
 
 type StatsFetchState = {
 	rangeKey: string;
 	stats: ProgressStatsUI;
+	/** Stats for the week before the requested range; null when they could not be loaded. */
+	previousStats: ProgressStatsUI | null;
 	settled: boolean;
 };
 
 const initialFetchState: StatsFetchState = {
 	rangeKey: "",
 	stats: emptyProgressStats,
+	previousStats: null,
 	settled: false,
 };
 
@@ -29,15 +34,25 @@ export function useProgressStats(weekStart: Date, weekEnd: Date) {
 	useEffect(() => {
 		let cancelled = false;
 
-		void getProgressStats(weekStart, weekEnd)
-			.then((loadedStats) => {
+		// A failed previous-week fetch only hides the trend arrows; it must not fail the cards.
+		const loadPreviousStats = getProgressStats(subWeeks(weekStart, 1), subWeeks(weekEnd, 1)).catch(
+			() => null,
+		);
+
+		void Promise.all([getProgressStats(weekStart, weekEnd), loadPreviousStats])
+			.then(([loadedStats, previousStats]) => {
 				if (!cancelled) {
-					setFetchState({ rangeKey, stats: loadedStats, settled: true });
+					setFetchState({ rangeKey, stats: loadedStats, previousStats, settled: true });
 				}
 			})
 			.catch(() => {
 				if (!cancelled) {
-					setFetchState({ rangeKey, stats: emptyProgressStats, settled: true });
+					setFetchState({
+						rangeKey,
+						stats: emptyProgressStats,
+						previousStats: null,
+						settled: true,
+					});
 				}
 			});
 
@@ -49,5 +64,7 @@ export function useProgressStats(weekStart: Date, weekEnd: Date) {
 	const isLoading = !fetchState.settled || fetchState.rangeKey !== rangeKey;
 	const stats = fetchState.rangeKey === rangeKey ? fetchState.stats : emptyProgressStats;
 
-	return { stats, isLoading };
+	const previousStats = fetchState.rangeKey === rangeKey ? fetchState.previousStats : null;
+
+	return { stats, previousStats, isLoading };
 }

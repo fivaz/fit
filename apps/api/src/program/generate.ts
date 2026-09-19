@@ -3,12 +3,21 @@ import { generateObject } from "ai";
 
 import type { ExerciseCatalogItem } from "@/exercise/catalog";
 import { logError } from "@/logger";
-import { buildProgramGenerationSystemPrompt } from "@/program/generate-prompt";
 import {
-	generatedProgramsSchema,
+	buildExercisePickSystemPrompt,
+	buildProgramPlanSystemPrompt,
+} from "@/program/generate-prompt";
+import {
+	filterCatalogByMuscles,
+	generatedPlanSchema,
 	hasInvalidPrograms,
+	MIN_EXERCISES_PER_PROGRAM,
+	type PlannedProgram,
+	programExercisesSchema,
+	resolveGroupName,
 	type SanitizedGenerationResult,
-	sanitizeGeneratedPrograms,
+	type SanitizedProgram,
+	sanitizeExerciseIds,
 } from "@/program/generate-schema";
 
 const DEFAULT_MODEL = "gpt-4o-mini";
@@ -33,17 +42,68 @@ function getModelId(): string {
 	return process.env.AI_PROGRAM_MODEL ?? DEFAULT_MODEL;
 }
 
-async function callModel(description: string, catalog: ExerciseCatalogItem[]) {
-	const system = buildProgramGenerationSystemPrompt(catalog);
+async function planPrograms(description: string, catalog: ExerciseCatalogItem[]) {
+	const availableMuscles = [...new Set(catalog.flatMap((exercise) => exercise.muscles))];
 
-	return generateObject({
+	const { object } = await generateObject({
 		model: openai(getModelId()),
-		schema: generatedProgramsSchema,
-		schemaName: "WorkoutPrograms",
-		schemaDescription: "One or more workout programs with exercise IDs from the catalog",
-		system,
+		schema: generatedPlanSchema,
+		schemaName: "WorkoutProgramPlan",
+		schemaDescription: "A plan of one or more workout programs, without exercises",
+		system: buildProgramPlanSystemPrompt(availableMuscles),
 		prompt: description,
 	});
+
+	return object;
+}
+
+async function pickExercises(
+	description: string,
+	program: PlannedProgram,
+	catalog: ExerciseCatalogItem[],
+	extraInstruction = "",
+) {
+	const count = Math.min(program.exerciseCount, catalog.length);
+
+	const { object } = await generateObject({
+		model: openai(getModelId()),
+		schema: programExercisesSchema,
+		schemaName: "ProgramExercises",
+		schemaDescription: "Exercise IDs from the catalog for one workout program",
+		system: buildExercisePickSystemPrompt(program, catalog, count),
+		prompt: `${description}${extraInstruction}`,
+	});
+
+	return sanitizeExerciseIds(object.exerciseIds, new Set(catalog.map(({ id }) => id)), count);
+}
+
+async function buildProgram(
+	description: string,
+	program: PlannedProgram,
+	fullCatalog: ExerciseCatalogItem[],
+): Promise<SanitizedProgram> {
+	// Only exercises matching the program's muscles are ever shown to the model.
+	const catalog = filterCatalogByMuscles(fullCatalog, program.muscles);
+
+	if (catalog.length < MIN_EXERCISES_PER_PROGRAM) {
+		throw new ProgramGenerationError(
+			`Not enough exercises for ${program.muscles.join(", ")} in your library. Add more exercises or adjust your description.`,
+			422,
+		);
+	}
+
+	let exerciseIds = await pickExercises(description, program, catalog);
+
+	if (exerciseIds.length < MIN_EXERCISES_PER_PROGRAM) {
+		exerciseIds = await pickExercises(
+			description,
+			program,
+			catalog,
+			`\n\nSome exercise IDs were invalid. Use only exact "id" values from the catalog.`,
+		);
+	}
+
+	return { name: program.name, muscles: program.muscles, exerciseIds };
 }
 
 export async function generateProgramsFromDescription(
@@ -56,28 +116,20 @@ export async function generateProgramsFromDescription(
 
 	assertOpenAiApiKeyConfigured();
 
-	const catalogIdSet = new Set(catalog.map((exercise) => exercise.id));
-
 	try {
-		const { object } = await callModel(description, catalog);
-		let sanitized = sanitizeGeneratedPrograms(object, catalogIdSet);
+		const plan = await planPrograms(description, catalog);
+		const programs = await Promise.all(
+			plan.programs.map((program) => buildProgram(description, program, catalog)),
+		);
 
-		if (hasInvalidPrograms(sanitized.programs)) {
-			const { object: retryObject } = await callModel(
-				`${description}\n\nSome exercise IDs were invalid. Use only exact "id" values from the catalog.`,
-				catalog,
-			);
-			sanitized = sanitizeGeneratedPrograms(retryObject, catalogIdSet);
-		}
-
-		if (hasInvalidPrograms(sanitized.programs)) {
+		if (hasInvalidPrograms(programs)) {
 			throw new ProgramGenerationError(
 				"Could not generate a valid program from your description. Try being more specific.",
 				422,
 			);
 		}
 
-		return sanitized;
+		return { groupName: resolveGroupName(plan), programs };
 	} catch (error) {
 		if (error instanceof ProgramGenerationError) throw error;
 

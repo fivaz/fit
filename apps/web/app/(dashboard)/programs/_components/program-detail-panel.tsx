@@ -85,7 +85,11 @@ export function ProgramDetailPanel({ programId, onBack }: ProgramDetailPanelProp
 			{exercisesLoading && program.exercises.length === 0 ? (
 				<p className="text-muted-foreground mb-4 text-sm">Loading exercises...</p>
 			) : null}
-			<ProgramDetailsInternal program={program} onClose={onBack} />
+			<ProgramDetailsInternal
+				program={program}
+				onClose={onBack}
+				exercisesLoading={exercisesLoading}
+			/>
 		</div>
 	);
 }

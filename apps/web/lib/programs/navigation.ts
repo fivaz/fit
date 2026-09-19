@@ -16,8 +16,14 @@ export function programsDetailHref(programId: string): string {
 	return `${ROUTES.PROGRAMS}?${params.toString()}`;
 }
 
+/** Exercise progress for one program. A static route with a query param, like the detail view. */
+export function programProgressHref(programId: string): string {
+	const params = new URLSearchParams({ id: programId });
+	return `${ROUTES.PROGRAM_PROGRESS}?${params.toString()}`;
+}
+
 export function isProgramsRoute(pathname: string): boolean {
-	return pathname === ROUTES.PROGRAMS;
+	return pathname === ROUTES.PROGRAMS || pathname === ROUTES.PROGRAM_PROGRESS;
 }
 
 export function pushProgramsSelectedId(programId: string | null): void {

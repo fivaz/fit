@@ -30,10 +30,7 @@ const prismaProgramGroupRepository: ProgramGroupRepository = {
 	},
 	async deleteProgramGroup(id, userId) {
 		await prisma.$transaction([
-			prisma.program.updateMany({
-				where: { groupId: id, userId },
-				data: { groupId: null },
-			}),
+			prisma.program.deleteMany({ where: { groupId: id, userId } }),
 			prisma.programGroup.delete({ where: { id, userId } }),
 		]);
 	},
