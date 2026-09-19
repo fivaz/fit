@@ -1,3 +1,13 @@
+## [1.5.1](https://github.com/fivaz/fit/compare/v1.5.0...v1.5.1) (2026-09-19)
+
+### 🐛 Bug Fixes
+
+* **ci:** deploy the image built in the run instead of stale latest ([b63d70f](https://github.com/fivaz/fit/commit/b63d70f0b71381048ffed5d8733f228c3c97ea7b))
+
+### 🧹 Chores
+
+* **infra:** allow localhost:3000 in the staging API CORS origins ([8de6174](https://github.com/fivaz/fit/commit/8de617411ce1bfd1c7773fb6a37220bddd3542c9))
+
 ## [1.5.0](https://github.com/fivaz/fit/compare/v1.4.1...v1.5.0) (2026-09-19)
 
 ### ✨ Features
