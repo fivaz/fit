@@ -48,9 +48,12 @@ export function ProgramDetails({ program, onClose }: ProgramDetailProps) {
 export function ProgramDetailsInternal({
 	program: programProp,
 	onClose,
+	exercisesLoading = false,
 }: {
 	program?: ProgramWithExercises;
 	onClose?: () => void;
+	/** True while the program's exercises are still being fetched. */
+	exercisesLoading?: boolean;
 }) {
 	const { firstItem } = useProgramsStore();
 	const { deleteItem } = useProgramMutations();
@@ -105,7 +108,12 @@ export function ProgramDetailsInternal({
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
-								<DropdownMenuItem onClick={() => setShowAddExerciseForm(true)}>
+								{/* Until the exercises load the store is empty, so confirming would replace them all,
+							    and the late response would overwrite the change. */}
+								<DropdownMenuItem
+									disabled={exercisesLoading}
+									onClick={() => setShowAddExerciseForm(true)}
+								>
 									<DumbbellIcon className="size-4" />
 									<span>Add Exercises</span>
 								</DropdownMenuItem>

@@ -34,7 +34,7 @@ test.describe("Program Group Delete", () => {
 			await page.getByRole("button", { name: "Switch to manual program creation" }).click();
 			await page.getByLabel("Program Name").fill(programName);
 			await page.getByRole("button", { name: /chest/i }).click();
-			await page.getByLabel("Group").selectOption({ label: groupName });
+			await page.getByLabel("Group", { exact: true }).selectOption({ label: groupName });
 			await page.getByRole("button", { name: "Create Program" }).click();
 			await expect(page.getByText("Program created successfully.")).toBeVisible();
 		});
