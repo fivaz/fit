@@ -50,6 +50,9 @@ param apiBaseUrl string
 @description('CORS allowed origins (comma-separated)')
 param corsAllowedOrigins string = 'https://fittracker.com,capacitor://localhost'
 
+@description('Image tag to deploy (CI passes the immutable sha-<short> tag built in the same run; \'latest\' is only refreshed by default-branch builds)')
+param imageTag string = 'latest'
+
 @description('Suffix for this revision (e.g. short git SHA). Enables blue-green: the revision provisions with zero traffic until the "production" label is moved to it via `az containerapp revision label add`.')
 param revisionSuffix string = ''
 
@@ -158,7 +161,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: 'fit-api'
-          image: '${acrLoginServer}/fit-api:latest' // Will be updated by CI/CD
+          image: '${acrLoginServer}/fit-api:${imageTag}'
           resources: {
             cpu: json(cpuCores)
             memory: memory

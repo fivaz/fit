@@ -32,6 +32,9 @@
 		"customDomainName": {
 			"value": "fit-staging.sfivaz.com"
 		},
+		"corsAllowedOrigins": {
+			"value": "https://fit-staging.sfivaz.com,capacitor://localhost,ionic://localhost,http://localhost:3000"
+		},
 		"deployAcr": {
 			"value": false
 		},
