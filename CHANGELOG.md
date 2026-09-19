@@ -1,3 +1,31 @@
+## [1.5.0](https://github.com/fivaz/fit/compare/v1.4.1...v1.5.0) (2026-09-19)
+
+### ✨ Features
+
+* add per-program exercise progress page with weight/reps trends ([2ea7643](https://github.com/fivaz/fit/commit/2ea764322bb7de868389d20aafd994b29fda553e))
+* add volume chart to program exercise progress page ([ce99761](https://github.com/fivaz/fit/commit/ce9976196eca56eb5d91c71ea3a7eb56ae38d2e3))
+* **api:** delete a group's programs when the group is deleted ([5bb1996](https://github.com/fivaz/fit/commit/5bb19962ed3d7b436f3f46781bc5698a2af87613))
+* show exercise image on program progress page cards ([c5ad6bc](https://github.com/fivaz/fit/commit/c5ad6bcc8a7fc14aac990bf4cf3eac3f5e956f41))
+* **web:** add delete action to program groups ([a93bb32](https://github.com/fivaz/fit/commit/a93bb3202a55f080a466a41a7b71ebec277c4fb0))
+* **web:** show a program's existing exercises first in add-exercise list ([dced220](https://github.com/fivaz/fit/commit/dced2203ad68111b911ae2acad58e7615d879125))
+* **web:** show week-over-week trend arrows on progress stat cards ([b0a1ff4](https://github.com/fivaz/fit/commit/b0a1ff4ddc389c137d2526e9fae82f4e66e99988))
+* **web:** show weight and reps progression as charts on program progress page ([339cb85](https://github.com/fivaz/fit/commit/339cb85fe2bbdca235af57cf0d14da56b8f9b343))
+
+### 🐛 Bug Fixes
+
+* **api:** generate programs in two steps so exercises match program muscles ([72fa2f7](https://github.com/fivaz/fit/commit/72fa2f70ef3d73d57b1b6d39d6871a8dd5414376))
+* **api:** validate programId; harden group-delete e2e test ([6de402f](https://github.com/fivaz/fit/commit/6de402f81df79904bb3eeb60dc67b1ed45c910a5))
+* **web:** disable add-exercises until program exercises load; fix group locator ([ea10415](https://github.com/fivaz/fit/commit/ea1041559053a101d08df5b92409a2bc12b34c31))
+* **web:** preload program's current exercises when opening add-exercise drawer ([e4dbf57](https://github.com/fivaz/fit/commit/e4dbf5726ce541f82009fe576aafd33ec41aa45a))
+
+### 🧹 Chores
+
+* **infra:** allow localhost:3000 in the dev API CORS origins ([77b47ea](https://github.com/fivaz/fit/commit/77b47eaf17dab13efe8dc398f16c8b72ded3ab60))
+
+### 🔧 Continuous Integration
+
+* **azure:** build frontends against the custom API domain when ready ([db9d468](https://github.com/fivaz/fit/commit/db9d468ade16557b56b766f41d9e977dd35a8fdb))
+
 ## [1.4.1](https://github.com/fivaz/fit/compare/v1.4.0...v1.4.1) (2026-09-16)
 
 ### 🐛 Bug Fixes
