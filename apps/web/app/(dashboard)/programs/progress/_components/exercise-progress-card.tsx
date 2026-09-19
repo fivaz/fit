@@ -54,13 +54,28 @@ export function ExerciseProgressCard({ exercise }: ExerciseProgressCardProps) {
 			aria-label={`Progress for ${name}`}
 			className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800"
 		>
-			<h2 className="font-semibold text-gray-900 dark:text-white">{name}</h2>
+			<div className="mb-3 flex items-center gap-4">
+				<div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+					<img
+						src={exercise.imageUrl || "/exercise.jpg"}
+						alt={name}
+						className="h-full w-full object-cover"
+					/>
+				</div>
+				<div className="min-w-0 flex-1">
+					<h2 className="truncate font-semibold text-gray-900 capitalize dark:text-white">
+						{name}
+					</h2>
+					{latest && (
+						<p className="text-sm text-gray-500 dark:text-gray-400">
+							{sessions.length} {sessions.length === 1 ? "session" : "sessions"} logged
+						</p>
+					)}
+				</div>
+			</div>
 
 			{latest ? (
 				<>
-					<p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
-						{sessions.length} {sessions.length === 1 ? "session" : "sessions"} logged
-					</p>
 					<div className="mb-3 flex flex-col gap-4">
 						<ExerciseMetricChart exerciseName={name} metric="volume" sessions={sessions} />
 						<ExerciseMetricChart exerciseName={name} metric="weight" sessions={sessions} />

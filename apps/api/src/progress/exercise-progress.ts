@@ -20,7 +20,7 @@ function isLoggedWorkingSet(set: SetForExerciseProgress): boolean {
 }
 
 export function buildExerciseProgress(
-	exercises: Array<{ id: string; name: string }>,
+	exercises: Array<{ id: string; name: string; imageUrl: string | null }>,
 	entries: ExerciseSessionEntry[],
 ): ProgramExerciseProgressUI[] {
 	return exercises.map((exercise) => {
@@ -42,6 +42,6 @@ export function buildExerciseProgress(
 				];
 			});
 
-		return { exerciseId: exercise.id, name: exercise.name, sessions };
+		return { exerciseId: exercise.id, name: exercise.name, imageUrl: exercise.imageUrl, sessions };
 	});
 }

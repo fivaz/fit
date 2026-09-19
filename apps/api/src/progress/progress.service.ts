@@ -162,7 +162,7 @@ export async function getProgramExerciseProgress(
 			name: true,
 			exercises: {
 				orderBy: { order: "asc" },
-				select: { exercise: { select: { id: true, name: true } } },
+				select: { exercise: { select: { id: true, name: true, imageUrl: true } } },
 			},
 		},
 	});

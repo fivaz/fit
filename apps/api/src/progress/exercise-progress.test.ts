@@ -12,8 +12,8 @@ const logged = (reps: number, weight: number | null, isWarmup = false): SetForEx
 
 describe("buildExerciseProgress", () => {
 	const exercises = [
-		{ id: "bench", name: "Bench Press" },
-		{ id: "squat", name: "Squat" },
+		{ id: "bench", name: "Bench Press", imageUrl: "https://example.com/bench.jpg" },
+		{ id: "squat", name: "Squat", imageUrl: null },
 	];
 
 	it("returns sessions oldest first with the best weight and reps", () => {
@@ -74,6 +74,13 @@ describe("buildExerciseProgress", () => {
 		]);
 
 		assert.deepEqual(result[0]?.sessions, []);
+	});
+
+	it("passes the exercise image through", () => {
+		const result = buildExerciseProgress(exercises, []);
+
+		assert.equal(result[0]?.imageUrl, "https://example.com/bench.jpg");
+		assert.equal(result[1]?.imageUrl, null);
 	});
 
 	it("keeps exercises without history and treats a missing weight as 0", () => {

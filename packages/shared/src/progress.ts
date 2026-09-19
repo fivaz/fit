@@ -47,6 +47,7 @@ export type ExerciseProgressSessionUI = {
 export type ProgramExerciseProgressUI = {
 	exerciseId: string;
 	name: string;
+	imageUrl: string | null;
 	/** Oldest first. */
 	sessions: ExerciseProgressSessionUI[];
 };
