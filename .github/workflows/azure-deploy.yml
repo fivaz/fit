@@ -53,6 +53,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=sha,prefix={{branch}}-
+            type=sha,format=short,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
@@ -175,6 +176,7 @@ jobs:
             --parameters deployContainerApps=true \
             --parameters externalAcrLoginServer="${{ env.REGISTRY }}/${{ github.repository }}" \
             --parameters revisionSuffix="${{ steps.env.outputs.revision_suffix }}" \
+            --parameters imageTag="sha-${{ steps.env.outputs.revision_suffix }}" \
             --parameters currentProductionRevisionName="${{ steps.traffic-mode.outputs.current_production_revision }}" \
             --name "$DEPLOYMENT_NAME"
 
