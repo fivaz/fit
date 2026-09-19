@@ -1,9 +1,13 @@
-import { Controller, Get, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 
 import { ApiError } from "@/api-error";
 import { AuthGuard } from "@/auth/auth.guard";
 import { UserId } from "@/auth/user-id.decorator";
-import { getProgressStats, getProgressWorkoutLogs } from "@/progress/progress.service";
+import {
+	getProgramExerciseProgress,
+	getProgressStats,
+	getProgressWorkoutLogs,
+} from "@/progress/progress.service";
 
 function parseRange(fromParam?: string, toParam?: string) {
 	if (!fromParam || !toParam) {
@@ -33,5 +37,10 @@ export class ProgressController {
 	logs(@UserId() userId: string, @Query("from") from?: string, @Query("to") to?: string) {
 		const range = parseRange(from, to);
 		return getProgressWorkoutLogs(userId, range.from, range.to);
+	}
+
+	@Get("programs/:programId/exercises")
+	programExercises(@UserId() userId: string, @Param("programId") programId: string) {
+		return getProgramExerciseProgress(userId, programId);
 	}
 }

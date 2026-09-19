@@ -1,9 +1,6 @@
 export { API_PATHS, PAGE_SIZE } from "./api-paths.js";
 export { AUTH_ADDITIONAL_FIELDS, type AuthUser } from "./auth.js";
-export {
-	getEmptyBodyMetrics,
-	type BodyMetricsUI,
-} from "./body-metrics.js";
+export { getEmptyBodyMetrics, type BodyMetricsUI } from "./body-metrics.js";
 export { buildEmptyExercise, type ExerciseRaw, type ExerciseUI } from "./exercise.js";
 export {
 	ALL_MUSCLES,
@@ -21,7 +18,10 @@ export {
 export { buildEmptyProgramGroup, type ProgramGroupUI } from "./program-group.js";
 export {
 	emptyProgressStats,
+	type ExerciseProgressSessionUI,
 	type HomeRecentWorkoutUI,
+	type ProgramExerciseProgressUI,
+	type ProgramProgressUI,
 	type ProgressStatsUI,
 	type ProgressWorkoutLogUI,
 } from "./progress.js";
