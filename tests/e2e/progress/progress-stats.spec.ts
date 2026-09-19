@@ -48,6 +48,10 @@ test.describe("Progress stats cards", () => {
 			).toBeVisible();
 			await expect(page.getByLabel("Average rest between sets value")).toHaveText("0s");
 		});
+
+		await test.step("Verify only the workouts card shows a trend, as unchanged", async () => {
+			await expect(page.getByRole("img", { name: "Unchanged from previous week" })).toHaveCount(1);
+		});
 	});
 
 	test("Finished workout updates all four last-7-days stat cards", async ({ page, request }) => {
@@ -99,6 +103,8 @@ test.describe("Progress stats cards", () => {
 			await expect(page.getByLabel("Workout count value")).toBeVisible({ timeout: 12_000 });
 			await expect(page.getByLabel("Workout count value")).toHaveText("1");
 			await expect(page.getByLabel("Average workout volume value")).toHaveText("900");
+			// One workout vs none the week before: only the workouts card has something to compare.
+			await expect(page.getByRole("img", { name: "Increased from previous week" })).toHaveCount(1);
 			await expect(page.getByLabel("Average rest between sets value")).toHaveText("3.0m");
 
 			const avgMinutes = Number(await page.getByLabel("Average workout minutes value").innerText());

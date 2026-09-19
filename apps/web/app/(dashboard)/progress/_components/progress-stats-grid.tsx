@@ -5,6 +5,7 @@ import { Clock, Dumbbell, Loader2, Timer, Weight } from "lucide-react";
 import { ProgressStatCard } from "@/app/(dashboard)/progress/_components/progress-stat-card";
 import { useProgressStats } from "@/app/(dashboard)/progress/_hooks/use-progress-stats";
 import { formatRestDuration } from "@/lib/progress/calculate-stats";
+import { getTrend } from "@/lib/progress/trend";
 
 type ProgressStatsGridProps = {
 	weekStart: Date;
@@ -13,7 +14,7 @@ type ProgressStatsGridProps = {
 };
 
 export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: ProgressStatsGridProps) {
-	const { stats, isLoading } = useProgressStats(weekStart, weekEnd);
+	const { stats, previousStats, isLoading } = useProgressStats(weekStart, weekEnd);
 
 	if (isLoading) {
 		return (
@@ -25,6 +26,10 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 		);
 	}
 
+	// Averages over zero workouts are just 0, so comparing them would show a misleading arrow.
+	const canCompareAverages =
+		previousStats !== null && previousStats.workoutCount > 0 && stats.workoutCount > 0;
+
 	return (
 		<div className="mb-6 grid grid-cols-2 gap-3">
 			<ProgressStatCard
@@ -34,6 +39,7 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				caption="Workouts"
 				icon={Dumbbell}
 				variant="primary"
+				trend={previousStats ? getTrend(stats.workoutCount, previousStats.workoutCount) : undefined}
 			/>
 			<ProgressStatCard
 				regionLabel={`Average workout duration in ${periodAriaLabel}`}
@@ -43,6 +49,11 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				icon={Clock}
 				iconClassName="text-blue-500"
 				animationDelay={0.05}
+				trend={
+					canCompareAverages
+						? getTrend(stats.avgWorkoutMinutes, previousStats.avgWorkoutMinutes)
+						: undefined
+				}
 			/>
 			<ProgressStatCard
 				regionLabel={`Average workout volume in ${periodAriaLabel}`}
@@ -52,6 +63,11 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				icon={Weight}
 				iconClassName="text-red-500"
 				animationDelay={0.1}
+				trend={
+					canCompareAverages
+						? getTrend(stats.avgWorkoutVolume, previousStats.avgWorkoutVolume)
+						: undefined
+				}
 			/>
 			<ProgressStatCard
 				regionLabel={`Average rest between sets in ${periodAriaLabel}`}
@@ -61,6 +77,11 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				icon={Timer}
 				iconClassName="text-green-500"
 				animationDelay={0.15}
+				trend={
+					canCompareAverages
+						? getTrend(stats.avgRestSeconds, previousStats.avgRestSeconds)
+						: undefined
+				}
 			/>
 		</div>
 	);
