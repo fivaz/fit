@@ -338,9 +338,7 @@ export const offlineDataAdapters = {
 		updateStore((store) => ({
 			...store,
 			programGroups: removeById(store.programGroups, id),
-			programs: store.programs.map((program) =>
-				program.groupId === id ? { ...program, groupId: null } : program,
-			),
+			programs: store.programs.filter((program) => program.groupId !== id),
 		}));
 		await runOrQueue({
 			url: `/api/program-groups/${id}`,

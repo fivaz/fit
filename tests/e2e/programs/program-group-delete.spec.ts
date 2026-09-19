@@ -12,7 +12,7 @@ async function createProgramGroup(page: import("@playwright/test").Page, name: s
 }
 
 test.describe("Program Group Delete", () => {
-	test("Authenticated user can delete a group and its programs move to Ungrouped", async ({
+	test("Authenticated user can delete a group together with its programs", async ({
 		page,
 		request,
 	}, testInfo) => {
@@ -46,19 +46,18 @@ test.describe("Program Group Delete", () => {
 			await expect(page.getByText("Group deleted successfully.")).toBeVisible();
 		});
 
-		await test.step("Verify group is gone and program moved to Ungrouped", async () => {
+		await test.step("Verify group and its program are gone", async () => {
 			await expect(page.getByRole("button", { name: `Hide ${groupName} group` })).not.toBeVisible();
 			await expect(page.getByRole("button", { name: `Show ${groupName} group` })).not.toBeVisible();
 
-			await expect(page.getByText("Ungrouped")).toBeVisible();
-			await expect(
-				page.getByRole("button", { name: new RegExp(`Open program.*${programName}`) }),
-			).toBeVisible();
+			const programButton = page.getByRole("button", {
+				name: new RegExp(`Open program.*${programName}`),
+			});
+			await expect(programButton).toHaveCount(0);
 
 			await page.reload();
-			await expect(
-				page.getByRole("button", { name: new RegExp(`Open program.*${programName}`) }),
-			).toBeVisible();
+			await expect(page.getByRole("button", { name: "Create program", exact: true })).toBeVisible();
+			await expect(programButton).toHaveCount(0);
 			await expect(page.getByRole("button", { name: `Hide ${groupName} group` })).not.toBeVisible();
 		});
 	});

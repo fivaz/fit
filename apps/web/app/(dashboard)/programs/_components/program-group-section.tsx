@@ -57,7 +57,7 @@ export function ProgramGroupSection({
 	const handleDelete = async () => {
 		const confirmed = await confirm({
 			title: "Delete Group",
-			message: `Are you sure you want to delete "${name}"? Its programs will move to Ungrouped. This action cannot be undone`,
+			message: `Are you sure you want to delete "${name}"? Its ${programs.length} ${programs.length === 1 ? "program" : "programs"} will be deleted too. This action cannot be undone`,
 		});
 
 		if (!confirmed) return;
@@ -66,13 +66,8 @@ export function ProgramGroupSection({
 			persist: () => deleteProgramGroup(sectionId),
 			onSuccess: () => {
 				toast.success("Group deleted successfully.");
-				const hasAffectedPrograms = allPrograms.some((program) => program.groupId === sectionId);
-				if (hasAffectedPrograms) {
-					setPrograms(
-						allPrograms.map((program) =>
-							program.groupId === sectionId ? { ...program, groupId: null } : program,
-						),
-					);
+				if (allPrograms.some((program) => program.groupId === sectionId)) {
+					setPrograms(allPrograms.filter((program) => program.groupId !== sectionId));
 				}
 			},
 			onError: () => toast.error("Failed to delete group."),
