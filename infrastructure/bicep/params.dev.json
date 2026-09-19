@@ -32,6 +32,9 @@
 		"customDomainName": {
 			"value": "fit-dev.sfivaz.com"
 		},
+		"corsAllowedOrigins": {
+			"value": "https://fit-dev.sfivaz.com,capacitor://localhost,ionic://localhost,http://localhost:3000"
+		},
 		"deployAcr": {
 			"value": false
 		},
