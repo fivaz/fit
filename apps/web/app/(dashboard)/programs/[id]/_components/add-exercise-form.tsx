@@ -29,6 +29,14 @@ export function AddExerciseForm({ program, open, onOpenChange }: AddExerciseForm
 	const { items: exercises } = useExercisesStore();
 	const { setItems, isPending } = useExerciseMutations();
 	const [selected, setSelected] = useState<ExerciseUI[]>(exercises);
+	const [wasOpen, setWasOpen] = useState(open);
+
+	// The form stays mounted while closed, so re-seed the selection from the program's
+	// current exercises each time it opens (drops stale or cancelled selections).
+	if (open !== wasOpen) {
+		setWasOpen(open);
+		if (open) setSelected(exercises);
+	}
 
 	const toggleExercise = (exercise: ExerciseUI) => {
 		setSelected((prev) =>
