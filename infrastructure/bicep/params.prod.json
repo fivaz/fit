@@ -12,7 +12,7 @@
 			"value": "fit"
 		},
 		"containerAppMinReplicas": {
-			"value": 0
+			"value": 1
 		},
 		"containerAppMaxReplicas": {
 			"value": 3
