@@ -1,3 +1,9 @@
+## [1.5.2](https://github.com/fivaz/fit/compare/v1.5.1...v1.5.2) (2026-09-20)
+
+### 🚀 Performance Improvements
+
+* **infra:** set prod containerAppMinReplicas to 1 to avoid cold starts ([1f9ab94](https://github.com/fivaz/fit/commit/1f9ab946cad5ecbc11506f2efc73930e6d300a03))
+
 ## [1.5.1](https://github.com/fivaz/fit/compare/v1.5.0...v1.5.1) (2026-09-19)
 
 ### 🐛 Bug Fixes
