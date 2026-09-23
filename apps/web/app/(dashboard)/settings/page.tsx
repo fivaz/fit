@@ -50,7 +50,12 @@ function CheckoutReturnHandler({ onCheckoutSuccess }: { onCheckoutSuccess: () =>
 
 		if (checkout === "success") {
 			onCheckoutSuccess();
-			toast.success("Credits added!");
+			toast.success("Payment received. Updating your credits...");
+			// The Stripe webhook that credits the account can land after the redirect back here,
+			// so refetch once more shortly after in case the first fetch saw the old balance. Not
+			// cleared on cleanup: the effect re-runs (and cleans up) as soon as router.replace
+			// strips ?checkout below, which would cancel this before it fires.
+			setTimeout(onCheckoutSuccess, 2500);
 		}
 
 		router.replace(ROUTES.SETTINGS);

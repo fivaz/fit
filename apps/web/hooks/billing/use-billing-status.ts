@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { BillingStatusUI } from "@fit/shared";
 
@@ -36,9 +36,9 @@ export function useBillingStatus() {
 
 	const isLoading = !fetchState.settled || fetchState.requestId !== requestId;
 
-	return {
-		status: fetchState.status,
-		isLoading,
-		refetch: () => setRequestId((id) => id + 1),
-	};
+	// Stable identity: consumers list this in effect deps, so a new function each render would
+	// re-trigger their effect (and call it again) forever.
+	const refetch = useCallback(() => setRequestId((id) => id + 1), []);
+
+	return { status: fetchState.status, isLoading, refetch };
 }

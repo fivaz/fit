@@ -57,14 +57,20 @@ export async function refundGenerationCredit(userId: string): Promise<void> {
 export async function createCheckoutSession(userId: string): Promise<{ url: string }> {
 	const webAppUrl = resolveWebAppUrl();
 
-	const session = await getStripeClient().checkout.sessions.create({
-		mode: "payment",
-		line_items: [{ price: CREDIT_PACK.priceId, quantity: 1 }],
-		client_reference_id: userId,
-		metadata: { userId },
-		success_url: `${webAppUrl}/settings?checkout=success`,
-		cancel_url: `${webAppUrl}/settings?checkout=cancel`,
-	});
+	let session: Stripe.Checkout.Session;
+	try {
+		session = await getStripeClient().checkout.sessions.create({
+			mode: "payment",
+			line_items: [{ price: CREDIT_PACK.priceId, quantity: 1 }],
+			client_reference_id: userId,
+			metadata: { userId },
+			success_url: `${webAppUrl}/settings?checkout=success`,
+			cancel_url: `${webAppUrl}/settings?checkout=cancel`,
+		});
+	} catch (error) {
+		logError(error, "createCheckoutSession", { extra: { userId } });
+		throw new ApiError("Could not start checkout. Please try again later.", 502);
+	}
 
 	if (!session.url) {
 		throw new ApiError("Failed to start checkout", 500);
