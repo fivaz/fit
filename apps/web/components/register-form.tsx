@@ -231,6 +231,10 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 						By creating an account, you agree to our{" "}
 						<Link href={ROUTES.PRIVACY} className="underline underline-offset-4">
 							Privacy Policy
+						</Link>{" "}
+						and{" "}
+						<Link href={ROUTES.TERMS} className="underline underline-offset-4">
+							Terms
 						</Link>
 						.
 					</FieldDescription>

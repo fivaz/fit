@@ -224,12 +224,14 @@ export function SettingsDetailsInternal({
 					>
 						<Trash2 className="mr-2 h-5 w-5" /> Delete Account
 					</Button>
-					<Link
-						href={ROUTES.PRIVACY}
-						className="mb-6 block text-sm text-gray-400 underline underline-offset-4 dark:text-gray-500"
-					>
-						Privacy Policy
-					</Link>
+					<div className="mb-6 flex justify-center gap-6 text-sm text-gray-400 dark:text-gray-500">
+						<Link href={ROUTES.PRIVACY} className="underline underline-offset-4">
+							Privacy Policy
+						</Link>
+						<Link href={ROUTES.TERMS} className="underline underline-offset-4">
+							Terms &amp; Refunds
+						</Link>
+					</div>
 					<div className="opacity-30">
 						<span className="text-[10px] font-bold tracking-widest uppercase dark:text-white">
 							Built with Passion

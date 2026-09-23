@@ -12,6 +12,7 @@ export const ROUTES = {
 	REGISTER: "/register",
 	SETTINGS: "/settings",
 	PRIVACY: "/privacy",
+	TERMS: "/terms",
 };
 
 export const PAGE_SIZE = SHARED_PAGE_SIZE;
