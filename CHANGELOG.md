@@ -1,3 +1,13 @@
+## [1.5.3](https://github.com/fivaz/fit/compare/v1.5.2...v1.5.3) (2026-09-23)
+
+### 🐛 Bug Fixes
+
+* **mobile:** persist bearer token on sign-in instead of dropping it ([4052451](https://github.com/fivaz/fit/commit/405245112c6d8783156d3dac5b3e098550374a01))
+
+### 🚀 Performance Improvements
+
+* **infra:** revert prod containerAppMinReplicas to 0 for scale-to-zero ([3b59c0a](https://github.com/fivaz/fit/commit/3b59c0ac94304725b37e25b30a621fe8e5160541))
+
 ## [1.5.2](https://github.com/fivaz/fit/compare/v1.5.1...v1.5.2) (2026-09-20)
 
 ### 🚀 Performance Improvements
