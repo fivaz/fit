@@ -15,8 +15,10 @@ import type { ProgramUI } from "@fit/shared";
 import { ApiError } from "@/api-error";
 import { AuthGuard } from "@/auth/auth.guard";
 import { UserId } from "@/auth/user-id.decorator";
+import { consumeGenerationCredit, refundGenerationCredit } from "@/billing/billing.service";
 import { getExerciseCatalogForUser } from "@/exercise/catalog";
 import { reorderProgramExercises } from "@/exercise/exercise.service";
+import { logError } from "@/logger";
 import { generateProgramsFromDescription, ProgramGenerationError } from "@/program/generate";
 import { generateProgramRequestSchema } from "@/program/generate-schema";
 import {
@@ -65,11 +67,17 @@ export class ProgramsController {
 			);
 		}
 
+		const catalog = await getExerciseCatalogForUser(userId);
+
+		await consumeGenerationCredit(userId);
+
 		try {
-			const catalog = await getExerciseCatalogForUser(userId);
 			const generated = await generateProgramsFromDescription(parsed.data.description, catalog);
-			return createGeneratedPrograms(generated, userId);
+			return await createGeneratedPrograms(generated, userId);
 		} catch (error) {
+			await refundGenerationCredit(userId).catch((refundError) =>
+				logError(refundError, "refundGenerationCredit"),
+			);
 			if (error instanceof ProgramGenerationError) {
 				throw new ApiError(error.message, error.status);
 			}

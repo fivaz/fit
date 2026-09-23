@@ -50,6 +50,12 @@ param apiBaseUrl string
 @description('CORS allowed origins (comma-separated)')
 param corsAllowedOrigins string = 'https://fittracker.com,capacitor://localhost'
 
+@description('Canonical web app origin, used to build Stripe Checkout success/cancel redirect URLs')
+param webAppUrl string = ''
+
+@description('Price ID of the one-time credit-pack Price, created in the Stripe Dashboard (test mode)')
+param stripeCreditPackPriceId string = ''
+
 @description('Image tag to deploy (CI passes the immutable sha-<short> tag built in the same run; \'latest\' is only refreshed by default-branch builds)')
 param imageTag string = 'latest'
 
@@ -154,6 +160,16 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/OPENAI-API-KEY'
           identity: 'system'
         }
+        {
+          name: 'stripe-secret-key'
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/STRIPE-SECRET-KEY'
+          identity: 'system'
+        }
+        {
+          name: 'stripe-webhook-secret'
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/STRIPE-WEBHOOK-SECRET'
+          identity: 'system'
+        }
       ]
     }
     template: {
@@ -178,6 +194,22 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'OPENAI_API_KEY'
               secretRef: 'openai-api-key'
+            }
+            {
+              name: 'STRIPE_SECRET_KEY'
+              secretRef: 'stripe-secret-key'
+            }
+            {
+              name: 'STRIPE_WEBHOOK_SECRET'
+              secretRef: 'stripe-webhook-secret'
+            }
+            {
+              name: 'STRIPE_CREDIT_PACK_PRICE_ID'
+              value: stripeCreditPackPriceId
+            }
+            {
+              name: 'WEB_APP_URL'
+              value: webAppUrl
             }
             {
               name: 'API_BASE_URL'

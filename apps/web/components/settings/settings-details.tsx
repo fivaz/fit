@@ -12,16 +12,19 @@ import {
 	LogOut,
 	Palette,
 	Scale,
+	SparklesIcon,
 	Trash2,
 	Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { PaywallDialog } from "@/components/billing/paywall-dialog";
 import { DeleteAccountDrawer } from "@/components/settings/delete-account-drawer";
 import { MetricsForm } from "@/components/settings/metrics-form";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { UserForm } from "@/components/settings/user-form";
 import { Button } from "@/components/ui/button";
+import { useBillingStatus } from "@/hooks/billing/use-billing-status";
 import { BodyMetricsProvider, useBodyMetricsStore } from "@/hooks/body-metrics/store";
 import { authClient, signOut } from "@/lib/auth-client";
 import { BodyMetricsUI } from "@/lib/body-metrics/type";
@@ -32,27 +35,33 @@ import { cn } from "@/lib/utils";
 
 type SettingsDetailProps = {
 	bodyMetrics: BodyMetricsUI;
+	billing: ReturnType<typeof useBillingStatus>;
 };
 
-export function SettingsDetails({ bodyMetrics }: SettingsDetailProps) {
+export function SettingsDetails({ bodyMetrics, billing }: SettingsDetailProps) {
 	useEffect(() => {
 		offlineDataAdapters.setBodyMetricsLocal(bodyMetrics);
 	}, [bodyMetrics]);
 
 	return (
 		<BodyMetricsProvider initialItems={[bodyMetrics]}>
-			<SettingsDetailsInternal />
+			<SettingsDetailsInternal billing={billing} />
 		</BodyMetricsProvider>
 	);
 }
 
-export function SettingsDetailsInternal() {
+export function SettingsDetailsInternal({
+	billing,
+}: {
+	billing: ReturnType<typeof useBillingStatus>;
+}) {
 	const [isPendingSignOut, setIsPendingSignOut] = useState(false);
 	const { data: session } = authClient.useSession();
 
 	const [isUserOpen, setIsUserOpen] = useState(false);
 	const [isMetricsOpen, setIsMetricsOpen] = useState(false);
 	const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+	const [isPaywallOpen, setIsPaywallOpen] = useState(false);
 	const router = useRouter();
 	const { firstItem: bodyMetrics } = useBodyMetricsStore();
 
@@ -163,6 +172,28 @@ export function SettingsDetailsInternal() {
 						Preferences
 					</h3>
 					<div className="overflow-hidden rounded-2xl bg-white shadow-sm dark:bg-gray-800">
+						<div className="flex items-center justify-between border-b border-gray-50 p-4 dark:border-gray-700">
+							<div className="flex items-center gap-3">
+								<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20">
+									<SparklesIcon className="h-5 w-5 text-orange-500" />
+								</div>
+								<span className="font-medium dark:text-white">AI Credits</span>
+							</div>
+							<div className="flex items-center gap-3">
+								<span className="text-sm font-bold text-gray-900 dark:text-white">
+									{billing.isLoading ? "--" : (billing.status?.credits ?? 0)}
+								</span>
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={() => setIsPaywallOpen(true)}
+									aria-label="Buy more AI credits"
+								>
+									Buy more
+								</Button>
+							</div>
+						</div>
 						<div className="flex items-center justify-between p-4">
 							<div className="flex items-center gap-3">
 								<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-700">
@@ -232,6 +263,8 @@ export function SettingsDetailsInternal() {
 				isOpen={isDeleteAccountOpen}
 				onClose={() => setIsDeleteAccountOpen(false)}
 			/>
+
+			<PaywallDialog open={isPaywallOpen} onOpenChange={setIsPaywallOpen} />
 		</>
 	);
 }

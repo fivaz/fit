@@ -29,9 +29,27 @@ model User {
   workouts      Workout[]
   bodyMetrics   BodyMetric[]
   timezone      String       @default("UTC")
+  credits       Int          @default(10)
+
+  creditPurchases CreditPurchase[]
 
   @@unique([email])
   @@map("user")
+}
+
+model CreditPurchase {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSessionId       String   @unique
+  stripePaymentIntentId String?
+  creditsGranted        Int
+  amountTotal           Int
+  currency              String
+  createdAt             DateTime @default(now())
+
+  @@index([userId])
+  @@map("credit_purchases")
 }
 
 model BodyMetric {

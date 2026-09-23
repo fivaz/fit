@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { PenLineIcon, PlusIcon, SparklesIcon } from "lucide-react";
 
+import { PaywallDialog } from "@/components/billing/paywall-dialog";
 import { ProgramFormManual } from "@/components/program/program-form-button/program-form";
 import { ProgramFormAutomatic } from "@/components/program/program-form-button/program-form-automatic";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export function ProgramFormButton({
 }: ProgramFormButtonProps) {
 	const [internalOpen, setInternalOpen] = useState(false);
 	const [creationMode, setCreationMode] = useState<CreationMode>("automatic");
+	const [isPaywallOpen, setIsPaywallOpen] = useState(false);
 
 	const isControlled = externalOpen !== undefined;
 	const open = isControlled ? externalOpen : internalOpen;
@@ -49,64 +51,75 @@ export function ProgramFormButton({
 		onOpenChange?.(nextOpen);
 	};
 
+	const handleOutOfCredits = () => {
+		handleOpenChange(false);
+		setIsPaywallOpen(true);
+	};
+
 	return (
-		<Drawer open={open} onOpenChange={handleOpenChange}>
-			{!isControlled && (
-				<DrawerTrigger asChild>
-					<Button aria-label={ariaLabel} {...props}>
-						{children || <PlusIcon className="size-5" />}
-					</Button>
-				</DrawerTrigger>
-			)}
+		<>
+			<Drawer open={open} onOpenChange={handleOpenChange}>
+				{!isControlled && (
+					<DrawerTrigger asChild>
+						<Button aria-label={ariaLabel} {...props}>
+							{children || <PlusIcon className="size-5" />}
+						</Button>
+					</DrawerTrigger>
+				)}
 
-			<DrawerContent className="max-h-[90vh]">
-				<div className="mx-auto w-full max-w-md overflow-y-auto pb-6">
-					<DrawerHeader className="relative">
-						<DrawerTitle>{isEditProgram ? "Edit Program" : "Create Program"}</DrawerTitle>
-						{isEditProgram ? null : creationMode === "automatic" ? (
-							<>
-								<DrawerDescription>
-									Tell our AI coach what you want and we&apos;ll build your program.
-								</DrawerDescription>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="absolute top-0 right-0 mx-4 my-2"
-									aria-label="Switch to manual program creation"
-									onClick={() => setCreationMode("manual")}
-								>
-									<PenLineIcon className="size-4" />
-									Manual
-								</Button>
-							</>
+				<DrawerContent className="max-h-[90vh]">
+					<div className="mx-auto w-full max-w-md overflow-y-auto pb-6">
+						<DrawerHeader className="relative">
+							<DrawerTitle>{isEditProgram ? "Edit Program" : "Create Program"}</DrawerTitle>
+							{isEditProgram ? null : creationMode === "automatic" ? (
+								<>
+									<DrawerDescription>
+										Tell our AI coach what you want and we&apos;ll build your program.
+									</DrawerDescription>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										className="absolute top-0 right-0 mx-4 my-2"
+										aria-label="Switch to manual program creation"
+										onClick={() => setCreationMode("manual")}
+									>
+										<PenLineIcon className="size-4" />
+										Manual
+									</Button>
+								</>
+							) : (
+								<>
+									<DrawerDescription>
+										Name your program and select target muscle groups.
+									</DrawerDescription>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										className="absolute top-0 right-0 mx-4 my-2"
+										aria-label="Switch to automatic program creation"
+										onClick={() => setCreationMode("automatic")}
+									>
+										<SparklesIcon className="size-4" />
+										AI coach
+									</Button>
+								</>
+							)}
+						</DrawerHeader>
+
+						{isEditProgram || creationMode === "manual" ? (
+							<ProgramFormManual program={program} onClose={() => handleOpenChange(false)} />
 						) : (
-							<>
-								<DrawerDescription>
-									Name your program and select target muscle groups.
-								</DrawerDescription>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="absolute top-0 right-0 mx-4 my-2"
-									aria-label="Switch to automatic program creation"
-									onClick={() => setCreationMode("automatic")}
-								>
-									<SparklesIcon className="size-4" />
-									AI coach
-								</Button>
-							</>
+							<ProgramFormAutomatic
+								onClose={() => handleOpenChange(false)}
+								onOutOfCredits={handleOutOfCredits}
+							/>
 						)}
-					</DrawerHeader>
-
-					{isEditProgram || creationMode === "manual" ? (
-						<ProgramFormManual program={program} onClose={() => handleOpenChange(false)} />
-					) : (
-						<ProgramFormAutomatic onClose={() => handleOpenChange(false)} />
-					)}
-				</div>
-			</DrawerContent>
-		</Drawer>
+					</div>
+				</DrawerContent>
+			</Drawer>
+			<PaywallDialog open={isPaywallOpen} onOpenChange={setIsPaywallOpen} />
+		</>
 	);
 }

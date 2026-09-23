@@ -69,6 +69,12 @@ param apiBaseUrl string = ''
 @description('CORS allowed origins (comma-separated)')
 param corsAllowedOrigins string = ''
 
+@description('Canonical web app origin for Stripe Checkout redirects (defaults to https://<customDomainName>)')
+param webAppUrl string = ''
+
+@description('Price ID of the one-time credit-pack Price, created in the Stripe Dashboard (test mode)')
+param stripeCreditPackPriceId string = ''
+
 @description('Deploy Container Apps (set to false for initial infrastructure-only deployment)')
 param deployContainerApps bool = true
 
@@ -94,6 +100,7 @@ var rgName = 'rg-${projectName}-${environment}'
 // Use custom API base URL if provided, otherwise empty (Container App will use its default FQDN)
 var computedApiBaseUrl = apiBaseUrl
 var computedCorsOrigins = corsAllowedOrigins != '' ? corsAllowedOrigins : 'https://${customDomainName},capacitor://localhost,ionic://localhost'
+var computedWebAppUrl = webAppUrl != '' ? webAppUrl : (customDomainName != '' ? 'https://${customDomainName}' : '')
 
 // ============================================
 // Module: Monitoring (deploy first for Log Analytics)
@@ -171,6 +178,8 @@ module containerApps './modules/container-apps.bicep' = if (deployContainerApps)
     memory: containerMemory
     apiBaseUrl: computedApiBaseUrl
     corsAllowedOrigins: computedCorsOrigins
+    webAppUrl: computedWebAppUrl
+    stripeCreditPackPriceId: stripeCreditPackPriceId
     revisionSuffix: revisionSuffix
     imageTag: imageTag
     currentProductionRevisionName: currentProductionRevisionName

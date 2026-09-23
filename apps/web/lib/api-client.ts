@@ -6,6 +6,16 @@ type JsonRequestInit = Omit<RequestInit, "body"> & {
 	body?: unknown;
 };
 
+export class ApiClientError extends Error {
+	constructor(
+		message: string,
+		public readonly status: number,
+	) {
+		super(message);
+		this.name = "ApiClientError";
+	}
+}
+
 function resolveApiUrl(input: string): string {
 	const baseUrl = resolvePublicApiBaseUrl();
 	if (!baseUrl) return input;
@@ -61,7 +71,7 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 				hasBearer: Boolean(token),
 			});
 		}
-		throw new Error(errText);
+		throw new ApiClientError(errText, response.status);
 	}
 
 	if (isClientDebugEnabled()) {
