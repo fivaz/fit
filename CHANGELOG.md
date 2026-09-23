@@ -1,3 +1,10 @@
+## [1.6.0](https://github.com/fivaz/fit/compare/v1.5.3...v1.6.0) (2026-09-23)
+
+### ✨ Features
+
+* **billing:** add credit-gated AI program generation with Stripe checkout ([6fe42bd](https://github.com/fivaz/fit/commit/6fe42bde77f2d474070c46745c77d83503df6a67))
+* **web:** add terms and refund policy page linked from settings and signup ([bb4762c](https://github.com/fivaz/fit/commit/bb4762c74d03903de3f5fc60669670ae8009e757))
+
 ## [1.5.3](https://github.com/fivaz/fit/compare/v1.5.2...v1.5.3) (2026-09-23)
 
 ### 🐛 Bug Fixes
