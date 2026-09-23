@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProgramMutations } from "@/hooks/program/store";
 import { useProgramGroupMutations } from "@/hooks/program-group/store";
+import { ApiClientError } from "@/lib/api-client";
 import { generatePrograms } from "@/lib/program/api";
 
 const descriptionSchema = z.object({
@@ -18,6 +19,7 @@ const descriptionSchema = z.object({
 
 type ProgramFormAutomaticProps = {
 	onClose: () => void;
+	onOutOfCredits: () => void;
 };
 
 function formatSuccessMessage(count: number, names: string[], groupName: string | null) {
@@ -30,7 +32,7 @@ function formatSuccessMessage(count: number, names: string[], groupName: string 
 	return `Created ${count} programs successfully.`;
 }
 
-export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
+export function ProgramFormAutomatic({ onClose, onOutOfCredits }: ProgramFormAutomaticProps) {
 	const { addItem } = useProgramMutations();
 	const { addItem: addGroup } = useProgramGroupMutations();
 	const [error, setError] = useState<string>();
@@ -77,6 +79,10 @@ export function ProgramFormAutomatic({ onClose }: ProgramFormAutomaticProps) {
 				),
 			);
 		} catch (err) {
+			if (err instanceof ApiClientError && err.status === 402) {
+				onOutOfCredits();
+				return;
+			}
 			const message = err instanceof Error ? err.message : "Failed to generate program.";
 			toast.error(message);
 		} finally {

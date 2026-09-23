@@ -153,12 +153,42 @@ Example:
 
 ### Validation Workflow
 
-When changing `.ts`, `.tsx`, `.js`, `.jsx` files:
+Run these yourself in the terminal before treating a task as complete; don't only suggest the user run them.
 
-1. Run `pnpm exec tsc --noEmit -p apps/web` and/or `-p apps/api`
-2. Run `pnpm exec eslint -- path/to/changed-file.ts`
-3. Fix errors until clean
-4. Report pre-existing errors separately; never ignore new errors
+| Change                                                                     | Validate with                                                                       |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `.ts`, `.tsx`, `.js`, `.jsx` (logic, types, hooks, components, API routes) | **Both** `tsc` and `eslint` on touched paths (or project-wide if the diff is small) |
+| React hooks, imports, or patterns covered by ESLint plugins                | `eslint`                                                                            |
+| Types-only or Prisma/schema changes that affect TS types                   | `tsc` (and `eslint` if `.ts` files changed)                                         |
+| Markdown, images, `.env.example`, or config with no TS/JS impact           | Skip unless types or lint are clearly affected                                      |
+
+```bash
+pnpm exec tsc --noEmit -p apps/web    # non-watch check; `pnpm run tsc` runs --watch, don't use it here
+pnpm exec tsc --noEmit -p apps/api
+pnpm exec eslint -- path/to/changed-file.ts path/to/other.tsx   # scope to changed files for speed
+```
+
+For a broad refactor, `pnpm run lint` project-wide is acceptable.
+
+1. After implementing or fixing TS/TSX/JS changes, run the checks that apply.
+2. Fix reported errors; re-run until clean for your changes.
+3. Report pre-existing errors separately; never ignore new errors you introduced.
+
+### Package Script Naming
+
+- Workflow test commands: `act:X` (e.g. `act:e2e`, `act:release`)
+- Database operations: `db:X` (e.g. `db:reset`, `db:deploy`)
+- Test commands: `test:X` (e.g. `test:e2e`)
+
+When adding a command expected to run repeatedly (e.g. an `act` workflow check), add a dedicated `package.json` script rather than a one-off inline command.
+
+### CodeRabbit CLI
+
+CodeRabbit is installed in the terminal for manual review of changes.
+
+- Run `cr -h` to see available commands and options.
+- Prefer the `--agent` flag; for uncommitted changes: `coderabbit --agent -t uncommitted`.
+- Do not run CodeRabbit more than 3 times for the same set of changes.
 
 ## Data Model Highlights
 
@@ -214,15 +244,19 @@ For iOS physical device on LAN, use Mac's LAN IP in `API_BASE_URL`.
 
 ## Cursor Rules Reference
 
-The `.cursor/rules/` directory contains agent orchestration standards:
+The `.cursor/rules/` directory holds the same standards in Cursor's rule format, for parity between editors:
 
 - **`architecture-fit.mdc`** - Static SPA boundaries, no SSR/Server Actions
 - **`api-contracts.mdc`** - Response envelope, Zod validation at boundaries
 - **`security-fit.mdc`** - Auth checks, fail closed, no sensitive logs
 - **`testing.mdc`** - Playwright locator standards, verification protocol
 - **`validation.mdc`** - When to run `tsc` and `eslint` before finishing tasks
+- **`naming-scripts.mdc`** - `package.json` script naming conventions
+- **`coderabbit-cli.mdc`** - CodeRabbit CLI usage
 
-These rules enforce repeatable quality standards and architectural decisions.
+Their content is folded into this file directly above (Claude Code doesn't read `.mdc` files on its own), so this file is the source of truth here — keep both in sync if either changes.
+
+`.cursor/rules/imported/` holds portable, non-project-specific rules (TypeScript strictness, naming, documentation, security principles, testing patterns) copied from `~/dotfiles/cursor/`. Their Claude Code equivalent lives in `~/.claude/CLAUDE.md`, not here.
 
 ## iOS Deployment
 

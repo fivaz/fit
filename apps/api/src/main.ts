@@ -8,6 +8,7 @@ import express, { type NextFunction, type Request, type Response } from "express
 
 import { AppModule } from "@/app.module";
 import { auth } from "@/auth/auth";
+import { STRIPE_WEBHOOK_PATH } from "@/billing/billing-webhook.controller";
 import { corsOriginDelegate } from "@/cors";
 import { ApiExceptionFilter } from "@/exception.filter";
 
@@ -45,14 +46,19 @@ async function bootstrap() {
 		exposedHeaders: ["set-auth-token", "Set-Auth-Token"],
 	});
 
+	// Stripe signature verification needs the raw, unparsed body, so it must be routed to
+	// express.raw() instead of express.json() before any body-parsing middleware runs.
 	const handleAuth = toNodeHandler(auth);
 	expressApp.use((req: Request, res: Response, next: NextFunction) => {
-		if (req.url.split("?")[0].startsWith("/api/auth")) {
+		const path = req.url.split("?")[0];
+		if (path.startsWith("/api/auth")) {
 			return handleAuth(req, res);
 		}
-		next();
+		if (path === STRIPE_WEBHOOK_PATH) {
+			return express.raw({ type: "application/json" })(req, res, next);
+		}
+		return express.json()(req, res, next);
 	});
-	expressApp.use(express.json());
 
 	app.setGlobalPrefix("api");
 	app.useGlobalFilters(new ApiExceptionFilter());

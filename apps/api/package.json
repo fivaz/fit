@@ -16,7 +16,7 @@
 		"db:seed": "prisma db seed",
 		"db:generate": "prisma generate",
 		"exercises-seed": "tsx scripts/exercises-seed.ts",
-		"test:unit": "node --import tsx --test src/program/generate.test.ts src/progress/exercise-progress.test.ts"
+		"test:unit": "node --import tsx --test src/program/generate.test.ts src/progress/exercise-progress.test.ts src/billing/billing.service.test.ts"
 	},
 	"dependencies": {
 		"@ai-sdk/openai": "^4.0.29",
@@ -35,6 +35,7 @@
 		"pg": "^8.16.3",
 		"reflect-metadata": "^0.2.2",
 		"rxjs": "^7.8.2",
+		"stripe": "^22.6.2",
 		"tsx": "^4.21.0",
 		"zod": "^4.3.5"
 	},

@@ -1,5 +1,6 @@
 export { API_PATHS, PAGE_SIZE } from "./api-paths.js";
 export { AUTH_ADDITIONAL_FIELDS, type AuthUser } from "./auth.js";
+export { type BillingStatusUI } from "./billing.js";
 export { getEmptyBodyMetrics, type BodyMetricsUI } from "./body-metrics.js";
 export { buildEmptyExercise, type ExerciseRaw, type ExerciseUI } from "./exercise.js";
 export {

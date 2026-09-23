@@ -175,6 +175,30 @@ resource githubClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if 
   }
 }
 
+resource stripeSecretKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
+  parent: keyVault
+  name: 'STRIPE-SECRET-KEY'
+  properties: {
+    value: 'placeholder-update-via-portal-or-cli'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource stripeWebhookSecretSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
+  parent: keyVault
+  name: 'STRIPE-WEBHOOK-SECRET'
+  properties: {
+    value: 'placeholder-update-via-portal-or-cli'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
 // ============================================
 // Outputs
 // ============================================

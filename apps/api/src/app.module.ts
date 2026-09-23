@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
 
+import { BillingController } from "@/billing/billing.controller";
+import { BillingWebhookController } from "@/billing/billing-webhook.controller";
 import { BodyMetricsController } from "@/body-metrics/body-metrics.controller";
 import { ExercisesController } from "@/exercise/exercises.controller";
 import { HealthController } from "@/health.controller";
@@ -21,6 +23,8 @@ import { WorkoutsController } from "@/workout/workouts.controller";
 		ProgressController,
 		HealthController,
 		HomeController,
+		BillingController,
+		BillingWebhookController,
 	],
 })
 export class AppModule {}

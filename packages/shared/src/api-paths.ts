@@ -23,4 +23,6 @@ export const API_PATHS = {
 	homeRecentWorkouts: "/api/home/recent-workouts",
 	homeExerciseCount: "/api/home/exercise-count",
 	userTimezone: "/api/user/timezone",
+	billingStatus: "/api/billing/status",
+	billingCheckout: "/api/billing/checkout",
 } as const;
