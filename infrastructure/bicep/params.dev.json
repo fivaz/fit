@@ -20,6 +20,9 @@
 		"containerAppMaxReplicas": {
 			"value": 2
 		},
+		"stripeCreditPackPriceId": {
+			"value": "price_1UIvq4Lf4Vo2Yf06pT2AoUlh"
+		},
 		"containerCpuCores": {
 			"value": "0.25"
 		},
