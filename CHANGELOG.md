@@ -1,3 +1,13 @@
+## [1.6.1](https://github.com/fivaz/fit/compare/v1.6.0...v1.6.1) (2026-09-23)
+
+### 🐛 Bug Fixes
+
+* **billing:** stabilize refetch to stop checkout return effect looping ([fe95daf](https://github.com/fivaz/fit/commit/fe95dafd85de6c96db621099772015ebbc407ca8))
+
+### 🔧 Continuous Integration
+
+* **secrets:** sync Key Vault secrets per GitHub Environment instead of _DEV suffixes ([89f6edd](https://github.com/fivaz/fit/commit/89f6edd817eb290b954a6291df285c343f374b83))
+
 ## [1.6.0](https://github.com/fivaz/fit/compare/v1.5.3...v1.6.0) (2026-09-23)
 
 ### ✨ Features
