@@ -40,6 +40,9 @@
 		"pretest": "node scripts/free-dev-server-port.mjs",
 		"test:e2e": "pnpm run pretest && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
 		"test": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e",
+		"demo": "pnpm run demo:record && pnpm run demo:convert",
+		"demo:record": "node scripts/free-dev-server-port.mjs && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test -c playwright.demo.config.ts",
+		"demo:convert": "node scripts/demo-convert.mjs",
 		"test:unit": "pnpm --filter @fit/api test:unit",
 		"agent": "agent worker start"
 	},
