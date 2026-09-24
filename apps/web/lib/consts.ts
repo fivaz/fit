@@ -2,6 +2,8 @@ import { PAGE_SIZE as SHARED_PAGE_SIZE } from "@fit/shared";
 
 export const APP_NAME = "Fit-Tracker";
 
+export const TESTFLIGHT_URL = "https://testflight.apple.com/join/y923WUsY";
+
 export const ROUTES = {
 	HOME: "/",
 	PROGRAMS: "/programs",
@@ -13,6 +15,7 @@ export const ROUTES = {
 	SETTINGS: "/settings",
 	PRIVACY: "/privacy",
 	TERMS: "/terms",
+	ABOUT: "/about",
 };
 
 export const PAGE_SIZE = SHARED_PAGE_SIZE;
