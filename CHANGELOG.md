@@ -1,3 +1,9 @@
+## [1.7.0](https://github.com/fivaz/fit/compare/v1.6.1...v1.7.0) (2026-09-24)
+
+### ✨ Features
+
+* **web:** add public about page describing the product and pricing ([50ab0fb](https://github.com/fivaz/fit/commit/50ab0fbf541e5c3f33b1da912ab51ea2bc8b4d4a))
+
 ## [1.6.1](https://github.com/fivaz/fit/compare/v1.6.0...v1.6.1) (2026-09-23)
 
 ### 🐛 Bug Fixes
