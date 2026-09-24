@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 import "dotenv/config";
 
-import { STORAGE_STATE_FILE, VIDEO_SIZE } from "./demos/support/paths";
+import { IPHONE_SCREEN, STORAGE_STATE_FILE, VIDEO_SIZE } from "./demos/support/paths";
 import { webServer } from "./playwright.shared";
 
 // Demos create real accounts and (optionally) spend OpenAI credits, so they must never run against a
@@ -30,6 +30,9 @@ export default defineConfig({
 	use: {
 		baseURL: LOCAL_WEB,
 		...iPhone,
+		// The device descriptor's 393x659 viewport is Safari with its toolbars; the app runs full-screen
+		// (its `screen` is already 393x852).
+		viewport: IPHONE_SCREEN,
 		colorScheme: "dark",
 		locale: "en-US",
 		timezoneId: "Europe/Zurich",

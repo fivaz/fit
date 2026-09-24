@@ -21,9 +21,10 @@ const MAX_BYTES = 1.5 * 1024 * 1024;
  */
 const TRIMS = {
 	"log-workout": { start: 0.5, end: 0.3 },
-	"ai-coach": { start: 1.0, end: 0.3 },
+	progress: { start: 0.5, end: 0.3 },
+	"ai-coach": { start: 0.5, end: 0.3 },
 };
-const DEFAULT_TRIM = { start: 1.0, end: 0.3 };
+const DEFAULT_TRIM = { start: 0.5, end: 0.3 };
 
 function run(command, args) {
 	return spawnSync(command, args, { encoding: "utf8" });
@@ -115,24 +116,61 @@ function formatSize(bytes) {
 		: `${(bytes / 1024).toFixed(0)} KB`;
 }
 
+/**
+ * Stretches of dead time recorded by a clip (e.g. waiting on OpenAI), as [from, to] seconds on the
+ * raw timeline, written by the demo through its `timeline` fixture.
+ */
+function readCuts(clipName) {
+	const file = path.join(RAW_DIR, `${clipName}.cuts.json`);
+	return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : [];
+}
+
+/** The [start, end] pieces of the raw timeline to keep, after the edge trims and the cuts. */
+function keepSegments(total, trim, cuts) {
+	let segments = [[trim.start, total - trim.end]];
+	for (const cut of [...cuts].sort((a, b) => a.from - b.from)) {
+		segments = segments.flatMap(([from, to]) => {
+			if (cut.to <= from || cut.from >= to) return [[from, to]];
+			return [
+				[from, Math.max(from, cut.from)],
+				[Math.min(to, cut.to), to],
+			].filter(([a, b]) => b - a > 0.05);
+		});
+	}
+	return segments;
+}
+
 function convertClip(clipName) {
 	const input = path.join(RAW_DIR, `${clipName}.webm`);
 	const trim = TRIMS[clipName] ?? DEFAULT_TRIM;
 	const total = durationSeconds(input);
-	const length = total - trim.start - trim.end;
+	const segments = keepSegments(total, trim, readCuts(clipName));
+	const length = segments.reduce((sum, [from, to]) => sum + (to - from), 0);
 	if (length <= 0)
 		throw new Error(
 			`${clipName}: trims (${trim.start}s + ${trim.end}s) exceed ${total.toFixed(1)}s`,
 		);
 
-	const window = ["-ss", String(trim.start), "-t", length.toFixed(2), "-i", input];
-	// Both encoders need even dimensions; the scale filter rounds down to the nearest even number.
-	const evenScale = "scale=trunc(iw/2)*2:trunc(ih/2)*2";
+	// Trim each kept piece, join them, then scale. Both encoders need even dimensions; the scale
+	// filter rounds down to the nearest even number.
+	const pieces = segments
+		.map(
+			([from, to], i) =>
+				`[0:v]trim=start=${from.toFixed(3)}:end=${to.toFixed(3)},setpts=PTS-STARTPTS[p${i}]`,
+		)
+		.join(";");
+	const joined =
+		segments.map((_, i) => `[p${i}]`).join("") + `concat=n=${segments.length}:v=1:a=0[joined]`;
+	const filter = `${pieces};${joined};[joined]scale=trunc(iw/2)*2:trunc(ih/2)*2[out]`;
+	const window = ["-i", input, "-filter_complex", filter, "-map", "[out]"];
 	const mp4 = path.join(OUT_DIR, `${clipName}.mp4`);
 	const webm = path.join(OUT_DIR, `${clipName}.webm`);
 	const poster = path.join(OUT_DIR, `${clipName}-poster.webp`);
 
-	console.log(`${clipName}: ${total.toFixed(1)}s raw -> ${length.toFixed(1)}s`);
+	console.log(
+		`${clipName}: ${total.toFixed(1)}s raw -> ${length.toFixed(1)}s` +
+			(segments.length > 1 ? ` (${segments.length - 1} cut)` : ""),
+	);
 
 	const sizes = {
 		mp4: encodeWithinBudget(
@@ -140,8 +178,6 @@ function convertClip(clipName) {
 			28,
 			(crf) => [
 				...window,
-				"-vf",
-				evenScale,
 				"-c:v",
 				"libx264",
 				"-preset",
@@ -162,8 +198,6 @@ function convertClip(clipName) {
 			38,
 			(crf) => [
 				...window,
-				"-vf",
-				evenScale,
 				"-c:v",
 				"libvpx-vp9",
 				"-crf",
@@ -180,7 +214,7 @@ function convertClip(clipName) {
 	};
 
 	// First meaningful frame: just after the trimmed start, once the screen has painted.
-	const posterFile = writePoster(input, trim.start + 0.2, poster);
+	const posterFile = writePoster(input, segments[0][0] + 0.2, poster);
 	sizes[path.basename(posterFile)] = fs.statSync(posterFile).size;
 
 	for (const [kind, size] of Object.entries(sizes)) {

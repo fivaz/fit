@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 const TAP_INDICATOR_SCRIPT = `
 (() => {
-	const RIPPLE_MS = 550;
+	const RIPPLE_MS = 750;
 	const style = document.createElement("style");
 	style.textContent = \`
 		@keyframes demo-tap { from { transform: translate(-50%, -50%) scale(0.4); opacity: 0.85; }
