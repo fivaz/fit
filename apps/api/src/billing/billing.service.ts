@@ -5,6 +5,19 @@ import { getStripeClient } from "@/billing/stripe-client";
 import { logError } from "@/logger";
 import { prisma } from "@/prisma/client";
 
+/**
+ * Brand values from apps/web/app/globals.css: --primary (orange) and the dark --background. With
+ * Managed Payments on, Stripe only applies the header colour and business name; the body and the
+ * Pay button stay Stripe's, so button_color/font/border only matter if that is ever turned off.
+ */
+const CHECKOUT_BRANDING = {
+	background_color: "#09090b",
+	button_color: "#ff6900",
+	border_style: "rounded",
+	font_family: "inter",
+	display_name: "Fit-Tracker",
+} satisfies Stripe.Checkout.SessionCreateParams.BrandingSettings;
+
 const DEFAULT_LOCAL_WEB_APP_URL = "http://localhost:3000";
 
 function resolveWebAppUrl(): string {
@@ -60,8 +73,19 @@ export async function createCheckoutSession(userId: string): Promise<{ url: stri
 	let session: Stripe.Checkout.Session;
 	try {
 		session = await getStripeClient().checkout.sessions.create({
+			ui_mode: "hosted_page",
 			mode: "payment",
+			billing_address_collection: "auto",
+			phone_number_collection: { enabled: false },
+			// Checkout Studio asked for automatic_tax.enabled=false, but Stripe rejects that while Managed
+			// Payments is on (it handles tax itself); the parameter must be omitted or true.
+			allow_promotion_codes: false,
+			submit_type: "auto",
+			integration_identifier: "hosted_web_0001",
+			origin_context: "web",
+			branding_settings: CHECKOUT_BRANDING,
 			line_items: [{ price: CREDIT_PACK.priceId, quantity: 1 }],
+			// Not Checkout Studio parameters, but required: the webhook credits the account from metadata.userId.
 			client_reference_id: userId,
 			metadata: { userId },
 			success_url: `${webAppUrl}/settings?checkout=success`,
