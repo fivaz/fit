@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Converts the raw Playwright recordings in demo-output/raw/*.webm into portfolio-ready files in
- * demo-output/: <clip>.mp4 (H.264), <clip>.webm (VP9) and <clip>-poster.webp. Requires ffmpeg.
+ * demo-output/: <clip>.mp4 (H.264, plays in every browser incl. iOS Safari) and <clip>-poster.webp.
+ * Requires ffmpeg. (A VP9 .webm was dropped: it was no smaller for these clips.)
  *
  * Usage: node scripts/demo-convert.mjs [clipName ...]   (no arguments = every raw clip)
  */
@@ -164,7 +165,6 @@ function convertClip(clipName) {
 	const filter = `${pieces};${joined};[joined]scale=iw*2:ih*2:flags=lanczos[out]`;
 	const window = ["-i", input, "-filter_complex", filter, "-map", "[out]"];
 	const mp4 = path.join(OUT_DIR, `${clipName}.mp4`);
-	const webm = path.join(OUT_DIR, `${clipName}.webm`);
 	const poster = path.join(OUT_DIR, `${clipName}-poster.webp`);
 
 	console.log(
@@ -192,24 +192,6 @@ function convertClip(clipName) {
 				mp4,
 			],
 			mp4,
-		),
-		webm: encodeWithinBudget(
-			"webm",
-			38,
-			(crf) => [
-				...window,
-				"-c:v",
-				"libvpx-vp9",
-				"-crf",
-				String(crf),
-				"-b:v",
-				"0",
-				"-row-mt",
-				"1",
-				"-an",
-				webm,
-			],
-			webm,
 		),
 	};
 
