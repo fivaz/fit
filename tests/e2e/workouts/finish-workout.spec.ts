@@ -9,7 +9,10 @@ import {
 } from "@/tests/e2e/helpers/program-workout";
 
 test.describe("Finish workout", () => {
-	test("Authenticated user can finish workout and land on Progress", async ({ page, request }) => {
+	test("Authenticated user can finish workout, land on Progress and open its exercise progress", async ({
+		page,
+		request,
+	}) => {
 		const exerciseName = `Finish Flow Exercise ${Date.now()}`;
 		const programName = `Finish Flow Program ${Date.now()}`;
 
@@ -42,6 +45,17 @@ test.describe("Finish workout", () => {
 			await expect(page).toHaveURL(new RegExp(`${escapedProgressRoute}$`));
 			await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
 			await expect(page.getByText(/Workout finished on/i)).toBeVisible();
+		});
+
+		await test.step("Open the finished workout's exercise progress", async () => {
+			await page.getByRole("link", { name: `View workout ${programName}` }).click();
+			await expect(page.getByRole("heading", { name: programName })).toBeVisible();
+			await page.getByRole("link", { name: "Exercise progress" }).click();
+
+			// Matches the program progress route, e.g. "/programs/progress?id=<uuid>".
+			await expect(page).toHaveURL(/\/programs\/progress\?id=/);
+			await expect(page.getByRole("heading", { name: "Exercise progress" })).toBeVisible();
+			await expect(page.getByText(exerciseName)).toBeVisible();
 		});
 	});
 });

@@ -32,4 +32,6 @@ export async function scrollGently(page: Page, totalPx: number, steps = 4): Prom
 		await page.mouse.wheel(0, totalPx / steps);
 		await page.waitForTimeout(450);
 	}
+	// A real thumb lifts off; a parked mouse would keep hovering a chart and show its tooltip.
+	await page.mouse.move(0, 0);
 }

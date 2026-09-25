@@ -5,11 +5,11 @@ import {
 } from "@/tests/e2e/helpers/program-workout";
 
 import { expect, test } from "./support/fixtures";
-import { beat, HOLD, settle, typeSlowly } from "./support/pacing";
+import { beat, HOLD, scrollGently, settle, typeSlowly } from "./support/pacing";
 
 const PROGRAM = "Push Day A";
 
-// One journey, kept short for a portfolio: log today's training, then review it on Progress.
+// One journey: log today's training, then review it on Progress and in the exercise charts.
 test("log-workout", async ({ page }) => {
 	await test.step("Open the program", async () => {
 		await page.goto(ROUTES.PROGRAMS);
@@ -25,14 +25,25 @@ test("log-workout", async ({ page }) => {
 		await beat(page, HOLD.glance);
 	});
 
-	await test.step("Log a set", async () => {
+	await test.step("Log a warmup set, then a heavier working set", async () => {
 		const spinbuttons = page.getByRole("spinbutton");
-		await typeSlowly(spinbuttons.nth(0), "8");
+		const setTimeButtons = page.getByRole("button", { name: "Set time" });
+		// Warmup sets are left out of the progress charts, so only the working set counts there.
+		await page.getByRole("button", { name: "Toggle warmup set" }).first().click();
+		await beat(page, 400);
+		await typeSlowly(spinbuttons.nth(0), "12");
 		await beat(page, 300);
-		await typeSlowly(spinbuttons.nth(1), "70");
+		await typeSlowly(spinbuttons.nth(1), "50");
 		await beat(page, 400);
 		// Tapping the clock stamps the set as done now, so it counts toward volume on Progress.
-		await page.getByRole("button", { name: "Set time" }).first().click();
+		await setTimeButtons.nth(0).click();
+		await beat(page, HOLD.glance);
+		await typeSlowly(spinbuttons.nth(2), "8");
+		await beat(page, 300);
+		// A little above the seeded history's best, so today shows up as a new high on the chart.
+		await typeSlowly(spinbuttons.nth(3), "72.5");
+		await beat(page, 400);
+		await setTimeButtons.nth(1).click();
 		await beat(page, HOLD.glance);
 	});
 
@@ -54,6 +65,22 @@ test("log-workout", async ({ page }) => {
 		// Today's workout is listed under the week's stats, already in view: the page is barely taller
 		// than the screen, so scrolling would only hit the bottom and bounce.
 		await expect(page.getByRole("link", { name: `View workout ${PROGRAM}` })).toBeInViewport();
+		await beat(page, HOLD.read);
+	});
+
+	await test.step("Open today's workout", async () => {
+		await page.getByRole("link", { name: `View workout ${PROGRAM}` }).click();
+		await expect(page.getByRole("heading", { name: PROGRAM })).toBeVisible();
+		await settle(page);
+		await beat(page, HOLD.read);
+	});
+
+	await test.step("Check the exercise progress", async () => {
+		await page.getByRole("link", { name: "Exercise progress" }).click();
+		await expect(page.getByRole("heading", { name: "Exercise progress" })).toBeVisible();
+		await settle(page);
+		await beat(page, HOLD.linger);
+		await scrollGently(page, 250, 3);
 		await beat(page, HOLD.linger);
 	});
 });
