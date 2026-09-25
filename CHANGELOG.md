@@ -1,3 +1,38 @@
+## [1.8.0](https://github.com/fivaz/fit/compare/v1.7.0...v1.8.0) (2026-09-25)
+
+### ✨ Features
+
+* **billing:** brand the Stripe checkout header with the app colors ([c31999d](https://github.com/fivaz/fit/commit/c31999d11447b11c5479092293868cd038c9ba20))
+* **demo:** add scripted iPhone demo recording and ffmpeg conversion ([ef26e81](https://github.com/fivaz/fit/commit/ef26e81b6df7886a6324061b7b4ee457054a5b07))
+* **demo:** merge progress into log-workout clip and add Stripe payment clip ([cd19adc](https://github.com/fivaz/fit/commit/cd19adcc1272b147e34aeca3a2c35c2d365edc61))
+* **demo:** publish demo clips to the R2 CDN with pnpm demo:publish ([fc078bf](https://github.com/fivaz/fit/commit/fc078bf651b7ff368f82756c91a0a26d994ebdbe))
+* **demo:** record full-screen iPhone clips from seeded history with a cut-down AI clip ([154ed93](https://github.com/fivaz/fit/commit/154ed938a76ad934316307e376b65eaa30b8d565))
+* **demo:** record the AI clip by default, opt out with DEMO_AI=0 ([f484b67](https://github.com/fivaz/fit/commit/f484b67b489c283e5b51c9415df7641724bcf651))
+* **demo:** seed warmup sets and log a warmup plus two working sets in the log-workout clip ([8704e7e](https://github.com/fivaz/fit/commit/8704e7e8380a5a612dbf450437cf9cf2dbd72605))
+* **web:** link a past workout to its program's exercise progress ([f4c1e6f](https://github.com/fivaz/fit/commit/f4c1e6f65d1467896b5b18c20705cc7413ca6e19))
+* **web:** report app startup timings to Sentry ([848c4fd](https://github.com/fivaz/fit/commit/848c4fd50698da5c15333aeb7681bce182a53750))
+* **web:** tag Sentry events with the deploy environment ([261f582](https://github.com/fivaz/fit/commit/261f5829761109bd9e1542197f49462a4ca263f0))
+
+### 🐛 Bug Fixes
+
+* **demo:** keep dark mode after the Stripe redirect and shorten clips for the portfolio ([809deb3](https://github.com/fivaz/fit/commit/809deb3758c08ae6df9379dc918aa1badc85ea7e))
+* **demo:** stop the log-workout clip from overscrolling the Progress page ([188217f](https://github.com/fivaz/fit/commit/188217f470fa1212055bbe27f7f5b9650ed3640e))
+* **web:** keep toasts below the iPhone status bar and Dynamic Island ([fdc50e3](https://github.com/fivaz/fit/commit/fdc50e334660aa17c715fac327c17fd3c45339f2))
+* **web:** keep users signed in through slow or failed session checks ([7aa126a](https://github.com/fivaz/fit/commit/7aa126a46ddf174ccabeff44d9b871f65f5288c7))
+
+### 🚀 Performance Improvements
+
+* **web:** wake the API on launch and stop saves from waiting on uploads ([492f386](https://github.com/fivaz/fit/commit/492f3861b2f2e6cf05d8d8f7c40c3eb3c5d2fac4))
+
+### 🧹 Chores
+
+* **demo:** drop the webm output and keep mp4 plus poster ([47e9ef3](https://github.com/fivaz/fit/commit/47e9ef3fb4585148f4afc1d1764f73d9e194e1dc))
+* **infra:** point prod at the live-mode Stripe credit pack price ([95cae77](https://github.com/fivaz/fit/commit/95cae777956dd05b98855c6ea01b90e9d7e3b877))
+
+### 🔨 Code Refactoring
+
+* **demo:** rename clips to flow-credits, flow-generate and flow-workout ([05aed19](https://github.com/fivaz/fit/commit/05aed1952db7193d4a03fb87eae61a7199e1a298))
+
 ## [1.7.0](https://github.com/fivaz/fit/compare/v1.6.1...v1.7.0) (2026-09-24)
 
 ### ✨ Features
