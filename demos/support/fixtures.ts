@@ -30,7 +30,8 @@ const test = base.extend<{ timeline: DemoTimeline; resetDemoData: void }>({
 				await use();
 				return;
 			}
-			reseedDemoData();
+			// The payment clip opens on the paywall, which only shows once the free credits are gone.
+			reseedDemoData(testInfo.title === "payment" ? 0 : undefined);
 			await use();
 		},
 		{ auto: true },

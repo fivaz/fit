@@ -21,8 +21,8 @@ const MAX_BYTES = 1.5 * 1024 * 1024;
  */
 const TRIMS = {
 	"log-workout": { start: 0.5, end: 0.3 },
-	progress: { start: 0.5, end: 0.3 },
 	"ai-coach": { start: 0.5, end: 0.3 },
+	payment: { start: 0.5, end: 0.3 },
 };
 const DEFAULT_TRIM = { start: 0.5, end: 0.3 };
 
@@ -151,8 +151,8 @@ function convertClip(clipName) {
 			`${clipName}: trims (${trim.start}s + ${trim.end}s) exceed ${total.toFixed(1)}s`,
 		);
 
-	// Trim each kept piece, join them, then scale. Both encoders need even dimensions; the scale
-	// filter rounds down to the nearest even number.
+	// Trim each kept piece, join them, then scale. Playwright records at CSS-pixel size (393x852),
+	// so upscale 2x for retina displays; that also gives the even dimensions both encoders need.
 	const pieces = segments
 		.map(
 			([from, to], i) =>
@@ -161,7 +161,7 @@ function convertClip(clipName) {
 		.join(";");
 	const joined =
 		segments.map((_, i) => `[p${i}]`).join("") + `concat=n=${segments.length}:v=1:a=0[joined]`;
-	const filter = `${pieces};${joined};[joined]scale=trunc(iw/2)*2:trunc(ih/2)*2[out]`;
+	const filter = `${pieces};${joined};[joined]scale=iw*2:ih*2:flags=lanczos[out]`;
 	const window = ["-i", input, "-filter_complex", filter, "-map", "[out]"];
 	const mp4 = path.join(OUT_DIR, `${clipName}.mp4`);
 	const webm = path.join(OUT_DIR, `${clipName}.webm`);

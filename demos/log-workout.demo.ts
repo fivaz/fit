@@ -5,22 +5,16 @@ import {
 } from "@/tests/e2e/helpers/program-workout";
 
 import { expect, test } from "./support/fixtures";
-import { beat, HOLD, settle, typeSlowly } from "./support/pacing";
+import { beat, HOLD, scrollGently, settle, typeSlowly } from "./support/pacing";
 
 const PROGRAM = "Push Day A";
 
-// Starts and ends on Progress so the looped clip's last frame resembles its first.
+// One journey: log today's training, then review it on Progress and the program's exercise charts.
 test("log-workout", async ({ page }) => {
-	await test.step("Open on Progress (first frame)", async () => {
-		await page.goto(ROUTES.PROGRESS);
-		await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
-		await settle(page);
-		await beat(page, HOLD.read);
-	});
-
-	await test.step("Go to the program", async () => {
-		await page.getByRole("link", { name: "Programs" }).click();
+	await test.step("Open the program", async () => {
+		await page.goto(ROUTES.PROGRAMS);
 		await expect(page.getByRole("button", { name: `Open program ${PROGRAM}` })).toBeVisible();
+		await settle(page);
 		await beat(page, HOLD.read);
 		await openProgramFromList(page, PROGRAM);
 		await beat(page, HOLD.read);
@@ -63,14 +57,30 @@ test("log-workout", async ({ page }) => {
 		await page.getByRole("button", { name: "Yes, finish" }).click();
 	});
 
-	await test.step("Land on Progress (last frame)", async () => {
+	await test.step("Review the week on Progress", async () => {
 		// Matches the Progress route URL, anchored with $ so it must end exactly there.
 		await expect(page).toHaveURL(new RegExp(`${ROUTES.PROGRESS}$`));
 		await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
-		// Matches the finish toast, e.g. "Workout finished on Sep 24, 2026, 6:01:06 PM". It overlaps
-		// the page heading, so let it dismiss before the last frame to keep the loop seam clean.
-		await expect(page.getByText(/Workout finished on/i)).toBeHidden({ timeout: 10_000 });
 		await settle(page);
+		await beat(page, HOLD.linger);
+		// Today's workout is listed under the week's stats.
+		await scrollGently(page, 600);
+		await expect(page.getByRole("link", { name: `View workout ${PROGRAM}` })).toBeVisible();
+		await beat(page, HOLD.read);
+	});
+
+	await test.step("Review the program's exercise progress", async () => {
+		await page.getByRole("link", { name: "Programs" }).click();
+		await expect(page.getByRole("button", { name: `Open program ${PROGRAM}` })).toBeVisible();
+		await beat(page, HOLD.glance);
+		await openProgramFromList(page, PROGRAM);
+		await beat(page, HOLD.glance);
+		await page.getByRole("link", { name: "Exercise progress" }).click();
+		await expect(page.getByRole("heading", { name: "Exercise progress" })).toBeVisible();
+		await settle(page);
+		await beat(page, HOLD.linger);
+		// Just far enough to reveal the reps chart; today's session is the last point on each chart.
+		await scrollGently(page, 250, 3);
 		await beat(page, HOLD.linger);
 	});
 });

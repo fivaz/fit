@@ -8,8 +8,11 @@ export const STORAGE_STATE_FILE = "demo-output/.demo-storage-state.json";
 export const IPHONE_SCREEN = { width: 393, height: 852 };
 /** iPhone 15 Pro safe-area insets in portrait (status bar / Dynamic Island, home indicator). */
 export const SAFE_AREA_INSETS = { top: 59, bottom: 34, left: 0, right: 0 };
-/** Recording size = 2x the screen (aspect 0.461, like the real device), even dimensions for H.264. */
-export const VIDEO_SIZE = { width: IPHONE_SCREEN.width * 2, height: IPHONE_SCREEN.height * 2 };
+/**
+ * Recording size = the screen in CSS px. Playwright captures frames at CSS-pixel size and doesn't
+ * scale them up: a larger size just pins the page top-left on gray padding. demo-convert upscales 2x.
+ */
+export const VIDEO_SIZE = IPHONE_SCREEN;
 
 export function rawClipPath(clipName: string): string {
 	return path.join(RAW_DIR, `${clipName}.webm`);
