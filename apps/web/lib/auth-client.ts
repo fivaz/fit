@@ -2,6 +2,7 @@ import { AUTH_ADDITIONAL_FIELDS } from "@fit/shared";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
+import { forgetLastSession } from "@/lib/auth/last-session";
 import { resolvePublicAuthBaseUrl } from "@/lib/env/mobile-dev-url";
 import {
 	clearMobileAuthToken,
@@ -72,6 +73,7 @@ type SignOutOptions = Parameters<typeof authClient.signOut>[0];
 
 export async function signOut(options?: SignOutOptions) {
 	const result = await authClient.signOut(options);
+	forgetLastSession();
 	await clearMobileAuthToken();
 	return result;
 }
@@ -82,6 +84,7 @@ type DeleteAccountOptions = { password: string };
 export async function deleteAccount({ password }: DeleteAccountOptions) {
 	const result = await authClient.deleteUser({ password });
 	if (!result.error) {
+		forgetLastSession();
 		await clearMobileAuthToken();
 	}
 	return result;
