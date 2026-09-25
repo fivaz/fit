@@ -43,10 +43,12 @@
 		"demo": "pnpm run demo:record && pnpm run demo:convert",
 		"demo:record": "node scripts/free-dev-server-port.mjs && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test -c playwright.demo.config.ts",
 		"demo:convert": "node scripts/demo-convert.mjs",
+		"demo:publish": "node scripts/demo-publish.mjs",
 		"test:unit": "pnpm --filter @fit/api test:unit",
 		"agent": "agent worker start"
 	},
 	"devDependencies": {
+		"@aws-sdk/client-s3": "^3.1140.0",
 		"@commitlint/cli": "^20.2.0",
 		"@commitlint/config-conventional": "^20.2.0",
 		"@playwright/test": "^1.61.0",
