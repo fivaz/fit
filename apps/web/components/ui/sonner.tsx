@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
+// Keeps toasts below the status bar / Dynamic Island; Sonner's own offset ignores the safe area.
+const SAFE_TOP_OFFSET = "calc(env(safe-area-inset-top) + 8px)";
+
 const Toaster = ({ ...props }: ToasterProps) => {
 	const { theme = "system" } = useTheme();
 
@@ -20,6 +23,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
 			position="top-right"
 			theme={theme as ToasterProps["theme"]}
 			className="toaster group"
+			offset={{ top: SAFE_TOP_OFFSET }}
+			mobileOffset={{ top: SAFE_TOP_OFFSET }}
 			icons={{
 				success: <CircleCheckIcon className="size-4" />,
 				info: <InfoIcon className="size-4" />,
