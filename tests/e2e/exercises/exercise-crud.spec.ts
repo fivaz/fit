@@ -17,7 +17,7 @@ test.describe("Exercise CRUD", () => {
 
 		await test.step("Read created exercise from library", async () => {
 			await page.goto(ROUTES.EXERCISES);
-			await page.getByRole("button", { name: "All" }).click();
+			await page.getByRole("button", { name: "All", exact: true }).click();
 			await page.getByRole("textbox", { name: "Search exercises..." }).fill(exerciseName);
 			await expect(
 				page.getByRole("button", { name: new RegExp(exerciseName, "i") }).first(),
@@ -46,7 +46,7 @@ test.describe("Exercise CRUD", () => {
 
 		await test.step("Read updated exercise from library", async () => {
 			await page.goto(ROUTES.EXERCISES);
-			await page.getByRole("button", { name: "All" }).click();
+			await page.getByRole("button", { name: "All", exact: true }).click();
 			await page.getByRole("textbox", { name: "Search exercises..." }).fill(updatedExerciseName);
 			await expect(
 				page.getByRole("button", { name: new RegExp(updatedExerciseName, "i") }).first(),
@@ -66,7 +66,7 @@ test.describe("Exercise CRUD", () => {
 
 		await test.step("Verify exercise is absent after delete", async () => {
 			await page.goto(ROUTES.EXERCISES);
-			await page.getByRole("button", { name: "All" }).click();
+			await page.getByRole("button", { name: "All", exact: true }).click();
 			await page.getByRole("textbox", { name: "Search exercises..." }).fill(updatedExerciseName);
 			await expect(
 				page.getByRole("button", { name: new RegExp(updatedExerciseName, "i") }),

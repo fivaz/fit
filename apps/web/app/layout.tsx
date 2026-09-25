@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { ApiWarmUp } from "@/components/api-warm-up";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/hooks/confirm/confirm-provider";
@@ -85,6 +86,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
+				<ApiWarmUp />
 				<CapacitorSplashDismiss />
 				<ThemeProvider
 					attribute="class"

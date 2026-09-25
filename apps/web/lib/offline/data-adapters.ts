@@ -45,8 +45,6 @@ const emptyStore: OfflineStore = {
 	pendingOperations: [],
 };
 
-let isSyncingQueue = false;
-
 // In-flight or recently edited sets — merged over API reads until sync succeeds.
 const optimisticWorkoutSets = new Map<string, WorkoutSetMap>();
 
@@ -120,33 +118,47 @@ function enqueueOperation(operation: Omit<PendingOperation, "id" | "createdAt">)
 	}));
 }
 
-async function flushPendingOperations() {
-	if (!isOfflineEnabled() || !isBrowser() || isSyncingQueue) return;
+/** The flush currently draining the queue, so later callers wait for it instead of skipping it. */
+let flushInFlight: Promise<void> | null = null;
 
-	isSyncingQueue = true;
-	try {
-		if (!(await isNetworkAvailable())) return;
+/**
+ * Sends queued mutations in order. Concurrent callers share one run, and the run keeps going until
+ * nothing new is queued, so a read that awaits this sees every earlier write on the server.
+ */
+function flushPendingOperations(): Promise<void> {
+	if (!isOfflineEnabled() || !isBrowser()) return Promise.resolve();
+	flushInFlight ??= drainPendingOperations().finally(() => {
+		flushInFlight = null;
+	});
+	return flushInFlight;
+}
 
-		const store = readStore();
-		const remaining: PendingOperation[] = [];
+async function drainPendingOperations() {
+	if (!(await isNetworkAvailable())) return;
 
-		for (const operation of store.pendingOperations) {
-			try {
-				await apiFetch<void>(operation.url, {
-					method: operation.method,
-					body: operation.body,
-				});
-			} catch {
-				remaining.push(operation);
-			}
+	// Each operation is tried once per run; failures stay queued for the next run.
+	const attempted = new Set<string>();
+	for (;;) {
+		// Re-read every time: saves made while a request is in flight (e.g. during an API cold start)
+		// are appended to the stored queue and must go out in this same run.
+		const operation = readStore().pendingOperations.find(({ id }) => !attempted.has(id));
+		if (!operation) return;
+		attempted.add(operation.id);
+
+		try {
+			await apiFetch<void>(operation.url, {
+				method: operation.method,
+				body: operation.body,
+			});
+		} catch {
+			continue;
 		}
-
-		writeStore({
+		// Remove only this operation, from the current store: writing back a snapshot taken before the
+		// request would drop whatever was saved or cached while it was in flight.
+		updateStore((store) => ({
 			...store,
-			pendingOperations: remaining,
-		});
-	} finally {
-		isSyncingQueue = false;
+			pendingOperations: store.pendingOperations.filter(({ id }) => id !== operation.id),
+		}));
 	}
 }
 
@@ -171,7 +183,19 @@ async function runOrQueue(operation: Omit<PendingOperation, "id" | "createdAt">)
 		return;
 	}
 	enqueueOperation(operation);
+	// Don't make the caller wait for the upload: the local store already has the change, and a cold
+	// API container can take many seconds to answer. Reads await the flush, so they still see it.
+	void flushPendingOperations();
+}
+
+/**
+ * GET for data the server computes from other records (progress stats, logs, counts), which has no
+ * local fallback. Waits for queued writes first, so e.g. Progress includes a workout finished a
+ * moment ago even though finishing no longer waits for the upload.
+ */
+export async function fetchAfterPendingWrites<T>(input: string): Promise<T> {
 	await flushPendingOperations();
+	return apiFetch<T>(input);
 }
 
 export const offlineDataAdapters = {
