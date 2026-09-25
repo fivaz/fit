@@ -10,7 +10,7 @@ import { beat, HOLD, scrollGently, settle, typeSlowly } from "./support/pacing";
 const PROGRAM = "Push Day A";
 
 // One journey: log today's training, then review it on Progress and in the exercise charts.
-test("log-workout", async ({ page }) => {
+test("flow-workout", async ({ page }) => {
 	await test.step("Open the program", async () => {
 		await page.goto(ROUTES.PROGRAMS);
 		await expect(page.getByRole("button", { name: `Open program ${PROGRAM}` })).toBeVisible();

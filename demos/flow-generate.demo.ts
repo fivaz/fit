@@ -6,7 +6,7 @@ import { beat, HOLD, settle, typeSlowly } from "./support/pacing";
 // Records the real feature. Opt-in because it calls OpenAI and spends one of the demo account's
 // credits. The wait for OpenAI is cut out during conversion (see the timeline marks below), keeping
 // a couple of seconds of the "Generating..." state so the jump is understandable.
-test("ai-coach", async ({ page, timeline }) => {
+test("flow-generate", async ({ page, timeline }) => {
 	test.skip(!process.env.DEMO_AI, "Set DEMO_AI=1 to record the AI coach clip.");
 	test.skip(!process.env.OPENAI_API_KEY, "OPENAI_API_KEY is not set.");
 

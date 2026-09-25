@@ -10,7 +10,7 @@ const TEST_CARD = { number: "4242424242424242", expiry: "1234", cvc: "123" };
 // Out of credits -> paywall -> Stripe Checkout (test mode) -> back in the app with credits added.
 // Starts with 0 credits (see the reseed fixture). The waits on Stripe's page load and payment
 // processing are cut out during conversion.
-test("payment", async ({ page, timeline }) => {
+test("flow-credits", async ({ page, timeline }) => {
 	test.skip(
 		!process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_"),
 		"Needs a test-mode STRIPE_SECRET_KEY; never record a real payment.",

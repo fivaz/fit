@@ -20,9 +20,9 @@ const MAX_BYTES = 1.5 * 1024 * 1024;
  * a recording; `end` drops the idle tail. Tune after watching the raw video.
  */
 const TRIMS = {
-	"log-workout": { start: 0.5, end: 0.3 },
-	"ai-coach": { start: 0.5, end: 0.3 },
-	payment: { start: 0.5, end: 0.3 },
+	"flow-workout": { start: 0.5, end: 0.3 },
+	"flow-generate": { start: 0.5, end: 0.3 },
+	"flow-credits": { start: 0.5, end: 0.3 },
 };
 const DEFAULT_TRIM = { start: 0.5, end: 0.3 };
 

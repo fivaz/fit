@@ -26,12 +26,12 @@ const test = base.extend<{ timeline: DemoTimeline; resetDemoData: void }>({
 	resetDemoData: [
 		async ({}, use, testInfo) => {
 			// Skipped clips (e.g. the opt-in AI one) shouldn't touch the DB.
-			if (testInfo.title === "ai-coach" && !process.env.DEMO_AI) {
+			if (testInfo.title === "flow-generate" && !process.env.DEMO_AI) {
 				await use();
 				return;
 			}
 			// The payment clip opens on the paywall, which only shows once the free credits are gone.
-			reseedDemoData(testInfo.title === "payment" ? 0 : undefined);
+			reseedDemoData(testInfo.title === "flow-credits" ? 0 : undefined);
 			await use();
 		},
 		{ auto: true },

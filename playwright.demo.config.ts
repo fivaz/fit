@@ -57,7 +57,7 @@ export default defineConfig({
 		},
 		{
 			name: "record",
-			// Matches clip files, e.g. "demos/log-workout.demo.ts".
+			// Matches clip files, e.g. "demos/flow-workout.demo.ts".
 			testMatch: /\.demo\.ts$/,
 			dependencies: ["seed"],
 			use: {
