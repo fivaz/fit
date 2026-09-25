@@ -26,15 +26,11 @@ test("payment", async ({ page, timeline }) => {
 			await settle(page);
 			// The video was already rolling while the Stripe CLI booted; drop those blank seconds.
 			timeline.cut(0, timeline.now());
-			await beat(page, HOLD.read);
+			await beat(page, HOLD.glance);
 			await page.getByRole("button", { name: "Create program", exact: true }).click();
 			await expect(page.getByRole("heading", { name: "Create Program" })).toBeVisible();
 			await beat(page, HOLD.glance);
-			await typeSlowly(
-				page.getByLabel("Workout description"),
-				"A 3-day full body plan for strength.",
-				70,
-			);
+			await typeSlowly(page.getByLabel("Workout description"), "3-day full body plan", 50);
 			await beat(page, HOLD.glance);
 			await page.getByRole("button", { name: "Generate Program" }).click();
 		});
@@ -55,11 +51,11 @@ test("payment", async ({ page, timeline }) => {
 			timeline.cut(cutFrom, timeline.now() - 0.3);
 			await beat(page, HOLD.read);
 
-			await typeSlowly(email, "alex.morgan@example.com", 50);
-			await typeSlowly(page.getByPlaceholder("1234 1234 1234 1234"), TEST_CARD.number, 60);
-			await typeSlowly(page.getByPlaceholder("MM / YY"), TEST_CARD.expiry, 90);
-			await typeSlowly(page.getByPlaceholder("CVC"), TEST_CARD.cvc, 90);
-			await typeSlowly(page.getByLabel("Cardholder name"), "Alex Morgan", 60);
+			await typeSlowly(email, "alex.morgan@example.com", 25);
+			await typeSlowly(page.getByPlaceholder("1234 1234 1234 1234"), TEST_CARD.number, 35);
+			await typeSlowly(page.getByPlaceholder("MM / YY"), TEST_CARD.expiry, 60);
+			await typeSlowly(page.getByPlaceholder("CVC"), TEST_CARD.cvc, 60);
+			await typeSlowly(page.getByLabel("Cardholder name"), "Alex Morgan", 40);
 			await beat(page, HOLD.glance);
 			await page.getByTestId("hosted-payment-submit-button").click();
 		});

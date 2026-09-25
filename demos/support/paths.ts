@@ -6,6 +6,7 @@ export const STORAGE_STATE_FILE = "demo-output/.demo-storage-state.json";
 
 /** iPhone 15 Pro: full screen in CSS px (the app runs full-screen, not inside Safari's toolbars). */
 export const IPHONE_SCREEN = { width: 393, height: 852 };
+export const DEMO_COLOR_SCHEME = "dark";
 /** iPhone 15 Pro safe-area insets in portrait (status bar / Dynamic Island, home indicator). */
 export const SAFE_AREA_INSETS = { top: 59, bottom: 34, left: 0, right: 0 };
 /**

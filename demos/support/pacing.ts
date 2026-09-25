@@ -1,8 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 
-/** How long a viewer needs to take a screen in (reading time), and to follow a transition. */
-export const HOLD = { glance: 1500, read: 2500, linger: 3500 } as const;
-export const BEAT = 900;
+/**
+ * How long a viewer needs to take a screen in (reading time), and to follow a transition. Kept short:
+ * portfolio visitors give a clip roughly 10 seconds before scrolling on.
+ */
+export const HOLD = { glance: 900, read: 1500, linger: 2500 } as const;
+export const BEAT = 600;
 
 /** Human-feeling pause between visible actions. */
 export async function beat(page: Page, ms: number = BEAT): Promise<void> {
@@ -10,7 +13,7 @@ export async function beat(page: Page, ms: number = BEAT): Promise<void> {
 }
 
 /** Types character by character so the typing is visible in the recording (an instant fill isn't). */
-export async function typeSlowly(target: Locator, text: string, delayMs = 110): Promise<void> {
+export async function typeSlowly(target: Locator, text: string, delayMs = 80): Promise<void> {
 	await target.click();
 	await target.press("ControlOrMeta+a");
 	await target.pressSequentially(text, { delay: delayMs });

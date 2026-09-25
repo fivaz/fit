@@ -2,7 +2,7 @@ import fs from "node:fs";
 
 import { expect, test as base } from "@playwright/test";
 
-import { cutsPath, rawClipPath, RAW_DIR, SAFE_AREA_INSETS } from "./paths";
+import { cutsPath, DEMO_COLOR_SCHEME, rawClipPath, RAW_DIR, SAFE_AREA_INSETS } from "./paths";
 import { reseedDemoData } from "./reseed";
 import { installDemoOverlays } from "./tap-indicator";
 
@@ -40,8 +40,20 @@ const test = base.extend<{ timeline: DemoTimeline; resetDemoData: void }>({
 		await installDemoOverlays(page);
 		// Chromium reports 0 for env(safe-area-inset-*); emulate the real iPhone 15 Pro insets so the
 		// app's header and bottom navigation get the padding they get on a device.
-		const session = await page.context().newCDPSession(page);
-		await session.send("Emulation.setSafeAreaInsetsOverride", { insets: SAFE_AREA_INSETS });
+		const emulateDevice = async () => {
+			const session = await page.context().newCDPSession(page);
+			await session.send("Emulation.setSafeAreaInsetsOverride", { insets: SAFE_AREA_INSETS });
+			await session.detach();
+			await page.emulateMedia({ colorScheme: DEMO_COLOR_SCHEME });
+		};
+		await emulateDevice();
+		// Coming back from a cross-origin page (Stripe Checkout) swaps the renderer process, which drops
+		// both the insets and the context's dark color scheme, so the app would return in light mode.
+		page.on("framenavigated", (frame) => {
+			if (frame !== page.mainFrame()) return;
+			// The page may already be closing when a late navigation fires; nothing to restore then.
+			emulateDevice().catch(() => undefined);
+		});
 
 		await use(page);
 

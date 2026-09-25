@@ -14,7 +14,7 @@ test("ai-coach", async ({ page, timeline }) => {
 		await page.goto(ROUTES.PROGRAMS);
 		await expect(page.getByRole("heading", { name: "Programs" })).toBeVisible();
 		await settle(page);
-		await beat(page, HOLD.read);
+		await beat(page, HOLD.glance);
 	});
 
 	await test.step("Open Create Program in AI coach mode", async () => {
@@ -27,23 +27,19 @@ test("ai-coach", async ({ page, timeline }) => {
 		await typeSlowly(
 			page.getByLabel("Workout description"),
 			"A 4-day upper/lower split to build muscle, 45-minute sessions, full gym.",
-			70,
+			40,
 		);
 		await beat(page, HOLD.read);
 	});
 
 	await test.step("Generate, cutting the wait for OpenAI", async () => {
 		await page.getByRole("button", { name: "Generate Program" }).click();
-		const loadingShownFor = 2.5;
+		const loadingShownFor = 1.5;
 		const cutFrom = timeline.now() + loadingShownFor;
 
 		// Matches the success toast, e.g. 'Created "AI Generated Split" with 4 programs.'
 		await expect(page.getByText(/^Created /)).toBeVisible({ timeout: 90_000 });
 		timeline.cut(cutFrom, timeline.now() - 0.3);
-		await beat(page, HOLD.read);
-	});
-
-	await test.step("Show the generated programs", async () => {
 		await beat(page, HOLD.linger);
 	});
 });
