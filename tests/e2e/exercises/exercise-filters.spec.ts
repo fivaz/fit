@@ -22,7 +22,7 @@ test.describe("Exercise library filters", () => {
 		});
 
 		await test.step("Select All muscles to show the exercise again", async () => {
-			await page.getByRole("button", { name: "All" }).click();
+			await page.getByRole("button", { name: "All", exact: true }).click();
 			await expect(
 				page.getByRole("button", { name: new RegExp(exerciseName, "i") }).first(),
 			).toBeVisible();

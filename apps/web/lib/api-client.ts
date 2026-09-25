@@ -96,3 +96,14 @@ async function getErrorMessage(response: Response) {
 		return `Request failed with status ${response.status}`;
 	}
 }
+
+/**
+ * Pings the API without waiting for the answer. Prod scales the API container to zero, so the first
+ * request after a quiet spell waits for a container to boot; sending this as the app opens (even on
+ * the login screen) starts that boot while the user is still looking at the first screen.
+ */
+export function warmUpApi(): void {
+	// Without a configured API origin, relative URLs would hit the web server, not the API.
+	if (!resolvePublicApiBaseUrl()) return;
+	void fetch(resolveApiUrl("/api/health"), { cache: "no-store" }).catch(() => undefined);
+}

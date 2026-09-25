@@ -8,6 +8,10 @@ if (process.env.NODE_ENV === "production") {
 	Sentry.init({
 		dsn: "https://53346ababcca5c37041d2b5cd7cfaae3@o4508857555550208.ingest.de.sentry.io/4510635945492560",
 
+		// dev/staging/prod, set by the Azure deploy workflow. Builds made elsewhere (e.g. an iOS build
+		// installed from a laptop) report as "local" rather than Sentry's default "production".
+		environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || "local",
+
 		// Add optional integrations for additional features
 		integrations: [Sentry.replayIntegration()],
 

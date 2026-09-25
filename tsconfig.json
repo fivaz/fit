@@ -13,5 +13,11 @@
 			"@/tests/*": ["./tests/*"]
 		}
 	},
-	"include": ["tests/**/*.ts", "playwright.config.ts"]
+	"include": [
+		"tests/**/*.ts",
+		"demos/**/*.ts",
+		"playwright.config.ts",
+		"playwright.demo.config.ts",
+		"playwright.shared.ts"
+	]
 }

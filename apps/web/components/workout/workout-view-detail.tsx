@@ -3,11 +3,12 @@
 import Link from "next/link";
 
 import { format } from "date-fns";
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Clock, TrendingUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { WorkoutViewSetList } from "@/components/workout/workout-view-set-list";
 import { ROUTES } from "@/lib/consts";
+import { programProgressHref } from "@/lib/programs/navigation";
 import { formatWorkoutElapsed } from "@/lib/workout/elapsed";
 import { WorkoutWithMappedSets } from "@/lib/workout/type";
 
@@ -56,6 +57,14 @@ export function WorkoutViewDetail({ workout }: WorkoutViewDetailProps) {
 								) : null}
 							</div>
 						</div>
+						{/* Workouts cached offline before the snapshot carried an id have none; hide the link. */}
+						{workout.program?.id ? (
+							<Button variant="outline" size="icon" className="mt-0.5 shrink-0" asChild>
+								<Link href={programProgressHref(workout.program.id)} aria-label="Exercise progress">
+									<TrendingUp className="h-4 w-4" />
+								</Link>
+							</Button>
+						) : null}
 					</div>
 				</div>
 			</header>

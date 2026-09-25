@@ -1,5 +1,5 @@
-import { apiFetch } from "@/lib/api-client";
+import { fetchAfterPendingWrites } from "@/lib/offline/data-adapters";
 
 export function getHomeExerciseLibraryCount() {
-	return apiFetch<{ count: number }>("/api/home/exercise-count");
+	return fetchAfterPendingWrites<{ count: number }>("/api/home/exercise-count");
 }

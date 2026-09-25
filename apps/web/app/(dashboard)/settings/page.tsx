@@ -50,7 +50,9 @@ function CheckoutReturnHandler({ onCheckoutSuccess }: { onCheckoutSuccess: () =>
 
 		if (checkout === "success") {
 			onCheckoutSuccess();
-			toast.success("Payment received. Updating your credits...");
+			// Fixed id: a re-run of this effect (e.g. React StrictMode in dev) replaces the toast
+			// instead of stacking a duplicate.
+			toast.success("Payment received. Updating your credits...", { id: "checkout-success" });
 			// The Stripe webhook that credits the account can land after the redirect back here,
 			// so refetch once more shortly after in case the first fetch saw the old balance. Not
 			// cleared on cleanup: the effect re-runs (and cleans up) as soon as router.replace

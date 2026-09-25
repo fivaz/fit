@@ -19,6 +19,7 @@ export const workoutWithExercisesAndSets = {
 		endDate: true,
 		program: {
 			select: {
+				id: true,
 				name: true,
 				imageUrl: true,
 				muscles: true,

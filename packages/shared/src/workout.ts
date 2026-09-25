@@ -13,6 +13,7 @@ export type SetUI = {
 export type WorkoutSetMap = Record<string, SetUI[]>;
 
 export type WorkoutProgramSnapshot = {
+	id: string;
 	name: string;
 	imageUrl: string | null;
 	muscles: MuscleGroupType[];

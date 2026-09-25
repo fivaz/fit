@@ -494,6 +494,8 @@ jobs:
         env:
           NODE_ENV: production
           API_BASE_URL: ${{ steps.frontend-api.outputs.url }}
+          # Tags the web app's Sentry events with dev/staging/prod (see instrumentation-client.ts).
+          NEXT_PUBLIC_SENTRY_ENVIRONMENT: ${{ steps.env.outputs.environment }}
 
       - name: Deploy static frontend
         run: |
