@@ -25,12 +25,11 @@ test("log-workout", async ({ page }) => {
 		await beat(page, HOLD.glance);
 	});
 
-	await test.step("Log a warmup set, then a heavier working set", async () => {
+	await test.step("Log a warmup set, then two heavier working sets", async () => {
 		const spinbuttons = page.getByRole("spinbutton");
 		const setTimeButtons = page.getByRole("button", { name: "Set time" });
-		// Warmup sets are left out of the progress charts, so only the working set counts there.
-		await page.getByRole("button", { name: "Toggle warmup set" }).first().click();
-		await beat(page, 400);
+		// Set 1 is already flagged as a warmup: a new workout copies the flags from the last session.
+		// Warmups stay out of the progress charts, so only the working sets count there.
 		await typeSlowly(spinbuttons.nth(0), "12");
 		await beat(page, 300);
 		await typeSlowly(spinbuttons.nth(1), "50");
@@ -38,13 +37,19 @@ test("log-workout", async ({ page }) => {
 		// Tapping the clock stamps the set as done now, so it counts toward volume on Progress.
 		await setTimeButtons.nth(0).click();
 		await beat(page, HOLD.glance);
-		await typeSlowly(spinbuttons.nth(2), "8");
-		await beat(page, 300);
-		// A little above the seeded history's best, so today shows up as a new high on the chart.
-		await typeSlowly(spinbuttons.nth(3), "72.5");
-		await beat(page, 400);
-		await setTimeButtons.nth(1).click();
-		await beat(page, HOLD.glance);
+		// A little above the seeded history's best weight, with reps dropping off as fatigue sets in,
+		// so today shows up as a new high for both weight and volume on the charts.
+		for (const [row, reps] of [
+			[1, "9"],
+			[2, "8"],
+		] as const) {
+			await typeSlowly(spinbuttons.nth(row * 2), reps);
+			await beat(page, 300);
+			await typeSlowly(spinbuttons.nth(row * 2 + 1), "72.5");
+			await beat(page, 400);
+			await setTimeButtons.nth(row).click();
+			await beat(page, HOLD.glance);
+		}
 	});
 
 	await test.step("Finish and confirm", async () => {

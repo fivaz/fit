@@ -14,6 +14,8 @@ import { prisma } from "../src/prisma/client.js";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 const WEEKS = 8;
+/** Warmup sets use this share of the day's working weight. */
+const WARMUP_LOAD = 0.6;
 
 type PlannedExercise = { name: string; baseKg: number; weeklyKg: number };
 type PlannedProgram = {
@@ -160,19 +162,23 @@ async function main() {
 			let clock = start.getTime();
 
 			const exercises = program.exercises.map((exercise, order) => {
+				// A lighter warmup set, then two working sets. Warmups stay out of the progress charts,
+				// so the history lines up with a live session logged the same way.
 				const sets = [0, 1, 2].map((setIndex) => {
 					clock += (3 + Math.floor(random() * 3)) * 60_000;
+					const isWarmup = setIndex === 0;
 					const jitter = (random() - 0.5) * 1.25;
+					const workingKg = exercise.baseKg + exercise.weeklyKg * weekIndex + jitter;
 					const weight =
 						exercise.baseKg === 0
 							? null
-							: roundToPlate(exercise.baseKg + exercise.weeklyKg * weekIndex + jitter);
+							: roundToPlate(isWarmup ? workingKg * WARMUP_LOAD : workingKg);
 					return {
 						order: setIndex,
-						reps: 8 + Math.floor(random() * 3) - (setIndex === 2 ? 1 : 0),
+						reps: isWarmup ? 12 : 8 + Math.floor(random() * 3) - (setIndex === 2 ? 1 : 0),
 						weight,
 						time: new Date(clock),
-						isWarmup: false,
+						isWarmup,
 					};
 				});
 				return { order, exerciseId: idByName.get(exercise.name) as string, sets: { create: sets } };
