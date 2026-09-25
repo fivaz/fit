@@ -5,7 +5,7 @@ import {
 } from "@/tests/e2e/helpers/program-workout";
 
 import { expect, test } from "./support/fixtures";
-import { beat, HOLD, scrollGently, settle, typeSlowly } from "./support/pacing";
+import { beat, HOLD, settle, typeSlowly } from "./support/pacing";
 
 const PROGRAM = "Push Day A";
 
@@ -51,10 +51,9 @@ test("log-workout", async ({ page }) => {
 		await expect(page).toHaveURL(new RegExp(`${ROUTES.PROGRESS}$`));
 		await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
 		await settle(page);
-		await beat(page, HOLD.read);
-		// Today's workout is listed under the week's stats.
-		await scrollGently(page, 600, 3);
-		await expect(page.getByRole("link", { name: `View workout ${PROGRAM}` })).toBeVisible();
+		// Today's workout is listed under the week's stats, already in view: the page is barely taller
+		// than the screen, so scrolling would only hit the bottom and bounce.
+		await expect(page.getByRole("link", { name: `View workout ${PROGRAM}` })).toBeInViewport();
 		await beat(page, HOLD.linger);
 	});
 });
