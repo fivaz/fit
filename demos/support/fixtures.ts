@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { expect, test as base } from "@playwright/test";
 
 import { cutsPath, DEMO_COLOR_SCHEME, rawClipPath, RAW_DIR, SAFE_AREA_INSETS } from "./paths";
+import { aiClipSkipReason } from "./flags";
 import { reseedDemoData } from "./reseed";
 import { installDemoOverlays } from "./tap-indicator";
 
@@ -25,8 +26,8 @@ const test = base.extend<{ timeline: DemoTimeline; resetDemoData: void }>({
 	// instead of showing up as blank frames at the head of the recording.
 	resetDemoData: [
 		async ({}, use, testInfo) => {
-			// Skipped clips (e.g. the opt-in AI one) shouldn't touch the DB.
-			if (testInfo.title === "flow-generate" && !process.env.DEMO_AI) {
+			// Skipped clips (e.g. the AI one when opted out) shouldn't touch the DB.
+			if (testInfo.title === "flow-generate" && aiClipSkipReason()) {
 				await use();
 				return;
 			}
