@@ -11,6 +11,7 @@ const TAP_INDICATOR_SCRIPT = `
 			pointer-events: none; background: rgba(249, 115, 22, 0.35); border: 2px solid rgba(249, 115, 22, 0.9);
 			animation: demo-tap \${RIPPLE_MS}ms ease-out forwards; }
 		nextjs-portal { display: none !important; }
+		[data-api-status-dot] { display: none !important; }
 	\`;
 	const install = () => document.documentElement.appendChild(style);
 	if (document.documentElement) install();
@@ -29,7 +30,8 @@ const TAP_INDICATOR_SCRIPT = `
 
 /**
  * Playwright doesn't render touches, so draw a fading circle at each pointer-down. The same script
- * hides the Next.js dev indicator (a <nextjs-portal> element) so dev-only chrome stays out of clips.
+ * hides the Next.js dev indicator (a <nextjs-portal> element) and the API status dot, so app chrome
+ * that isn't part of the feature stays out of clips.
  */
 export async function installDemoOverlays(page: Page): Promise<void> {
 	await page.addInitScript(TAP_INDICATOR_SCRIPT);

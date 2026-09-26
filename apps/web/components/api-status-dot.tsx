@@ -58,6 +58,8 @@ export function ApiStatusDot() {
 
 	return (
 		<span
+			// Lets the demo recordings (demos/support/tap-indicator.ts) hide it.
+			data-api-status-dot
 			role="status"
 			aria-label={label}
 			title={label}
