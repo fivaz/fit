@@ -29,7 +29,7 @@ Azure Container Registry costs $5/month even when idle (Basic tier). For a portf
 
 ```bash
 az deployment group create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json
 ```
@@ -38,7 +38,7 @@ If you ever want ACR back instead, override it explicitly:
 
 ```bash
 az deployment group create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json \
   --parameters deployAcr=true
@@ -71,8 +71,8 @@ az deployment group create \
 3. **Update Container Apps image**:
    ```bash
    az containerapp update \
-     --name ca-fittracker-api-prod \
-     --resource-group rg-fittracker-prod \
+     --name ca-fit-api-prod \
+     --resource-group rg-fit-prod \
      --image ghcr.io/yourusername/fit-tracker/fit-api:latest
    ```
 
@@ -94,8 +94,8 @@ az deployment group create \
 4. **Update Container Apps**:
    ```bash
    az containerapp update \
-     --name ca-fittracker-api-prod \
-     --resource-group rg-fittracker-prod \
+     --name ca-fit-api-prod \
+     --resource-group rg-fit-prod \
      --image yourusername/fit-api:latest
    ```
 
@@ -158,7 +158,7 @@ For dev/staging environments, use smaller resource sizes:
 # - Small resources
 
 az deployment group create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json \
   --parameters containerCpuCores=0.25 containerMemory=0.5Gi \
@@ -172,7 +172,7 @@ az deployment group create \
 ```bash
 # Use ACR for professional demo, but optimize monitoring
 az deployment group create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json \
   --parameters retentionInDays=30 dailyDataCapGb=1
@@ -197,7 +197,7 @@ If you later want to add ACR:
 
    ```bash
    az deployment group create \
-     --resource-group rg-fittracker-prod \
+     --resource-group rg-fit-prod \
      --template-file main.bicep \
      --parameters params.prod.json
    ```
@@ -210,11 +210,11 @@ If you later want to add ACR:
 
    # Tag for ACR
    docker tag ghcr.io/yourusername/fit-tracker/fit-api:latest \
-     acrfittrackerprod.azurecr.io/fit-api:latest
+     acrfitprod.azurecr.io/fit-api:latest
 
    # Push to ACR
-   az acr login --name acrfittrackerprod
-   docker push acrfittrackerprod.azurecr.io/fit-api:latest
+   az acr login --name acrfitprod
+   docker push acrfitprod.azurecr.io/fit-api:latest
    ```
 
 ## Best Practices
@@ -229,13 +229,13 @@ If you later want to add ACR:
 ```bash
 # View current month costs
 az consumption usage list \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --start-date $(date -d '1 month ago' +%Y-%m-01) \
   --end-date $(date +%Y-%m-%d)
 
 # Set budget alert
 az consumption budget create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --budget-name monthly-limit \
   --amount 50 \
   --time-grain Monthly

@@ -162,7 +162,7 @@ jobs:
         run: |
           cd infrastructure/bicep
 
-          DEPLOYMENT_NAME="fittracker-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
+          DEPLOYMENT_NAME="fit-${{ steps.env.outputs.environment }}-$(date +%Y%m%d-%H%M%S)"
           echo "deployment_name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
 
           # Deploy with Container Apps enabled (image was just built). revisionSuffix pins a

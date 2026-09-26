@@ -27,7 +27,7 @@ if [ "$RESOURCE_SUFFIX" = "random" ]; then
     RESOURCE_SUFFIX="$(openssl rand -hex 2)"
 fi
 
-PROJECT_NAME="fittracker"
+PROJECT_NAME="fit"
 RG_NAME="rg-${PROJECT_NAME}-${ENVIRONMENT}${RESOURCE_SUFFIX:+-$RESOURCE_SUFFIX}"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
@@ -107,7 +107,7 @@ echo -e "${BLUE}🚀 Deploying infrastructure...${NC}"
 echo -e "${YELLOW}This may take 5-10 minutes...${NC}"
 echo ""
 
-DEPLOYMENT_NAME="fittracker-${ENVIRONMENT}-$(date +%Y%m%d-%H%M%S)"
+DEPLOYMENT_NAME="fit-${ENVIRONMENT}-$(date +%Y%m%d-%H%M%S)"
 
 if az deployment group create \
     --resource-group "$RG_NAME" \

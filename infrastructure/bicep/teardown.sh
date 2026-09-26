@@ -21,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ENVIRONMENT="${1:?Usage: ./teardown.sh <environment> [suffix]}"
 RESOURCE_SUFFIX="${2:-}"
-PROJECT_NAME="fittracker"
+PROJECT_NAME="fit"
 
 if [ "$ENVIRONMENT" = "prod" ]; then
     echo -e "${RED}❌ Refusing to tear down 'prod'. This script is for dev/staging only.${NC}"

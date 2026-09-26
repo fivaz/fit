@@ -18,7 +18,7 @@ param location string = resourceGroup().location
 @description('Project name for resource naming')
 @minLength(3)
 @maxLength(10)
-param projectName string = 'fittracker'
+param projectName string = 'fit'
 
 @description('Optional lowercase alphanumeric suffix appended to resource names, for ephemeral/parallel dev stacks that must not collide with the main deployment')
 @maxLength(5)

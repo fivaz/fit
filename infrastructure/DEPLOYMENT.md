@@ -32,7 +32,7 @@ This project uses **GitHub Actions** for automated CI/CD with a two-phase deploy
 az ad sp create-for-rbac \
   --name "fit-tracker-github-actions" \
   --role contributor \
-  --scopes /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --scopes /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fit-dev${SUFFIX:+-$SUFFIX} \
   --json-auth
 ```
 
@@ -49,7 +49,7 @@ Go to your GitHub repo → Settings → Secrets and variables → Actions → Ne
 
 The `azure-deploy.yml` workflow reads the same suffix from a repository
 **variable** (not a secret) so it targets the same resource group/Key Vault as
-your manual deployment, instead of an unsuffixed `rg-fittracker-dev` that
+your manual deployment, instead of an unsuffixed `rg-fit-dev` that
 doesn't exist:
 
 ```bash
@@ -100,7 +100,7 @@ until you assign yourself a data-plane role:
 az role assignment create \
   --role "Key Vault Secrets Officer" \
   --assignee $(az ad signed-in-user show --query id -o tsv) \
-  --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fittracker-dev${SUFFIX:+-$SUFFIX}/providers/Microsoft.KeyVault/vaults/kv-fittracker-dev${SUFFIX:+-$SUFFIX}
+  --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fit-dev${SUFFIX:+-$SUFFIX}/providers/Microsoft.KeyVault/vaults/kv-fit-dev${SUFFIX:+-$SUFFIX}
 ```
 
 This requires `Microsoft.Authorization/roleAssignments/write` on the resource
@@ -113,13 +113,13 @@ take a minute or two to propagate before the next step succeeds.
 ```bash
 # Your actual Neon database URL
 az keyvault secret set \
-  --vault-name kv-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --vault-name kv-fit-dev${SUFFIX:+-$SUFFIX} \
   --name DATABASE-URL \
   --value "postgresql://user:password@host/db?sslmode=require"
 
 # Generate auth secret
 az keyvault secret set \
-  --vault-name kv-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --vault-name kv-fit-dev${SUFFIX:+-$SUFFIX} \
   --name BETTER-AUTH-SECRET \
   --value "$(openssl rand -base64 32)"
 
@@ -127,7 +127,7 @@ az keyvault secret set \
 # this the Container App falls back to the Key Vault placeholder and the API
 # returns "AI program generation is not configured"
 az keyvault secret set \
-  --vault-name kv-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --vault-name kv-fit-dev${SUFFIX:+-$SUFFIX} \
   --name OPENAI-API-KEY \
   --value "sk-..."
 ```
@@ -159,8 +159,8 @@ Once setup is complete, **every push to `master` triggers**:
    └─ Execute Prisma migrations (pnpm run db:deploy)
 
 4. Output URLs
-   ├─ API URL: https://ca-fittracker-api-dev.xxx.eastus.azurecontainerapps.io
-   └─ SPA URL: https://stfittrackerdev.z13.web.core.windows.net
+   ├─ API URL: https://ca-fit-api-dev.xxx.eastus.azurecontainerapps.io
+   └─ SPA URL: https://stfitdev.z13.web.core.windows.net
 ```
 
 ### What Gets Deployed
@@ -186,7 +186,7 @@ docker push ghcr.io/YOUR_USERNAME/fit-api:latest
 # Deploy with Container Apps enabled
 cd infrastructure/bicep
 az deployment group create \
-  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fit-dev${SUFFIX:+-$SUFFIX} \
   --template-file main.bicep \
   --parameters params.dev.json \
   --parameters deployContainerApps=true \
@@ -232,14 +232,14 @@ az deployment group create \
 ```bash
 # Container App logs
 az containerapp logs show \
-  --name ca-fittracker-api-dev${SUFFIX:+-$SUFFIX} \
-  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --name ca-fit-api-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fit-dev${SUFFIX:+-$SUFFIX} \
   --follow
 
 # Application Insights
 az monitor app-insights query \
-  --app appi-fittracker-dev${SUFFIX:+-$SUFFIX} \
-  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --app appi-fit-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fit-dev${SUFFIX:+-$SUFFIX} \
   --analytics-query "requests | take 10"
 ```
 
@@ -251,7 +251,7 @@ Or via CLI:
 
 ```bash
 az deployment group list \
-  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fit-dev${SUFFIX:+-$SUFFIX} \
   --output table
 ```
 
@@ -271,8 +271,8 @@ Check Container App configuration:
 
 ```bash
 az containerapp show \
-  --name ca-fittracker-api-dev${SUFFIX:+-$SUFFIX} \
-  --resource-group rg-fittracker-dev${SUFFIX:+-$SUFFIX} \
+  --name ca-fit-api-dev${SUFFIX:+-$SUFFIX} \
+  --resource-group rg-fit-dev${SUFFIX:+-$SUFFIX} \
   --query "properties.template.scale"
 ```
 
@@ -289,7 +289,7 @@ Should show `minReplicas: 0`.
    created the service principal (step 1) before setting a suffix, or changed
    the suffix afterwards, re-scope it:
    ```bash
-   az role assignment create --assignee <service-principal-appId> --role Contributor --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fittracker-dev${SUFFIX:+-$SUFFIX}
+   az role assignment create --assignee <service-principal-appId> --role Contributor --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-fit-dev${SUFFIX:+-$SUFFIX}
    ```
 4. Check Azure subscription has required resource providers registered
 
