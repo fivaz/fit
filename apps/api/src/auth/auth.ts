@@ -1,6 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { bearer } from "better-auth/plugins";
+import { bearer, oneTimeToken } from "better-auth/plugins";
 
 import { resolveApiPublicOrigin, resolveApiPublicUrl } from "@/api-origin";
 import { createAppleClientSecret } from "@/auth/apple-client-secret";
@@ -104,6 +104,7 @@ export const auth = betterAuth({
 			enabled: true,
 		},
 	},
-	plugins: [bearer()],
+	// oneTimeToken lets the SPA trade the cookie session left by a web OAuth redirect for a bearer token.
+	plugins: [bearer(), oneTimeToken()],
 	socialProviders: buildSocialProviders(),
 });

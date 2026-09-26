@@ -119,7 +119,7 @@ export async function signInWithSocialForMobile(params: {
 	// The API lives on another origin, so a relative callback would land on the API instead of this app.
 	await signIn.social({
 		provider,
-		callbackURL: `${window.location.origin}${ROUTES.HOME}`,
+		callbackURL: `${window.location.origin}${ROUTES.AUTH_CALLBACK}`,
 		errorCallbackURL: `${window.location.origin}${ROUTES.LOGIN}`,
 		fetchOptions: { onError: (ctx) => handlers?.onError?.(ctx.error.message) },
 	});

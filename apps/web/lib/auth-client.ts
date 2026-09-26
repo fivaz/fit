@@ -1,5 +1,5 @@
 import { AUTH_ADDITIONAL_FIELDS } from "@fit/shared";
-import { inferAdditionalFields } from "better-auth/client/plugins";
+import { inferAdditionalFields, oneTimeTokenClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
 import { forgetLastSession } from "@/lib/auth/last-session";
@@ -24,12 +24,12 @@ function resolveAuthBaseURL() {
 }
 
 export const authClient = createAuthClient({
-	plugins: [inferAdditionalFields(AUTH_ADDITIONAL_FIELDS)],
+	plugins: [inferAdditionalFields(AUTH_ADDITIONAL_FIELDS), oneTimeTokenClient()],
 	baseURL: resolveAuthBaseURL(),
 	basePath: "/api/auth",
 	fetchOptions: {
 		// Web social login (OAuth redirect) leaves only a cookie session on the API origin. Sending it
-		// lets `getSession` answer with `set-auth-token`, which is what `apiFetch` authenticates with.
+		// lets `/auth/callback` trade that session for the bearer token `apiFetch` authenticates with.
 		// The native app authenticates with the stored bearer token alone.
 		credentials: isNativeMobileRuntime() ? "omit" : "include",
 		auth: {

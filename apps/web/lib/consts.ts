@@ -12,6 +12,7 @@ export const ROUTES = {
 	PROGRESS: "/progress",
 	LOGIN: "/login",
 	REGISTER: "/register",
+	AUTH_CALLBACK: "/auth/callback",
 	SETTINGS: "/settings",
 	PRIVACY: "/privacy",
 	TERMS: "/terms",
