@@ -11,33 +11,36 @@ import {
 
 import { expect, test } from "./support/fixtures";
 import { addMinutes, setTimeByLongPress, settle } from "./support/pacing";
-import { SCREENSHOTS_DIR } from "./support/paths";
+import { type AppStoreSize, screenshotsDir } from "./support/paths";
 
 const PROGRAM = "Push Day A";
 
-/** Saves the visible screen at App Store size (1320x2868) once the page has settled. */
-async function capture(page: Page, name: string): Promise<void> {
+/** Saves the visible screen at the project's App Store size once the page has settled. */
+async function capture(page: Page, dir: string, name: string): Promise<void> {
 	await settle(page);
 	// Let entry animations and the tap-indicator ripple (750ms) finish before the shot.
 	await page.waitForTimeout(1_200);
-	await page.screenshot({ path: path.join(SCREENSHOTS_DIR, `${name}.png`) });
+	await page.screenshot({ path: path.join(dir, `${name}.png`) });
 }
 
 // App Store screenshots of the seeded demo account (Alex Morgan, ~8 weeks of history).
-test("app-store", async ({ page }) => {
-	fs.rmSync(SCREENSHOTS_DIR, { recursive: true, force: true });
-	fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
+test("app-store", async ({ page }, testInfo) => {
+	// The project name carries the display size, e.g. "screenshots-6.5".
+	const size = testInfo.project.name.replace("screenshots-", "") as AppStoreSize;
+	const dir = screenshotsDir(size);
+	fs.rmSync(dir, { recursive: true, force: true });
+	fs.mkdirSync(dir, { recursive: true });
 
 	await test.step("Home", async () => {
 		await page.goto(ROUTES.HOME);
 		await expect(page.getByText("Welcome back,")).toBeVisible();
-		await capture(page, "01-home");
+		await capture(page, dir, "01-home");
 	});
 
 	await test.step("Programs", async () => {
 		await page.goto(ROUTES.PROGRAMS);
 		await expect(page.getByRole("button", { name: `Open program ${PROGRAM}` })).toBeVisible();
-		await capture(page, "02-programs");
+		await capture(page, dir, "02-programs");
 	});
 
 	await test.step("A workout in progress", async () => {
@@ -65,7 +68,7 @@ test("app-store", async ({ page }) => {
 			}
 		}
 		await expect(page.getByLabel("synced-icon")).toBeVisible({ timeout: 12_000 });
-		await capture(page, "03-workout");
+		await capture(page, dir, "03-workout");
 	});
 
 	await test.step("Progress, with the workout just finished", async () => {
@@ -76,7 +79,7 @@ test("app-store", async ({ page }) => {
 		await expect(page.getByRole("link", { name: `View workout ${PROGRAM}` })).toBeVisible();
 		// Matches the finish toast, e.g. "Workout finished on Sep 26, 2026, 8:26:01 AM".
 		await expect(page.getByText(/Workout finished on/i)).toBeHidden({ timeout: 10_000 });
-		await capture(page, "04-progress");
+		await capture(page, dir, "04-progress");
 	});
 
 	await test.step("Exercise progress", async () => {
@@ -84,7 +87,7 @@ test("app-store", async ({ page }) => {
 		await openProgramFromList(page, PROGRAM);
 		await page.getByRole("link", { name: "Exercise progress" }).click();
 		await expect(page.getByRole("heading", { name: "Exercise progress" })).toBeVisible();
-		await capture(page, "05-exercise-progress");
+		await capture(page, dir, "05-exercise-progress");
 	});
 
 	await test.step("AI coach", async () => {
@@ -94,6 +97,6 @@ test("app-store", async ({ page }) => {
 		await page
 			.getByLabel("Workout description")
 			.fill("A 4-day upper/lower split to build muscle, 45-minute sessions, full gym.");
-		await capture(page, "06-ai-coach");
+		await capture(page, dir, "06-ai-coach");
 	});
 });
