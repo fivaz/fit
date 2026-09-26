@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Dumbbell, Loader2, Timer, Weight } from "lucide-react";
+import { Clock, Dumbbell, Timer, Weight } from "lucide-react";
 
 import { ProgressStatCard } from "@/app/(dashboard)/progress/_components/progress-stat-card";
 import { useProgressStats } from "@/app/(dashboard)/progress/_hooks/use-progress-stats";
@@ -16,16 +16,6 @@ type ProgressStatsGridProps = {
 export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: ProgressStatsGridProps) {
 	const { stats, previousStats, isLoading } = useProgressStats(weekStart, weekEnd);
 
-	if (isLoading) {
-		return (
-			<div className="mb-6 grid grid-cols-2 gap-3">
-				<div className="col-span-2 flex justify-center py-8">
-					<Loader2 className="h-6 w-6 animate-spin text-orange-500" />
-				</div>
-			</div>
-		);
-	}
-
 	// Averages over zero workouts are just 0, so comparing them would show a misleading arrow.
 	const canCompareAverages =
 		previousStats !== null && previousStats.workoutCount > 0 && stats.workoutCount > 0;
@@ -39,6 +29,7 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				caption="Workouts"
 				icon={Dumbbell}
 				variant="primary"
+				isLoading={isLoading}
 				trend={previousStats ? getTrend(stats.workoutCount, previousStats.workoutCount) : undefined}
 			/>
 			<ProgressStatCard
@@ -49,6 +40,7 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				icon={Clock}
 				iconClassName="text-blue-500"
 				animationDelay={0.05}
+				isLoading={isLoading}
 				trend={
 					canCompareAverages
 						? getTrend(stats.avgWorkoutMinutes, previousStats.avgWorkoutMinutes)
@@ -63,6 +55,7 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				icon={Weight}
 				iconClassName="text-red-500"
 				animationDelay={0.1}
+				isLoading={isLoading}
 				trend={
 					canCompareAverages
 						? getTrend(stats.avgWorkoutVolume, previousStats.avgWorkoutVolume)
@@ -77,6 +70,7 @@ export function ProgressStatsGrid({ weekStart, weekEnd, periodAriaLabel }: Progr
 				icon={Timer}
 				iconClassName="text-green-500"
 				animationDelay={0.15}
+				isLoading={isLoading}
 				trend={
 					canCompareAverages
 						? getTrend(stats.avgRestSeconds, previousStats.avgRestSeconds)
