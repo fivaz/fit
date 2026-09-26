@@ -35,3 +35,30 @@ export async function scrollGently(page: Page, totalPx: number, steps = 4): Prom
 	// A real thumb lifts off; a parked mouse would keep hovering a chart and show its tooltip.
 	await page.mouse.move(0, 0);
 }
+
+/** How long the set-time button must be held before it turns into a time field (see TimeInput). */
+const LONG_PRESS_MS = 700;
+
+/**
+ * Logs a set at a chosen time instead of now: a long press on the set's time button opens a time
+ * field (a quick tap would stamp the current time), which takes "HH:mm".
+ */
+export async function setTimeByLongPress(page: Page, button: Locator, time: string): Promise<void> {
+	const box = await button.boundingBox();
+	if (!box) throw new Error("Set time button is not visible");
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.down();
+	await page.waitForTimeout(LONG_PRESS_MS);
+	await page.mouse.up();
+	const timeField = page.getByLabel("Set time input");
+	await timeField.fill(time);
+	// Leaving the field closes it and shows the time on the button again.
+	await timeField.blur();
+}
+
+/** Adds minutes to an "HH:mm" time, wrapping past midnight. */
+export function addMinutes(time: string, minutes: number): string {
+	const [hours, mins] = time.split(":").map(Number);
+	const total = (((hours * 60 + mins + minutes) % 1440) + 1440) % 1440;
+	return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}

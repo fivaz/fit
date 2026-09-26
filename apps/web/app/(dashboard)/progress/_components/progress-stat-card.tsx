@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { type LucideIcon, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { Loader2, type LucideIcon, Minus, TrendingDown, TrendingUp } from "lucide-react";
 
 import { type Trend } from "@/lib/progress/trend";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,8 @@ type ProgressStatCardProps = {
 	iconClassName?: string;
 	variant?: "primary" | "default";
 	animationDelay?: number;
+	/** Shows the card frame, icon and caption right away, with a spinner where the value will appear. */
+	isLoading?: boolean;
 	/** Direction of change versus the previous period; omitted when there is nothing to compare. */
 	trend?: Trend;
 };
@@ -35,6 +37,7 @@ export function ProgressStatCard({
 	iconClassName,
 	variant = "default",
 	animationDelay = 0,
+	isLoading = false,
 	trend,
 }: ProgressStatCardProps) {
 	const isPrimary = variant === "primary";
@@ -55,13 +58,30 @@ export function ProgressStatCard({
 		>
 			<Icon className={cn("mb-2 h-6 w-6", isPrimary ? "opacity-80" : iconClassName)} aria-hidden />
 			<div className="flex items-center gap-2">
-				<p
-					aria-label={valueLabel}
-					className={cn("text-3xl font-bold", !isPrimary && "text-gray-900 dark:text-white")}
-				>
-					{value}
-				</p>
-				{trend && TrendIcon && (
+				{isLoading ? (
+					// h-9 matches the value's line height, so the card doesn't change size when it loads.
+					<div
+						role="status"
+						aria-label={`Loading ${caption.toLowerCase()}`}
+						className="flex h-9 items-center"
+					>
+						<Loader2
+							className={cn(
+								"h-6 w-6 animate-spin",
+								isPrimary ? "text-white/80" : "text-orange-500",
+							)}
+							aria-hidden
+						/>
+					</div>
+				) : (
+					<p
+						aria-label={valueLabel}
+						className={cn("text-3xl font-bold", !isPrimary && "text-gray-900 dark:text-white")}
+					>
+						{value}
+					</p>
+				)}
+				{!isLoading && trend && TrendIcon && (
 					<TrendIcon
 						role="img"
 						aria-label={TREND_LABELS[trend]}

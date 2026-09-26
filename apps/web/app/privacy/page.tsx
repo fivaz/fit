@@ -68,12 +68,16 @@ export default function PrivacyPolicyPage() {
 							</li>
 							<li>
 								<span className="font-medium text-gray-900 dark:text-white">Diagnostic data:</span>{" "}
-								crash reports and error logs, collected automatically to help us fix bugs.
+								crash reports, error logs, and performance measurements (such as how long screens
+								take to load), collected automatically to help us fix bugs and keep the app fast. On
+								the website, a small share of sessions is also recorded as a replay of what appeared
+								on screen, to reproduce bugs. The iOS app doesn&apos;t record replays.
 							</li>
 						</ul>
 						<p>
-							If you choose to sign in with Google or GitHub (where available), we receive the name,
-							email address, and profile image associated with that account.
+							If you choose to sign in with Apple or Google, we receive the name and email address
+							associated with that account. With Apple, the email can be a private relay address if
+							you choose to hide yours; with Google, we also receive your profile image.
 						</p>
 					</Section>
 
@@ -99,10 +103,8 @@ export default function PrivacyPolicyPage() {
 						<p>We rely on a small number of third-party services to run {APP_NAME}:</p>
 						<ul className="list-disc space-y-1 pl-5">
 							<li>Cloud hosting and database providers, to store and serve your data.</li>
-							<li>Sentry, for crash and error reporting.</li>
-							<li>
-								Google and GitHub, only if you choose to sign in using one of those providers.
-							</li>
+							<li>Sentry, for crash, error, and performance reporting.</li>
+							<li>Apple and Google, only if you choose to sign in using one of those providers.</li>
 						</ul>
 						<p>These providers process data only as needed to deliver the service.</p>
 					</Section>

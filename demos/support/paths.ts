@@ -15,6 +15,26 @@ export const SAFE_AREA_INSETS = { top: 59, bottom: 34, left: 0, right: 0 };
  */
 export const VIDEO_SIZE = IPHONE_SCREEN;
 
+/**
+ * App Store screenshot sizes, each a real iPhone's screen in CSS px at 3x. App Store Connect asks for
+ * either display size depending on the account's setup, so both are captured.
+ * - 6.9": iPhone 16 Pro Max, 1320x2868 px
+ * - 6.5": iPhone 14 Pro Max, 1284x2778 px
+ */
+export const APP_STORE_SIZES = {
+	"6.9": { width: 440, height: 956 },
+	"6.5": { width: 428, height: 926 },
+} as const;
+export type AppStoreSize = keyof typeof APP_STORE_SIZES;
+export const APP_STORE_SCALE = 3;
+
+/** e.g. demo-output/screenshots/6.9in-1320x2868 */
+export function screenshotsDir(size: AppStoreSize): string {
+	const { width, height } = APP_STORE_SIZES[size];
+	const pixels = `${width * APP_STORE_SCALE}x${height * APP_STORE_SCALE}`;
+	return path.join(process.cwd(), "demo-output", "screenshots", `${size}in-${pixels}`);
+}
+
 export function rawClipPath(clipName: string): string {
 	return path.join(RAW_DIR, `${clipName}.webm`);
 }

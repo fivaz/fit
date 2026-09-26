@@ -3,6 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 import "dotenv/config";
 
 import {
+	APP_STORE_SCALE,
+	APP_STORE_SIZES,
+	type AppStoreSize,
 	DEMO_COLOR_SCHEME,
 	IPHONE_SCREEN,
 	STORAGE_STATE_FILE,
@@ -55,6 +58,19 @@ export default defineConfig({
 			// Matches the teardown file name, e.g. "demos/cleanup.teardown.ts".
 			testMatch: /cleanup\.teardown\.ts$/,
 		},
+		// One project per App Store display size, e.g. "screenshots-6.9"; the test reads its size back
+		// from the project name.
+		...(Object.keys(APP_STORE_SIZES) as AppStoreSize[]).map((size) => ({
+			name: `screenshots-${size}`,
+			// Matches App Store screenshot files, e.g. "demos/app-store.screenshots.ts".
+			testMatch: /\.screenshots\.ts$/,
+			dependencies: ["seed"],
+			use: {
+				storageState: STORAGE_STATE_FILE,
+				viewport: APP_STORE_SIZES[size],
+				deviceScaleFactor: APP_STORE_SCALE,
+			},
+		})),
 		{
 			name: "record",
 			// Matches clip files, e.g. "demos/flow-workout.demo.ts".

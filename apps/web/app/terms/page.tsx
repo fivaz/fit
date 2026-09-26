@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
+import { WebOnly, WebOrApp } from "@/components/platform/web-only";
 import { APP_NAME, ROUTES } from "@/lib/consts";
 
 export const metadata: Metadata = {
@@ -32,7 +33,7 @@ export default function TermsPage() {
 						<Logo className="size-6" />
 					</div>
 					<h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-						Terms &amp; Refund Policy
+						<WebOrApp web="Terms & Refund Policy" app="Terms" />
 					</h1>
 					<p className="text-xs text-gray-500 dark:text-gray-400">Last updated: {LAST_UPDATED}</p>
 				</div>
@@ -46,31 +47,34 @@ export default function TermsPage() {
 						</p>
 					</Section>
 
-					<Section title="Buying Credits">
-						<p>
-							Additional credits are sold as a one-time credit pack (currently 100 credits for CHF
-							2.00) through our payment provider, Stripe. Purchases are one-time payments, not
-							subscriptions, and are never renewed automatically. Credits are added to your account
-							after payment is confirmed and do not expire.
-						</p>
-						<p>
-							We never see or store your card details; payments are processed by Stripe. Credits
-							have no cash value and cannot be transferred or exchanged for money.
-						</p>
-					</Section>
+					{/* Credits are bought on the website only; the iOS app must not describe paying elsewhere. */}
+					<WebOnly>
+						<Section title="Buying Credits">
+							<p>
+								Additional credits are sold as a one-time credit pack (currently 100 credits for CHF
+								2.00) through our payment provider, Stripe. Purchases are one-time payments, not
+								subscriptions, and are never renewed automatically. Credits are added to your
+								account after payment is confirmed and do not expire.
+							</p>
+							<p>
+								We never see or store your card details; payments are processed by Stripe. Credits
+								have no cash value and cannot be transferred or exchanged for money.
+							</p>
+						</Section>
 
-					<Section title="Refunds">
-						<p>
-							If you have not used any credits from a pack, you can request a full refund within 14
-							days of purchase. Credits that have already been used to generate programs are not
-							refundable, since the generation has already been delivered. If a generation fails,
-							the credit is returned to your balance automatically.
-						</p>
-						<p>
-							To request a refund, email us at the address below with the email address of your
-							account. Approved refunds are returned to the original payment method.
-						</p>
-					</Section>
+						<Section title="Refunds">
+							<p>
+								If you have not used any credits from a pack, you can request a full refund within
+								14 days of purchase. Credits that have already been used to generate programs are
+								not refundable, since the generation has already been delivered. If a generation
+								fails, the credit is returned to your balance automatically.
+							</p>
+							<p>
+								To request a refund, email us at the address below with the email address of your
+								account. Approved refunds are returned to the original payment method.
+							</p>
+						</Section>
+					</WebOnly>
 
 					<Section title="Acceptable Use">
 						<p>
@@ -90,7 +94,11 @@ export default function TermsPage() {
 
 					<Section title="Contact Us">
 						<p>
-							Questions about these terms or a purchase? Email us at{" "}
+							<WebOrApp
+								web="Questions about these terms or a purchase?"
+								app="Questions about these terms?"
+							/>{" "}
+							Email us at{" "}
 							<a href={`mailto:${SUPPORT_EMAIL}`} className="underline underline-offset-4">
 								{SUPPORT_EMAIL}
 							</a>

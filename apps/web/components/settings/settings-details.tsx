@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 
 import { PaywallDialog } from "@/components/billing/paywall-dialog";
+import { WebOrApp } from "@/components/platform/web-only";
 import { DeleteAccountDrawer } from "@/components/settings/delete-account-drawer";
 import { MetricsForm } from "@/components/settings/metrics-form";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
@@ -237,7 +238,7 @@ export function SettingsDetailsInternal({
 							Privacy Policy
 						</Link>
 						<Link href={ROUTES.TERMS} className="underline underline-offset-4">
-							Terms &amp; Refunds
+							<WebOrApp web="Terms & Refunds" app="Terms" />
 						</Link>
 					</div>
 					<div className="opacity-30">
