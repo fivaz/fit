@@ -89,22 +89,6 @@ export default function AboutPage() {
 					</ul>
 				</section>
 
-				<section
-					aria-labelledby="pricing-heading"
-					className="mt-16 rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800"
-				>
-					<h2 id="pricing-heading" className="text-xl font-semibold text-gray-900 dark:text-white">
-						Pricing
-					</h2>
-					<p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-						The app is free to use. AI program generation runs on credits: every account starts with
-						10 free credits, and each generation uses 1 credit. When you need more, buy a one-time
-						pack of <span className="font-medium">100 credits for CHF 2.00</span>. There is no
-						subscription and nothing renews automatically. Payments are processed securely by
-						Stripe.
-					</p>
-				</section>
-
 				<footer className="mt-16 space-y-3 text-center text-sm text-gray-500 dark:text-gray-400">
 					<p>
 						Questions? Contact us at{" "}
