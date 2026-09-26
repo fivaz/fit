@@ -1,8 +1,9 @@
-import { betterAuth } from "better-auth";
+import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { bearer } from "better-auth/plugins";
 
 import { resolveApiPublicOrigin, resolveApiPublicUrl } from "@/api-origin";
+import { createAppleClientSecret } from "@/auth/apple-client-secret";
 import { mobileDevOriginFromEnv } from "@/dev-origins";
 import { prisma } from "@/prisma/client";
 
@@ -26,15 +27,52 @@ const trustedOriginsBase =
 
 const betterAuthPublicOrigin = resolveApiPublicOrigin();
 const mobileDevOrigin = mobileDevOriginFromEnv();
+
+// Apple's web flow returns to the callback with a cross-site `form_post`, so its origin must be trusted.
+const APPLE_ORIGIN = "https://appleid.apple.com";
+
 const trustedOrigins = [
 	...new Set([
 		...trustedOriginsBase,
 		...MOBILE_WEBVIEW_ORIGINS,
+		APPLE_ORIGIN,
 		"http://localhost:3000",
 		...(betterAuthPublicOrigin ? [betterAuthPublicOrigin] : []),
 		...(mobileDevOrigin ? [mobileDevOrigin] : []),
 	]),
 ];
+
+/**
+ * Providers are only registered when their credentials are present, so a missing
+ * secret disables that button's backend instead of crashing on `undefined!`.
+ */
+function buildSocialProviders(): BetterAuthOptions["socialProviders"] {
+	const providers: NonNullable<BetterAuthOptions["socialProviders"]> = {};
+
+	const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
+	if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+		providers.google = { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET };
+	}
+
+	const { APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY, APPLE_APP_BUNDLE_ID } =
+		process.env;
+	if (APPLE_CLIENT_ID && APPLE_TEAM_ID && APPLE_KEY_ID && APPLE_PRIVATE_KEY) {
+		providers.apple = {
+			clientId: APPLE_CLIENT_ID,
+			clientSecret: createAppleClientSecret({
+				teamId: APPLE_TEAM_ID,
+				keyId: APPLE_KEY_ID,
+				clientId: APPLE_CLIENT_ID,
+				privateKey: APPLE_PRIVATE_KEY,
+			}),
+			// The web flow's ID tokens carry the Services ID as `aud`; the native iOS sheet's carry the bundle ID.
+			appBundleIdentifier: APPLE_APP_BUNDLE_ID,
+			audience: APPLE_APP_BUNDLE_ID ? [APPLE_CLIENT_ID, APPLE_APP_BUNDLE_ID] : undefined,
+		};
+	}
+
+	return providers;
+}
 
 export const auth = betterAuth({
 	baseURL: resolveApiPublicUrl(),
@@ -67,14 +105,5 @@ export const auth = betterAuth({
 		},
 	},
 	plugins: [bearer()],
-	socialProviders: {
-		google: {
-			clientId: process.env.GOOGLE_CLIENT_ID!,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-		},
-		github: {
-			clientId: process.env.GITHUB_CLIENT_ID!,
-			clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-		},
-	},
+	socialProviders: buildSocialProviders(),
 });

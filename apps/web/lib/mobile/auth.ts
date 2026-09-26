@@ -1,12 +1,17 @@
 "use client";
 
-import { signIn, signUp } from "@/lib/auth-client";
+import { authClient, signIn, signUp } from "@/lib/auth-client";
 import { ROUTES } from "@/lib/consts";
 import {
 	consumeAuthTokenRememberMe,
 	persistMobileAuthToken,
 	setAuthTokenRememberMe,
 } from "@/lib/mobile/auth-token-store";
+import {
+	isNativeGoogleConfigured,
+	requestNativeSocialCredential,
+} from "@/lib/mobile/native-social-login";
+import { isNativeMobileRuntime } from "@/lib/mobile/runtime";
 
 export type MobileAuthHandlers = {
 	onResponse?: () => void;
@@ -72,4 +77,51 @@ export async function signUpWithEmailForMobile(params: {
 		callbackURL: ROUTES.HOME,
 		fetchOptions: mobileAuthFetchOptions(handlers),
 	});
+}
+
+export type SocialProvider = "apple" | "google";
+
+/** Providers the current runtime can sign in with (native Google also needs its iOS client ID). */
+export function getAvailableSocialProviders(): SocialProvider[] {
+	if (isNativeMobileRuntime() && !isNativeGoogleConfigured()) return ["apple"];
+	return ["apple", "google"];
+}
+
+/**
+ * Native: the OS sheet returns an ID token that Better Auth verifies directly, so no browser redirect
+ * (unreliable in WKWebView) is involved. Web: standard OAuth redirect back to this SPA.
+ * Resolves `true` when a native sign-in completed; on web the page navigates away instead.
+ */
+export async function signInWithSocialForMobile(params: {
+	provider: SocialProvider;
+	handlers?: MobileAuthHandlers;
+}): Promise<boolean> {
+	const { provider, handlers } = params;
+	setAuthTokenRememberMe(true);
+
+	if (isNativeMobileRuntime()) {
+		const { idToken, displayName } = await requestNativeSocialCredential(provider);
+		const result = await signIn.social({
+			provider,
+			idToken: { token: idToken },
+			callbackURL: ROUTES.HOME,
+			fetchOptions: mobileAuthFetchOptions(handlers),
+		});
+		if (result.error) return false;
+
+		// Apple's ID token carries no name, so Better Auth would fall back to the email as the display name.
+		if (provider === "apple" && displayName) {
+			await authClient.updateUser({ name: displayName });
+		}
+		return true;
+	}
+
+	// The API lives on another origin, so a relative callback would land on the API instead of this app.
+	await signIn.social({
+		provider,
+		callbackURL: `${window.location.origin}${ROUTES.HOME}`,
+		errorCallbackURL: `${window.location.origin}${ROUTES.LOGIN}`,
+		fetchOptions: { onError: (ctx) => handlers?.onError?.(ctx.error.message) },
+	});
+	return false;
 }

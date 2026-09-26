@@ -102,7 +102,7 @@ Set at minimum:
 If you want social login enabled locally, also set:
 
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
+- `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_APP_BUNDLE_ID` (Sign in with Apple)
 
 To enable **AI coach program generation** (Create Program → AI coach), set:
 
@@ -222,9 +222,9 @@ To load the app from a running dev server instead of the bundled `out/` files (u
 
 One named tunnel (`fit-dev`) exposes **two HTTPS origins** so the SPA and Nest stay separate (Safari blocks `https://` pages from calling `http://localhost`):
 
-| Hostname | Local service |
-| -------- | ------------- |
-| `dev.sfivaz.com` | Next (`:3000`) |
+| Hostname             | Local service  |
+| -------------------- | -------------- |
+| `dev.sfivaz.com`     | Next (`:3000`) |
 | `api-dev.sfivaz.com` | Nest (`:3001`) |
 
 Copy/symlink `config/cloudflared.dev.yml` to `~/.cloudflared/config.yml`. First-time DNS:
@@ -247,19 +247,19 @@ Native/Swift changes still require `ios:build` or `ios:build:deploy`. Quick `clo
 
 ### Static/mobile (Capacitor) environment
 
-| Variable                      | When                               | Purpose                                                                                                            |
-| ----------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `MOBILE_DEV_URL`              | Optional (tunnel / LAN webview)    | App origin: Capacitor live-reload URL (`CAPACITOR_SERVER_URL` fallback). Unset for local web.                        |
-| `API_BASE_URL`                | Web + Capacitor + Nest             | API origin. Fills `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_URL` when those are unset. |
-| `NEXT_PUBLIC_API_BASE_URL`    | Optional override                  | Client API base; defaults to `API_BASE_URL`.                                                                        |
-| `NEXT_PUBLIC_AUTH_BASE_URL`   | Optional override                  | Better Auth client base; defaults to `API_BASE_URL`.                                                                |
-| `BETTER_AUTH_URL`             | Optional override                  | Nest Better Auth public URL; defaults to `API_BASE_URL`.                                                            |
-| `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                           | Extra origins for Better Auth CSRF (comma-separated). Capacitor origins are built into the API.  |
-| `CORS_ALLOWED_ORIGINS`        | Optional                           | Extra allowed `Origin` values for Nest CORS.                                                     |
-| `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                           | `1` / `true` → extra `[FitClient:*]` logs.                                                       |
-| `CAPACITOR_SERVER_URL`        | Optional (live reload)             | When set, Capacitor loads this URL instead of `out/`; run `ios:sync` after changing.             |
-| `IOS_DEPLOY_DEVICE_ID`        | Optional (CLI deploy)              | Override iPhone UDID for `ios:build:deploy` / `ios:deploy`.                                                        |
-| `IOS_DEPLOY_REQUIRED`         | Optional (CLI deploy)              | `1` → fail deploy when no paired device is reachable; default skips install.                                       |
+| Variable                      | When                            | Purpose                                                                                                                |
+| ----------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `MOBILE_DEV_URL`              | Optional (tunnel / LAN webview) | App origin: Capacitor live-reload URL (`CAPACITOR_SERVER_URL` fallback). Unset for local web.                          |
+| `API_BASE_URL`                | Web + Capacitor + Nest          | API origin. Fills `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_AUTH_BASE_URL`, and `BETTER_AUTH_URL` when those are unset. |
+| `NEXT_PUBLIC_API_BASE_URL`    | Optional override               | Client API base; defaults to `API_BASE_URL`.                                                                           |
+| `NEXT_PUBLIC_AUTH_BASE_URL`   | Optional override               | Better Auth client base; defaults to `API_BASE_URL`.                                                                   |
+| `BETTER_AUTH_URL`             | Optional override               | Nest Better Auth public URL; defaults to `API_BASE_URL`.                                                               |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | Optional                        | Extra origins for Better Auth CSRF (comma-separated). Capacitor origins are built into the API.                        |
+| `CORS_ALLOWED_ORIGINS`        | Optional                        | Extra allowed `Origin` values for Nest CORS.                                                                           |
+| `NEXT_PUBLIC_CLIENT_DEBUG`    | Optional                        | `1` / `true` → extra `[FitClient:*]` logs.                                                                             |
+| `CAPACITOR_SERVER_URL`        | Optional (live reload)          | When set, Capacitor loads this URL instead of `out/`; run `ios:sync` after changing.                                   |
+| `IOS_DEPLOY_DEVICE_ID`        | Optional (CLI deploy)           | Override iPhone UDID for `ios:build:deploy` / `ios:deploy`.                                                            |
+| `IOS_DEPLOY_REQUIRED`         | Optional (CLI deploy)           | `1` → fail deploy when no paired device is reachable; default skips install.                                           |
 
 See `.env.example` for commented templates (hosted API, local Simulator, physical device, tunnel, CLI deploy).
 

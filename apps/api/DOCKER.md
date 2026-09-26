@@ -67,14 +67,14 @@ curl http://localhost:3001/api/health
 
 ### Optional
 
-| Variable                  | Description            | Default            |
-| ------------------------- | ---------------------- | ------------------ |
-| `API_PORT`                | Port to listen on      | `3001`             |
-| `NODE_ENV`                | Environment            | `production`       |
-| `CORS_ALLOWED_ORIGINS`    | Allowed CORS origins   | See `.env.example` |
-| `OPENAI_API_KEY`          | AI coach functionality | -                  |
-| `GOOGLE_CLIENT_ID/SECRET` | Social auth (Google)   | -                  |
-| `GITHUB_CLIENT_ID/SECRET` | Social auth (GitHub)   | -                  |
+| Variable                                                                                       | Description            | Default            |
+| ---------------------------------------------------------------------------------------------- | ---------------------- | ------------------ |
+| `API_PORT`                                                                                     | Port to listen on      | `3001`             |
+| `NODE_ENV`                                                                                     | Environment            | `production`       |
+| `CORS_ALLOWED_ORIGINS`                                                                         | Allowed CORS origins   | See `.env.example` |
+| `OPENAI_API_KEY`                                                                               | AI coach functionality | -                  |
+| `GOOGLE_CLIENT_ID/SECRET`                                                                      | Social auth (Google)   | -                  |
+| `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_APP_BUNDLE_ID` | Sign in with Apple     | -                  |
 
 See `.env.docker.example` for a complete template.
 
