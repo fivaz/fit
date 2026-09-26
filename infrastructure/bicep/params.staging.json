@@ -32,6 +32,9 @@
 		"enableCdnCustomDomain": {
 			"value": false
 		},
+		"apiBaseUrl": {
+			"value": "https://api-fit-staging.sfivaz.com"
+		},
 		"customDomainName": {
 			"value": "fit-staging.sfivaz.com"
 		},

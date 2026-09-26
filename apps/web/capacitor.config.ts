@@ -34,6 +34,15 @@ const config: CapacitorConfig = {
 		StatusBar: {
 			style: "DEFAULT",
 		},
+		SocialLogin: {
+			// Only bundle the SDKs we actually use (keeps the Facebook SDK and its privacy footprint out).
+			providers: {
+				google: true,
+				apple: true,
+				facebook: false,
+				twitter: false,
+			},
+		},
 	},
 };
 

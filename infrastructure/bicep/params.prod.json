@@ -29,6 +29,9 @@
 		"enableCdnCustomDomain": {
 			"value": false
 		},
+		"apiBaseUrl": {
+			"value": "https://api-fit.sfivaz.com"
+		},
 		"customDomainName": {
 			"value": "fit.sfivaz.com"
 		},

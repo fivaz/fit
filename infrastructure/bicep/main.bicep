@@ -75,6 +75,21 @@ param webAppUrl string = ''
 @description('Price ID of the one-time credit-pack Price, created in the Stripe Dashboard (test mode)')
 param stripeCreditPackPriceId string = ''
 
+@description('Google OAuth web client ID. A public identifier, so it is a plain env var; the client secret comes from Key Vault (GOOGLE-CLIENT-SECRET).')
+param googleClientId string = '9802974239-diuva1p8lq4jk2lu0u3aranp1jtlchl6.apps.googleusercontent.com'
+
+@description('Sign in with Apple Services ID (web flow). Public identifier; the private key comes from Key Vault (APPLE-PRIVATE-KEY).')
+param appleClientId string = 'com.fivaz.fittracker.web'
+
+@description('Apple Developer Team ID used to sign the Sign in with Apple client secret')
+param appleTeamId string = '57D29F8Q9G'
+
+@description('Key ID of the Sign in with Apple .p8 key')
+param appleKeyId string = 'K62FM85V5G'
+
+@description('iOS bundle ID, the audience of native Sign in with Apple ID tokens')
+param appleAppBundleId string = 'com.fivaz.fittracker'
+
 @description('Deploy Container Apps (set to false for initial infrastructure-only deployment)')
 param deployContainerApps bool = true
 
@@ -180,6 +195,11 @@ module containerApps './modules/container-apps.bicep' = if (deployContainerApps)
     corsAllowedOrigins: computedCorsOrigins
     webAppUrl: computedWebAppUrl
     stripeCreditPackPriceId: stripeCreditPackPriceId
+    googleClientId: googleClientId
+    appleClientId: appleClientId
+    appleTeamId: appleTeamId
+    appleKeyId: appleKeyId
+    appleAppBundleId: appleAppBundleId
     revisionSuffix: revisionSuffix
     imageTag: imageTag
     currentProductionRevisionName: currentProductionRevisionName

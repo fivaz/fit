@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Loader2 } from "lucide-react";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { deleteAccount } from "@/lib/auth-client";
+import { deleteAccount, hasPasswordAccount } from "@/lib/auth-client";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
 
@@ -29,7 +29,22 @@ type DeleteAccountDrawerProps = {
 export function DeleteAccountDrawer({ isOpen, onClose }: DeleteAccountDrawerProps) {
 	const [password, setPassword] = useState("");
 	const [isPending, setIsPending] = useState(false);
+	// Social-only accounts have no password to confirm with; default to asking for one until we know.
+	const [requiresPassword, setRequiresPassword] = useState(true);
 	const router = useRouter();
+
+	useEffect(() => {
+		if (!isOpen) return;
+		let isCurrent = true;
+		hasPasswordAccount()
+			.then((hasPassword) => {
+				if (isCurrent) setRequiresPassword(hasPassword);
+			})
+			.catch((error: unknown) => logError(error, "DeleteAccountDrawer#hasPasswordAccount"));
+		return () => {
+			isCurrent = false;
+		};
+	}, [isOpen]);
 
 	const handleClose = () => {
 		setPassword("");
@@ -40,9 +55,14 @@ export function DeleteAccountDrawer({ isOpen, onClose }: DeleteAccountDrawerProp
 		e.preventDefault();
 		setIsPending(true);
 		try {
-			const result = await deleteAccount({ password });
+			const result = await deleteAccount(requiresPassword ? { password } : {});
 			if (result.error) {
-				toast.error(result.error.message ?? "Incorrect password. Please try again.");
+				toast.error(
+					result.error.message ??
+						(requiresPassword
+							? "Incorrect password. Please try again."
+							: "Please sign in again, then retry deleting your account."),
+				);
 				return;
 			}
 			toast.success("Your account has been deleted.");
@@ -67,24 +87,26 @@ export function DeleteAccountDrawer({ isOpen, onClose }: DeleteAccountDrawerProp
 				</DrawerHeader>
 
 				<form onSubmit={handleDelete} className="space-y-4 pt-4">
-					<div>
-						<Label
-							htmlFor="delete-account-password"
-							className="text-xs font-semibold text-gray-400 uppercase"
-						>
-							Confirm Password
-						</Label>
-						<Input
-							id="delete-account-password"
-							type="password"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							placeholder="••••••••"
-							required
-							autoComplete="current-password"
-							className="mt-1.5 h-12 border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
-						/>
-					</div>
+					{requiresPassword ? (
+						<div>
+							<Label
+								htmlFor="delete-account-password"
+								className="text-xs font-semibold text-gray-400 uppercase"
+							>
+								Confirm Password
+							</Label>
+							<Input
+								id="delete-account-password"
+								type="password"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								placeholder="••••••••"
+								required
+								autoComplete="current-password"
+								className="mt-1.5 h-12 border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+							/>
+						</div>
+					) : null}
 
 					<div className="flex gap-3 pt-4">
 						<DrawerClose asChild>
@@ -100,7 +122,7 @@ export function DeleteAccountDrawer({ isOpen, onClose }: DeleteAccountDrawerProp
 						<Button
 							type="submit"
 							variant="destructive"
-							disabled={isPending || !password}
+							disabled={isPending || (requiresPassword && !password)}
 							className="h-12 flex-1 rounded-xl font-bold"
 						>
 							{isPending ? <Loader2 className="size-4 animate-spin" /> : "Delete Account"}

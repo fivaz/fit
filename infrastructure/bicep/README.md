@@ -80,8 +80,10 @@ az keyvault secret set \
 
 # Optional: AI and social auth
 az keyvault secret set --vault-name kv-fittracker-prod --name "OPENAI-API-KEY" --value "$OPENAI_API_KEY"
-az keyvault secret set --vault-name kv-fittracker-prod --name "GOOGLE-CLIENT-ID" --value "$GOOGLE_CLIENT_ID"
 az keyvault secret set --vault-name kv-fittracker-prod --name "GOOGLE-CLIENT-SECRET" --value "$GOOGLE_CLIENT_SECRET"
+az keyvault secret set --vault-name kv-fittracker-prod --name "APPLE-PRIVATE-KEY" --value "$APPLE_PRIVATE_KEY"
+# The Google client ID and the Apple Services ID / team ID / key ID / bundle ID are public identifiers:
+# they are Bicep parameters in main.bicep (googleClientId, appleClientId, ...), not Key Vault secrets.
 ```
 
 ## Module Architecture

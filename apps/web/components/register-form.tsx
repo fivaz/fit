@@ -7,10 +7,8 @@ import { useRouter } from "next/navigation";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
-// Social auth (Google/GitHub) is temporarily disabled; re-enable alongside Sign in with Apple.
-// import { GithubIcon } from "@/components/icons/github-icon";
-// import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/logo";
+import { SocialAuthButtons } from "@/components/social-auth-buttons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -19,7 +17,6 @@ import {
 	scrollFieldIntoView,
 	scrollPrimaryActionIntoView,
 } from "@/hooks/use-software-keyboard-scroll";
-// import { signIn } from "@/lib/auth-client";
 import { APP_NAME, ROUTES } from "@/lib/consts";
 import { signUpWithEmailForMobile } from "@/lib/mobile/auth";
 import { cn } from "@/lib/utils";
@@ -57,20 +54,6 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 			reader.readAsDataURL(file);
 		}
 	};
-
-	// const handleSocialLogin = async (provider: "google" | "github") => {
-	// 	setSocialLoading(provider);
-	// 	try {
-	// 		await signIn.social({
-	// 			provider,
-	// 			callbackURL: ROUTES.HOME,
-	// 		});
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 		toast.error(`${provider} sign up failed.`);
-	// 		setSocialLoading(null);
-	// 	}
-	// };
 
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
@@ -239,40 +222,7 @@ export function RegisterForm({ className, ...props }: ComponentProps<"div">) {
 						.
 					</FieldDescription>
 
-					{/* Social auth (Google/GitHub) temporarily disabled; re-enable alongside Sign in with Apple.
-					<FieldSeparator>Or sign up with</FieldSeparator>
-
-					<Field className="grid gap-4 sm:grid-cols-2">
-						<Button
-							variant="outline"
-							type="button"
-							disabled={loading || !!socialLoading}
-							onClick={() => handleSocialLogin("github")}
-						>
-							{socialLoading === "github" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<>
-									<GithubIcon className="size-5" /> GitHub
-								</>
-							)}
-						</Button>
-						<Button
-							variant="outline"
-							type="button"
-							disabled={loading || !!socialLoading}
-							onClick={() => handleSocialLogin("google")}
-						>
-							{socialLoading === "google" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<>
-									<GoogleIcon className="size-5" /> Google
-								</>
-							)}
-						</Button>
-					</Field>
-					*/}
+					<SocialAuthButtons separatorLabel="Or sign up with" disabled={loading} />
 				</FieldGroup>
 			</form>
 		</div>
