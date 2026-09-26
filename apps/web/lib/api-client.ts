@@ -1,3 +1,4 @@
+import { trackApiRequest } from "@/lib/api-status";
 import { resolvePublicApiBaseUrl } from "@/lib/env/mobile-dev-url";
 import { getMobileAuthTokenSync, hydrateMobileAuthToken } from "@/lib/mobile/auth-token-store";
 import { clientDebug, isClientDebugEnabled } from "@/lib/mobile/client-debug";
@@ -50,12 +51,14 @@ export async function apiFetch<T>(input: string, init: JsonRequestInit = {}): Pr
 		});
 	}
 
-	const response = await fetch(url, {
-		...init,
-		headers,
-		body: hasBody ? JSON.stringify(init.body) : undefined,
-		keepalive: init.keepalive ?? (method !== "GET" && method !== "HEAD"),
-	});
+	const response = await trackApiRequest(() =>
+		fetch(url, {
+			...init,
+			headers,
+			body: hasBody ? JSON.stringify(init.body) : undefined,
+			keepalive: init.keepalive ?? (method !== "GET" && method !== "HEAD"),
+		}),
+	);
 
 	if (!response.ok) {
 		const errText = await getErrorMessage(response);
@@ -105,5 +108,7 @@ async function getErrorMessage(response: Response) {
 export function warmUpApi(): void {
 	// Without a configured API origin, relative URLs would hit the web server, not the API.
 	if (!resolvePublicApiBaseUrl()) return;
-	void fetch(resolveApiUrl("/api/health"), { cache: "no-store" }).catch(() => undefined);
+	void trackApiRequest(() => fetch(resolveApiUrl("/api/health"), { cache: "no-store" })).catch(
+		() => undefined,
+	);
 }

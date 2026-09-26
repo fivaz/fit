@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { ApiStatusDot } from "@/components/api-status-dot";
 import { ApiWarmUp } from "@/components/api-warm-up";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -95,6 +96,7 @@ export default function RootLayout({
 					disableTransitionOnChange
 				>
 					<CapacitorStatusBarSync />
+					<ApiStatusDot />
 					<ConfirmProvider>
 						<div className="mx-auto min-h-svh max-w-md border bg-gray-50 dark:bg-gray-900">
 							{children}
