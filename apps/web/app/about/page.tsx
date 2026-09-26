@@ -102,7 +102,7 @@ export default function AboutPage() {
 							Privacy Policy
 						</Link>
 						<Link href={ROUTES.TERMS} className="underline underline-offset-4">
-							Terms &amp; Refunds
+							Terms
 						</Link>
 					</p>
 				</footer>
