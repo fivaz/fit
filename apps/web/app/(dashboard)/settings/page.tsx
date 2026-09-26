@@ -8,18 +8,29 @@ import { toast } from "sonner";
 
 import { SettingsDetails } from "@/components/settings/settings-details";
 import { useBillingStatus } from "@/hooks/billing/use-billing-status";
+import { useOfflineCache } from "@/hooks/offline/use-offline-cache";
 import { getBodyMetrics } from "@/lib/body-metrics/api";
 import { BodyMetricsUI, getEmptyBodyMetrics } from "@/lib/body-metrics/type";
 import { ROUTES } from "@/lib/consts";
+import type { OfflineSnapshot } from "@/lib/offline/data-adapters";
+
+const EMPTY_BODY_METRICS = getEmptyBodyMetrics();
+
+function selectCachedBodyMetrics(snapshot: OfflineSnapshot): BodyMetricsUI {
+	return snapshot.bodyMetrics ?? EMPTY_BODY_METRICS;
+}
 
 export default function SettingsPage() {
-	const [bodyMetrics, setBodyMetrics] = useState<BodyMetricsUI>(getEmptyBodyMetrics());
+	// Saved values show right away; the API's answer replaces them once it arrives.
+	const cachedBodyMetrics = useOfflineCache(selectCachedBodyMetrics, EMPTY_BODY_METRICS);
+	const [loadedBodyMetrics, setLoadedBodyMetrics] = useState<BodyMetricsUI | null>(null);
+	const bodyMetrics = loadedBodyMetrics ?? cachedBodyMetrics;
 	const billing = useBillingStatus();
 
 	useEffect(() => {
 		void getBodyMetrics().then((metrics) => {
 			if (!metrics) return;
-			setBodyMetrics(metrics);
+			setLoadedBodyMetrics(metrics);
 		});
 	}, []);
 

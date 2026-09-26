@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -8,7 +8,9 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { WorkoutViewDetail } from "@/components/workout/workout-view-detail";
+import { useOfflineCache } from "@/hooks/offline/use-offline-cache";
 import { ROUTES } from "@/lib/consts";
+import type { OfflineSnapshot } from "@/lib/offline/data-adapters";
 import { getWorkoutById } from "@/lib/workout/api";
 import { readWorkoutSelectedId } from "@/lib/workout/navigation";
 import { WorkoutWithMappedSets } from "@/lib/workout/type";
@@ -32,7 +34,16 @@ function WorkoutViewPageContent() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const workoutId = readWorkoutSelectedId(pathname, searchParams);
-	const [workout, setWorkout] = useState<WorkoutWithMappedSets | null | undefined>(undefined);
+	const [loadedWorkout, setWorkout] = useState<WorkoutWithMappedSets | null | undefined>(undefined);
+	const selectCachedWorkout = useCallback(
+		(snapshot: OfflineSnapshot) =>
+			workoutId ? (snapshot.workoutsById[workoutId] ?? undefined) : undefined,
+		[workoutId],
+	);
+	// A saved copy of a finished workout shows right away; the API's answer replaces it.
+	const cachedWorkout = useOfflineCache(selectCachedWorkout, undefined);
+	const workout =
+		loadedWorkout === undefined && cachedWorkout?.endDate ? cachedWorkout : loadedWorkout;
 
 	useEffect(() => {
 		if (!workoutId) {

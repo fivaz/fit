@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -22,7 +22,6 @@ import { useConfirm } from "@/hooks/confirm/use-confirm";
 import { ExercisesProvider } from "@/hooks/exercise/store";
 import { ProgramsProvider, useProgramMutations, useProgramsStore } from "@/hooks/program/store";
 import { ROUTES } from "@/lib/consts";
-import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { deleteProgram } from "@/lib/program/api";
 import { ProgramWithExercises } from "@/lib/program/type";
 import { programProgressHref } from "@/lib/programs/navigation";
@@ -33,11 +32,6 @@ type ProgramDetailProps = {
 };
 
 export function ProgramDetails({ program, onClose }: ProgramDetailProps) {
-	useEffect(() => {
-		offlineDataAdapters.setProgramsLocal([program]);
-		offlineDataAdapters.setExercisesLocal(program.exercises);
-	}, [program]);
-
 	return (
 		<ProgramsProvider initialItems={[program]}>
 			<ProgramDetailsInternal onClose={onClose} />

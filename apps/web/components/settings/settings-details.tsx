@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -30,7 +30,6 @@ import { authClient, signOut } from "@/lib/auth-client";
 import { BodyMetricsUI } from "@/lib/body-metrics/type";
 import { ROUTES } from "@/lib/consts";
 import { logError } from "@/lib/logger";
-import { offlineDataAdapters } from "@/lib/offline/data-adapters";
 import { cn } from "@/lib/utils";
 
 type SettingsDetailProps = {
@@ -39,12 +38,12 @@ type SettingsDetailProps = {
 };
 
 export function SettingsDetails({ bodyMetrics, billing }: SettingsDetailProps) {
-	useEffect(() => {
-		offlineDataAdapters.setBodyMetricsLocal(bodyMetrics);
-	}, [bodyMetrics]);
+	// The provider resets to `initialItems` whenever that array changes, so it must only change
+	// when the metrics do: a new array on every render would wipe an edit that was just saved.
+	const initialItems = useMemo(() => [bodyMetrics], [bodyMetrics]);
 
 	return (
-		<BodyMetricsProvider initialItems={[bodyMetrics]}>
+		<BodyMetricsProvider initialItems={initialItems}>
 			<SettingsDetailsInternal billing={billing} />
 		</BodyMetricsProvider>
 	);
