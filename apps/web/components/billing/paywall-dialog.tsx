@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useBillingStatus } from "@/hooks/billing/use-billing-status";
 import { createCheckoutSession } from "@/lib/billing/api";
+import { isNativeMobileRuntime } from "@/lib/mobile/runtime";
 
 type PaywallDialogProps = {
 	open: boolean;
@@ -39,6 +40,36 @@ export function PaywallDialog({ open, onOpenChange }: PaywallDialogProps) {
 	};
 
 	const pack = status?.pack;
+
+	// Apple requires In-App Purchase for credits, which the iOS app doesn't have yet. Its rules also
+	// forbid pointing users to another way to pay (the website), so the message only states that
+	// buying isn't available here. Credits bought elsewhere still work in the app.
+	if (isNativeMobileRuntime()) {
+		const credits = status?.credits;
+		return (
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<SparklesIcon className="text-primary size-5" aria-hidden />
+							{credits === 0 ? "Out of credits" : "AI credits"}
+						</DialogTitle>
+						<DialogDescription>
+							Buying credits isn&apos;t available in the iOS app yet.
+							{credits === undefined
+								? null
+								: ` You have ${credits} ${credits === 1 ? "credit" : "credits"} left.`}
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button type="button" className="w-full" onClick={() => onOpenChange(false)}>
+							OK
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		);
+	}
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
