@@ -44,7 +44,12 @@ export function HomeWelcomeHero() {
 						aria-label="Loading name"
 					/>
 				) : (
-					<h1 className="text-3xl font-bold text-gray-900 dark:text-white">{greetingName}</h1>
+					<h1
+						className="truncate text-3xl font-bold text-gray-900 dark:text-white"
+						title={greetingName}
+					>
+						{greetingName}
+					</h1>
 				)}
 			</motion.div>
 		</div>
