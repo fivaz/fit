@@ -11,6 +11,7 @@ import { auth } from "@/auth/auth";
 import { STRIPE_WEBHOOK_PATH } from "@/billing/billing-webhook.controller";
 import { corsOriginDelegate } from "@/cors";
 import { ApiExceptionFilter } from "@/exception.filter";
+import { warmUpDatabase } from "@/prisma/warm-up";
 
 const PORT = Number(process.env.API_PORT ?? "3001");
 
@@ -22,6 +23,9 @@ async function bootstrap() {
 			sendDefaultPii: true,
 		});
 	}
+
+	// Not awaited: the database resumes while Nest sets up, instead of during the first request.
+	void warmUpDatabase();
 
 	const app = await NestFactory.create(AppModule, { bodyParser: false });
 	const expressApp = app.getHttpAdapter().getInstance();

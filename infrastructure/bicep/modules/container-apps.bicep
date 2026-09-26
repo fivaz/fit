@@ -303,16 +303,18 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               timeoutSeconds: 3
             }
             {
+              // Traffic (including a request waiting on a scale-from-zero start) only reaches the
+              // replica once this passes, so check early and often: the API is up in about a second.
               type: 'Readiness'
               httpGet: {
                 path: '/api/health'
                 port: 3001
                 scheme: 'HTTP'
               }
-              initialDelaySeconds: 5
-              periodSeconds: 5
+              initialDelaySeconds: 1
+              periodSeconds: 2
               failureThreshold: 3
-              timeoutSeconds: 3
+              timeoutSeconds: 2
             }
           ]
         }

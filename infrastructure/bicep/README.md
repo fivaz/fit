@@ -41,7 +41,7 @@ This Bicep configuration deploys a complete Azure infrastructure optimized for c
 
 ```bash
 az group create \
-  --name rg-fittracker-prod \
+  --name rg-fit-prod \
   --location northeurope \
   --tags Project="Fit Tracker" Environment="Production"
 ```
@@ -51,7 +51,7 @@ az group create \
 ```bash
 # From /infrastructure/bicep directory
 az deployment group create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json
 ```
@@ -69,19 +69,19 @@ BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 
 # Update Key Vault secrets
 az keyvault secret set \
-  --vault-name kv-fittracker-prod \
+  --vault-name kv-fit-prod \
   --name "DATABASE-URL" \
   --value "$DATABASE_URL"
 
 az keyvault secret set \
-  --vault-name kv-fittracker-prod \
+  --vault-name kv-fit-prod \
   --name "BETTER-AUTH-SECRET" \
   --value "$BETTER_AUTH_SECRET"
 
 # Optional: AI and social auth
-az keyvault secret set --vault-name kv-fittracker-prod --name "OPENAI-API-KEY" --value "$OPENAI_API_KEY"
-az keyvault secret set --vault-name kv-fittracker-prod --name "GOOGLE-CLIENT-SECRET" --value "$GOOGLE_CLIENT_SECRET"
-az keyvault secret set --vault-name kv-fittracker-prod --name "APPLE-PRIVATE-KEY" --value "$APPLE_PRIVATE_KEY"
+az keyvault secret set --vault-name kv-fit-prod --name "OPENAI-API-KEY" --value "$OPENAI_API_KEY"
+az keyvault secret set --vault-name kv-fit-prod --name "GOOGLE-CLIENT-SECRET" --value "$GOOGLE_CLIENT_SECRET"
+az keyvault secret set --vault-name kv-fit-prod --name "APPLE-PRIVATE-KEY" --value "$APPLE_PRIVATE_KEY"
 # The Google client ID and the Apple Services ID / team ID / key ID / bundle ID are public identifiers:
 # they are Bicep parameters in main.bicep (googleClientId, appleClientId, ...), not Key Vault secrets.
 ```
@@ -107,7 +107,7 @@ main.bicep                       # Orchestrator (entry point)
 | ------------- | ------------------------- | ----------------------------------------------- |
 | `environment` | Environment name          | `prod`, `staging`, `dev`                        |
 | `location`    | Azure region              | `westeurope`, `northeurope`, `switzerlandnorth` |
-| `projectName` | Project name (3-10 chars) | `fittracker`                                    |
+| `projectName` | Project name (3-10 chars) | `fit`                                           |
 
 ### Scale-to-Zero Configuration
 
@@ -184,7 +184,7 @@ If a dev Key Vault was created _before_ this setting existed, it may still have 
 ./deploy.sh dev northeurope random
 ```
 
-This creates a fully separate `rg-fittracker-dev-<suffix>` resource group that won't touch your main dev stack.
+This creates a fully separate `rg-fit-dev-<suffix>` resource group that won't touch your main dev stack.
 
 ## Deployment Commands
 
@@ -192,7 +192,7 @@ This creates a fully separate `rg-fittracker-dev-<suffix>` resource group that w
 
 ```bash
 az deployment group create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json
 ```
@@ -201,11 +201,11 @@ az deployment group create \
 
 ```bash
 # Create dev resource group
-az group create --name rg-fittracker-dev --location northeurope
+az group create --name rg-fit-dev --location northeurope
 
 # Deploy with dev parameters
 az deployment group create \
-  --resource-group rg-fittracker-dev \
+  --resource-group rg-fit-dev \
   --template-file main.bicep \
   --parameters environment=dev containerAppMinReplicas=0
 ```
@@ -214,7 +214,7 @@ az deployment group create \
 
 ```bash
 az deployment group what-if \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json
 ```
@@ -223,7 +223,7 @@ az deployment group what-if \
 
 ```bash
 az deployment group validate \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --template-file main.bicep \
   --parameters params.prod.json
 ```
@@ -241,22 +241,22 @@ See "Update Secrets in Key Vault" section above.
 docker build -t fit-api:latest -f apps/api/Dockerfile .
 
 # Login to ACR
-az acr login --name acrfittrackerprod
+az acr login --name acrfitprod
 
 # Tag for ACR
-docker tag fit-api:latest acrfittrackerprod.azurecr.io/fit-api:latest
+docker tag fit-api:latest acrfitprod.azurecr.io/fit-api:latest
 
 # Push
-docker push acrfittrackerprod.azurecr.io/fit-api:latest
+docker push acrfitprod.azurecr.io/fit-api:latest
 ```
 
 ### 3. Update Container App Image
 
 ```bash
 az containerapp update \
-  --name ca-fittracker-api-prod \
-  --resource-group rg-fittracker-prod \
-  --image acrfittrackerprod.azurecr.io/fit-api:latest
+  --name ca-fit-api-prod \
+  --resource-group rg-fit-prod \
+  --image acrfitprod.azurecr.io/fit-api:latest
 ```
 
 ### 4. Upload Static Website
@@ -267,7 +267,7 @@ pnpm run build:static
 
 # Upload to Storage
 az storage blob upload-batch \
-  --account-name stfittrackerprod \
+  --account-name stfitprod \
   --auth-mode key \
   --destination '$web' \
   --source ./apps/web/out \
@@ -279,8 +279,8 @@ az storage blob upload-batch \
 ```bash
 # Get Container App URL
 az containerapp show \
-  --name ca-fittracker-api-prod \
-  --resource-group rg-fittracker-prod \
+  --name ca-fit-api-prod \
+  --resource-group rg-fit-prod \
   --query properties.configuration.ingress.fqdn \
   --output tsv
 
@@ -289,9 +289,9 @@ curl https://<container-app-fqdn>/api/health
 
 # Get CDN URL
 az cdn endpoint show \
-  --profile-name cdn-fittracker-prod \
-  --name fittracker-prod \
-  --resource-group rg-fittracker-prod \
+  --profile-name cdn-fit-prod \
+  --name fit-prod \
+  --resource-group rg-fit-prod \
   --query hostName \
   --output tsv
 ```
@@ -303,7 +303,7 @@ az cdn endpoint show \
 ```bash
 # Set budget alert at $50/month
 az consumption budget create \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --budget-name monthly-budget \
   --amount 50 \
   --time-grain Monthly \
@@ -321,7 +321,7 @@ az consumption budget create \
 
 ```bash
 az consumption usage list \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --start-date 2024-01-01 \
   --end-date 2024-01-31
 ```
@@ -333,8 +333,8 @@ az consumption usage list \
 ```bash
 # Get App Insights connection string
 az monitor app-insights component show \
-  --app appi-fittracker-prod \
-  --resource-group rg-fittracker-prod \
+  --app appi-fit-prod \
+  --resource-group rg-fit-prod \
   --query connectionString \
   --output tsv
 ```
@@ -344,14 +344,14 @@ az monitor app-insights component show \
 ```bash
 # Recent API requests
 az monitor app-insights query \
-  --app appi-fittracker-prod \
-  --resource-group rg-fittracker-prod \
+  --app appi-fit-prod \
+  --resource-group rg-fit-prod \
   --analytics-query "requests | top 10 by timestamp desc"
 
 # Error rate
 az monitor app-insights query \
-  --app appi-fittracker-prod \
-  --resource-group rg-fittracker-prod \
+  --app appi-fit-prod \
+  --resource-group rg-fit-prod \
   --analytics-query "requests | where success == false | summarize count() by bin(timestamp, 1h)"
 ```
 
@@ -362,8 +362,8 @@ az monitor app-insights query \
 ```bash
 # Scale to specific replica count
 az containerapp update \
-  --name ca-fittracker-api-prod \
-  --resource-group rg-fittracker-prod \
+  --name ca-fit-api-prod \
+  --resource-group rg-fit-prod \
   --min-replicas 1 \
   --max-replicas 5
 ```
@@ -373,8 +373,8 @@ az containerapp update \
 ```bash
 # Check current replicas
 az containerapp replica list \
-  --name ca-fittracker-api-prod \
-  --resource-group rg-fittracker-prod \
+  --name ca-fit-api-prod \
+  --resource-group rg-fit-prod \
   --query "[].name"
 
 # After 5+ minutes of no traffic, should return empty array []
@@ -385,7 +385,7 @@ az containerapp replica list \
 ### Delete Resource Group (Everything)
 
 ```bash
-az group delete --name rg-fittracker-prod --yes --no-wait
+az group delete --name rg-fit-prod --yes --no-wait
 ```
 
 ### Delete Specific Resources
@@ -393,14 +393,14 @@ az group delete --name rg-fittracker-prod --yes --no-wait
 ```bash
 # Delete Container App only
 az containerapp delete \
-  --name ca-fittracker-api-prod \
-  --resource-group rg-fittracker-prod \
+  --name ca-fit-api-prod \
+  --resource-group rg-fit-prod \
   --yes
 
 # Delete Storage Account
 az storage account delete \
-  --name stfittrackerprod \
-  --resource-group rg-fittracker-prod \
+  --name stfitprod \
+  --resource-group rg-fit-prod \
   --yes
 ```
 
@@ -411,14 +411,14 @@ az storage account delete \
 ```bash
 # View logs
 az containerapp logs show \
-  --name ca-fittracker-api-prod \
-  --resource-group rg-fittracker-prod \
+  --name ca-fit-api-prod \
+  --resource-group rg-fit-prod \
   --follow
 
 # Check revision status
 az containerapp revision list \
-  --name ca-fittracker-api-prod \
-  --resource-group rg-fittracker-prod \
+  --name ca-fit-api-prod \
+  --resource-group rg-fit-prod \
   --query "[].{Name:name, Active:properties.active, Health:properties.healthState}"
 ```
 
@@ -428,7 +428,7 @@ az containerapp revision list \
 # Verify managed identity has access
 az role assignment list \
   --assignee <container-app-principal-id> \
-  --scope /subscriptions/<sub-id>/resourceGroups/rg-fittracker-prod/providers/Microsoft.KeyVault/vaults/kv-fittracker-prod
+  --scope /subscriptions/<sub-id>/resourceGroups/rg-fit-prod/providers/Microsoft.KeyVault/vaults/kv-fit-prod
 ```
 
 ### Deployment Failed
@@ -436,7 +436,7 @@ az role assignment list \
 ```bash
 # View deployment logs
 az deployment group show \
-  --resource-group rg-fittracker-prod \
+  --resource-group rg-fit-prod \
   --name monitoring-deployment \
   --query properties.error
 

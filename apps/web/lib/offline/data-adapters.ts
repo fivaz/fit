@@ -22,6 +22,8 @@ type PendingOperation = {
 type OfflineStore = {
 	programs: ProgramUI[];
 	programGroups: ProgramGroupUI[];
+	/** Last full program (with its exercises) fetched per id — the offline fallback for `getProgramById`. */
+	programDetailsById: Record<string, ProgramWithExercises>;
 	exercises: ExerciseUI[];
 	bodyMetrics: BodyMetricsUI | null;
 	workoutSetsByWorkoutId: Record<string, WorkoutSetMap>;
@@ -37,6 +39,7 @@ const OFFLINE_STORE_KEY = "fit:offline-store:v1";
 const emptyStore: OfflineStore = {
 	programs: [],
 	programGroups: [],
+	programDetailsById: {},
 	exercises: [],
 	bodyMetrics: null,
 	workoutSetsByWorkoutId: {},
@@ -71,17 +74,25 @@ function isBrowser() {
 	return typeof window !== "undefined";
 }
 
+/** The last parsed store and the raw JSON it came from, so unchanged storage isn't re-parsed. */
+let parsedStore: { raw: string; store: OfflineStore } | null = null;
+const storeListeners = new Set<() => void>();
+
 function readStore(): OfflineStore {
 	if (!isOfflineEnabled() || !isBrowser()) return emptyStore;
 
 	try {
 		const raw = window.localStorage.getItem(OFFLINE_STORE_KEY);
 		if (!raw) return emptyStore;
+		// Same object for the same JSON: screens subscribed through `getOfflineSnapshot` compare
+		// snapshots by reference and would re-render forever on a fresh parse each time.
+		if (parsedStore?.raw === raw) return parsedStore.store;
 		const parsed = JSON.parse(raw) as Partial<OfflineStore>;
 
-		return {
+		const store: OfflineStore = {
 			programs: parsed.programs ?? [],
 			programGroups: parsed.programGroups ?? [],
+			programDetailsById: parsed.programDetailsById ?? {},
 			exercises: parsed.exercises ?? [],
 			bodyMetrics: parsed.bodyMetrics ?? null,
 			workoutSetsByWorkoutId: parsed.workoutSetsByWorkoutId ?? {},
@@ -89,6 +100,8 @@ function readStore(): OfflineStore {
 			activeWorkoutId: parsed.activeWorkoutId ?? null,
 			pendingOperations: parsed.pendingOperations ?? [],
 		};
+		parsedStore = { raw, store };
+		return store;
 	} catch {
 		return emptyStore;
 	}
@@ -96,7 +109,28 @@ function readStore(): OfflineStore {
 
 function writeStore(store: OfflineStore) {
 	if (!isOfflineEnabled() || !isBrowser()) return;
-	window.localStorage.setItem(OFFLINE_STORE_KEY, JSON.stringify(store));
+	const raw = JSON.stringify(store);
+	window.localStorage.setItem(OFFLINE_STORE_KEY, raw);
+	parsedStore = { raw, store };
+	for (const listener of storeListeners) listener();
+}
+
+/** Read-only view of the device cache, for screens to show saved data before the API answers. */
+export type OfflineSnapshot = Pick<
+	OfflineStore,
+	"programs" | "programGroups" | "programDetailsById" | "exercises" | "bodyMetrics" | "workoutsById"
+>;
+
+/** The current cache; the same object until something is written. Empty when offline mode is off. */
+export function getOfflineSnapshot(): OfflineSnapshot {
+	return readStore();
+}
+
+export function subscribeToOfflineStore(listener: () => void): () => void {
+	storeListeners.add(listener);
+	return () => {
+		storeListeners.delete(listener);
+	};
 }
 
 function updateStore(update: (store: OfflineStore) => OfflineStore) {
@@ -170,6 +204,17 @@ function upsertById<T extends { id: string }>(items: T[], item: T): T[] {
 	return next;
 }
 
+/** Upserts every item: a partial list (e.g. one program's exercises) must not replace the whole cache. */
+function upsertAllById<T extends { id: string }>(items: T[], updates: T[]): T[] {
+	return updates.reduce(upsertById, items);
+}
+
+function withoutKeys<T>(record: Record<string, T>, keys: string[]): Record<string, T> {
+	const next = { ...record };
+	for (const key of keys) delete next[key];
+	return next;
+}
+
 function removeById<T extends { id: string }>(items: T[], id: string): T[] {
 	return items.filter((item) => item.id !== id);
 }
@@ -229,21 +274,19 @@ export const offlineDataAdapters = {
 		await flushPendingOperations();
 		try {
 			const program = await apiFetch<ProgramWithExercises>(`/api/programs/${programId}`);
+			const { exercises, ...programFields } = program;
 			updateStore((store) => ({
 				...store,
-				programs: upsertById(store.programs, {
-					id: program.id,
-					name: program.name,
-					muscles: program.muscles,
-					imageUrl: program.imageUrl,
-					order: program.order,
-					groupId: program.groupId,
-				}),
-				exercises: program.exercises.map(({ order: _order, ...exercise }) => exercise),
+				programs: upsertById(store.programs, programFields),
+				programDetailsById: { ...store.programDetailsById, [program.id]: program },
+				exercises: upsertAllById(
+					store.exercises,
+					exercises.map(({ order: _order, ...exercise }) => exercise),
+				),
 			}));
 			return program;
 		} catch {
-			return null;
+			return readStore().programDetailsById[programId] ?? null;
 		}
 	},
 
@@ -257,10 +300,16 @@ export const offlineDataAdapters = {
 			await apiFetch<void>("/api/programs", { method: "POST", body: program });
 			return;
 		}
-		updateStore((store) => ({
-			...store,
-			programs: upsertById(store.programs, program),
-		}));
+		updateStore((store) => {
+			const details = store.programDetailsById[program.id];
+			return {
+				...store,
+				programs: upsertById(store.programs, program),
+				programDetailsById: details
+					? { ...store.programDetailsById, [program.id]: { ...details, ...program } }
+					: store.programDetailsById,
+			};
+		});
 		await runOrQueue({
 			url: "/api/programs",
 			method: "POST",
@@ -308,6 +357,7 @@ export const offlineDataAdapters = {
 		updateStore((store) => ({
 			...store,
 			programs: removeById(store.programs, id),
+			programDetailsById: withoutKeys(store.programDetailsById, [id]),
 		}));
 		await runOrQueue({
 			url: `/api/programs/${id}`,
@@ -363,6 +413,10 @@ export const offlineDataAdapters = {
 			...store,
 			programGroups: removeById(store.programGroups, id),
 			programs: store.programs.filter((program) => program.groupId !== id),
+			programDetailsById: withoutKeys(
+				store.programDetailsById,
+				store.programs.filter((program) => program.groupId === id).map(({ id }) => id),
+			),
 		}));
 		await runOrQueue({
 			url: `/api/program-groups/${id}`,
@@ -371,6 +425,27 @@ export const offlineDataAdapters = {
 	},
 
 	async updateProgramExercises(exerciseIds: string[], programId: string) {
+		if (isOfflineEnabled()) {
+			updateStore((store) => {
+				const details = store.programDetailsById[programId];
+				if (!details) return store;
+				// New ones come from the cached library; ones already in the program keep their data.
+				const known = new Map<string, ExerciseUI>(
+					[...store.exercises, ...details.exercises].map((exercise) => [exercise.id, exercise]),
+				);
+				const exercises = exerciseIds.flatMap((id, order) => {
+					const exercise = known.get(id);
+					return exercise ? [{ ...exercise, order }] : [];
+				});
+				return {
+					...store,
+					programDetailsById: {
+						...store.programDetailsById,
+						[programId]: { ...details, exercises },
+					},
+				};
+			});
+		}
 		await runOrQueue({
 			url: `/api/programs/${programId}/exercises`,
 			method: "PUT",
@@ -467,6 +542,22 @@ export const offlineDataAdapters = {
 	},
 
 	async reorderProgramExercises(programId: string, exerciseIds: string[]) {
+		if (isOfflineEnabled()) {
+			updateStore((store) => {
+				const details = store.programDetailsById[programId];
+				if (!details) return store;
+				const exercises = details.exercises
+					.map((exercise) => ({ ...exercise, order: exerciseIds.indexOf(exercise.id) }))
+					.sort((a, b) => a.order - b.order);
+				return {
+					...store,
+					programDetailsById: {
+						...store.programDetailsById,
+						[programId]: { ...details, exercises },
+					},
+				};
+			});
+		}
 		await runOrQueue({
 			url: `/api/programs/${programId}/exercises/reorder`,
 			method: "PATCH",

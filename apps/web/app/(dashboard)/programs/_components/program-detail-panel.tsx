@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ArrowLeftIcon } from "lucide-react";
 
 import { ProgramDetailsInternal } from "@/app/(dashboard)/programs/[id]/_components/program-details";
 import { ProgramNotFound } from "@/app/(dashboard)/programs/[id]/_components/program-not-found";
 import { Button } from "@/components/ui/button";
+import { useOfflineCache } from "@/hooks/offline/use-offline-cache";
 import { useProgramsStore } from "@/hooks/program/store";
-import { offlineDataAdapters } from "@/lib/offline/data-adapters";
+import type { OfflineSnapshot } from "@/lib/offline/data-adapters";
 import { getProgramById } from "@/lib/program/api";
 import { ProgramUI, ProgramWithExercises } from "@/lib/program/type";
 
@@ -31,12 +32,19 @@ export function ProgramDetailPanel({ programId, onBack }: ProgramDetailPanelProp
 	const summary = items.find((program) => program.id === programId);
 	const summaryProgram = summary ? programFromSummary(summary) : undefined;
 	const [loadResult, setLoadResult] = useState<ProgramLoadResult | null>(null);
-	const loadedProgram = loadResult?.programId === programId ? loadResult.program : undefined;
+	const selectCachedProgram = useCallback(
+		(snapshot: OfflineSnapshot) => snapshot.programDetailsById[programId] ?? null,
+		[programId],
+	);
+	// A saved copy of this program shows right away; the API's answer replaces it once it arrives.
+	const cachedProgram = useOfflineCache(selectCachedProgram, null);
+	const loadedProgram =
+		loadResult?.programId === programId ? loadResult.program : (cachedProgram ?? undefined);
 	const program =
 		loadedProgram && summaryProgram
 			? { ...summaryProgram, exercises: loadedProgram.exercises }
 			: (loadedProgram ?? summaryProgram ?? null);
-	const exercisesLoading = loadResult?.programId !== programId;
+	const exercisesLoading = loadResult?.programId !== programId && !cachedProgram;
 
 	useEffect(() => {
 		let isCurrent = true;
@@ -55,11 +63,6 @@ export function ProgramDetailPanel({ programId, onBack }: ProgramDetailPanelProp
 			isCurrent = false;
 		};
 	}, [programId]);
-
-	useEffect(() => {
-		if (!program || program.exercises.length === 0) return;
-		offlineDataAdapters.setExercisesLocal(program.exercises);
-	}, [program]);
 
 	if (!program) {
 		if (exercisesLoading) {
