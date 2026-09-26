@@ -43,21 +43,16 @@ const trustedOrigins = [
 ];
 
 /**
- * Providers are only registered when their credentials are present, so a missing
- * secret disables that button's backend instead of crashing on `undefined!`.
+ * Sign in with Apple, or `null` when it isn't configured. A malformed key (e.g. the Key Vault
+ * placeholder before the real one is synced) disables Apple instead of crashing the whole API.
  */
-function buildSocialProviders(): BetterAuthOptions["socialProviders"] {
-	const providers: NonNullable<BetterAuthOptions["socialProviders"]> = {};
-
-	const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
-	if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
-		providers.google = { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET };
-	}
-
+function buildAppleProvider(): NonNullable<BetterAuthOptions["socialProviders"]>["apple"] | null {
 	const { APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY, APPLE_APP_BUNDLE_ID } =
 		process.env;
-	if (APPLE_CLIENT_ID && APPLE_TEAM_ID && APPLE_KEY_ID && APPLE_PRIVATE_KEY) {
-		providers.apple = {
+	if (!APPLE_CLIENT_ID || !APPLE_TEAM_ID || !APPLE_KEY_ID || !APPLE_PRIVATE_KEY) return null;
+
+	try {
+		return {
 			clientId: APPLE_CLIENT_ID,
 			clientSecret: createAppleClientSecret({
 				teamId: APPLE_TEAM_ID,
@@ -69,7 +64,27 @@ function buildSocialProviders(): BetterAuthOptions["socialProviders"] {
 			appBundleIdentifier: APPLE_APP_BUNDLE_ID,
 			audience: APPLE_APP_BUNDLE_ID ? [APPLE_CLIENT_ID, APPLE_APP_BUNDLE_ID] : undefined,
 		};
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : "unknown error";
+		console.error(`Sign in with Apple disabled: APPLE_PRIVATE_KEY is not a valid key (${reason}).`);
+		return null;
 	}
+}
+
+/**
+ * Providers are only registered when their credentials are present, so a missing
+ * secret disables that button's backend instead of crashing on `undefined!`.
+ */
+function buildSocialProviders(): BetterAuthOptions["socialProviders"] {
+	const providers: NonNullable<BetterAuthOptions["socialProviders"]> = {};
+
+	const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
+	if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+		providers.google = { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET };
+	}
+
+	const apple = buildAppleProvider();
+	if (apple) providers.apple = apple;
 
 	return providers;
 }
