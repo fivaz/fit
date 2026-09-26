@@ -5,8 +5,10 @@ import { config as loadEnv } from "dotenv";
 import { execSync } from "node:child_process";
 import path from "node:path";
 
+// The release version lives in the root package.json: semantic-release bumps that one only, so
+// `apps/web/package.json` would keep showing a stale version.
+import rootPackage from "../../package.json";
 import { resolvePublicApiBaseUrl, resolvePublicAuthBaseUrl } from "./lib/env/mobile-dev-url";
-import pkg from "./package.json";
 
 const repoRoot = path.resolve(__dirname, "../..");
 loadEnv({ path: path.join(repoRoot, ".env") });
@@ -30,7 +32,7 @@ function publicEnvFromProcess(): Record<string, string> {
 
 function resolvedAppPublicEnv(): Record<string, string> {
 	const env: Record<string, string> = {
-		NEXT_PUBLIC_APP_VERSION: pkg.version,
+		NEXT_PUBLIC_APP_VERSION: rootPackage.version,
 	};
 
 	if (process.env.NODE_ENV !== "production") {
