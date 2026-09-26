@@ -1,3 +1,22 @@
+## [1.9.0](https://github.com/fivaz/fit/compare/v1.8.0...v1.9.0) (2026-09-26)
+
+### ✨ Features
+
+* **auth:** add Sign in with Apple and Google login, sync provider secrets to Key Vault ([4334bc9](https://github.com/fivaz/fit/commit/4334bc9f4a6cf911d6655f27286d3a44e596928e))
+* **infra:** deploy Google and Apple sign-in config from Bicep and set the API base URL ([b9032ad](https://github.com/fivaz/fit/commit/b9032ad9bf672b81ab01096eeaf08e8a58a39c22))
+* **ios:** enable native Google sign-in with iOS client and shared web client ID ([e4f0ada](https://github.com/fivaz/fit/commit/e4f0adaac6e4d4a40c6863efc4faa2503a4052ab))
+* **web:** show a status dot for whether the API is starting, connected or not ([4cd87c7](https://github.com/fivaz/fit/commit/4cd87c7242d3815797d761e36ce595a5baba6f7b))
+
+### 🐛 Bug Fixes
+
+* **api:** keep the API running when the Apple signing key is invalid ([6ccd35b](https://github.com/fivaz/fit/commit/6ccd35b51fe567af021e33d399de7c3f56711b19))
+* **auth:** exchange the OAuth cookie session for a bearer token after web social login ([07d1b7b](https://github.com/fivaz/fit/commit/07d1b7babae8fdffd7451657b371fc32bd51c509))
+* **web:** truncate long names and emails instead of shrinking the avatar or overflowing ([0927a4f](https://github.com/fivaz/fit/commit/0927a4ffd145c29c43beb865a7a8d84a77590a31))
+
+### 🧹 Chores
+
+* **demo:** hide the API status dot in demo recordings ([94cd885](https://github.com/fivaz/fit/commit/94cd885ddaee8400fa3dd671b7dbed432f16df6c))
+
 ## [1.8.0](https://github.com/fivaz/fit/compare/v1.7.0...v1.8.0) (2026-09-25)
 
 ### ✨ Features
