@@ -50,6 +50,16 @@ function resolvedMobilePublicEnv(): Record<string, string> {
 	return env;
 }
 
+/**
+ * The Google web client ID is public (the native iOS sheet needs it to request ID tokens the API
+ * accepts), so reuse the API's `GOOGLE_CLIENT_ID` instead of asking for a duplicate `NEXT_PUBLIC_` copy.
+ * Only the ID is exposed; the client secret never leaves the API.
+ */
+function resolvedGooglePublicEnv(): Record<string, string> {
+	const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+	return clientId ? { NEXT_PUBLIC_GOOGLE_CLIENT_ID: clientId } : {};
+}
+
 /** Hostnames (and `a.b.*.*`-style patterns per Next.js) allowed to hit `/_next/*` in dev. Comma-separated. */
 function parseAllowedDevOriginsFromEnv(): string[] {
 	const raw = process.env.NEXT_ALLOWED_DEV_ORIGINS;
@@ -96,6 +106,7 @@ const nextConfig: NextConfig = {
 		...publicEnvFromProcess(),
 		...resolvedAppPublicEnv(),
 		...resolvedMobilePublicEnv(),
+		...resolvedGooglePublicEnv(),
 	},
 };
 
