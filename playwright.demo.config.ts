@@ -3,6 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 import "dotenv/config";
 
 import {
+	APP_STORE_SCALE,
+	APP_STORE_SCREEN,
 	DEMO_COLOR_SCHEME,
 	IPHONE_SCREEN,
 	STORAGE_STATE_FILE,
@@ -54,6 +56,17 @@ export default defineConfig({
 			name: "cleanup",
 			// Matches the teardown file name, e.g. "demos/cleanup.teardown.ts".
 			testMatch: /cleanup\.teardown\.ts$/,
+		},
+		{
+			name: "screenshots",
+			// Matches App Store screenshot files, e.g. "demos/app-store.screenshots.ts".
+			testMatch: /\.screenshots\.ts$/,
+			dependencies: ["seed"],
+			use: {
+				storageState: STORAGE_STATE_FILE,
+				viewport: APP_STORE_SCREEN,
+				deviceScaleFactor: APP_STORE_SCALE,
+			},
 		},
 		{
 			name: "record",

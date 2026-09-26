@@ -4,6 +4,12 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+// Checked before React (and Capacitor's JS) loads: the iOS app serves its bundle from
+// capacitor://localhost, and Capacitor's native bridge defines window.Capacitor at document start.
+const isIosApp =
+	typeof window !== "undefined" &&
+	(window.location.protocol === "capacitor:" || window.Capacitor?.isNativePlatform?.() === true);
+
 if (process.env.NODE_ENV === "production") {
 	Sentry.init({
 		dsn: "https://53346ababcca5c37041d2b5cd7cfaae3@o4508857555550208.ingest.de.sentry.io/4510635945492560",
@@ -12,8 +18,9 @@ if (process.env.NODE_ENV === "production") {
 		// installed from a laptop) report as "local" rather than Sentry's default "production".
 		environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || "local",
 
-		// Add optional integrations for additional features
-		integrations: [Sentry.replayIntegration()],
+		// Session Replay records screens, including body metrics. The iOS app leaves it out so its App
+		// Store privacy declaration (ios/App/App/PrivacyInfo.xcprivacy) stays accurate and minimal.
+		integrations: isIosApp ? [] : [Sentry.replayIntegration()],
 
 		// Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
 		tracesSampleRate: 1,
@@ -30,7 +37,9 @@ if (process.env.NODE_ENV === "production") {
 
 		// Enable sending user PII (Personally Identifiable Information)
 		// https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-		sendDefaultPii: true,
+		// Off in the iOS app: no IP address or other identifying data, so its diagnostics stay
+		// "not linked to the user" in the App Store privacy declaration.
+		sendDefaultPii: !isIosApp,
 	});
 }
 

@@ -86,7 +86,7 @@ The API origin must point at Nest (default `http://localhost:3001` in local dev)
 
 - Confirm privacy disclosures for account data, workout data, body metrics, diagnostics, and optional profile image. The in-app Privacy Policy page (`/privacy`) and `ios/App/App/PrivacyInfo.xcprivacy` (checked by `pnpm run ios:readiness`) cover this; fill out the App Store Connect "App Privacy" questionnaire to match.
 - Confirm in-app account deletion (Settings → Delete Account) works and is linked from the Privacy Policy page, per Guideline 5.1.1(v).
-- Confirm no social auth is presented in iOS v1 if it is deferred.
+- Confirm Sign in with Apple and Google sign-in both work on a TestFlight build (production client IDs and redirect URLs). Sign in with Apple is required by Guideline 4.8 because Google sign-in is offered.
 - Push notifications are deferred to v2 — no `PushNotifications` permission prompt or entitlement should appear in v1.
 - Export compliance is pre-declared via `ITSAppUsesNonExemptEncryption = false` in `Info.plist` (the app only uses standard HTTPS/TLS) — App Store Connect should not prompt for it per upload.
 - Confirm screenshots are captured for required device classes.

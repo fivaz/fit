@@ -15,6 +15,14 @@ export const SAFE_AREA_INSETS = { top: 59, bottom: 34, left: 0, right: 0 };
  */
 export const VIDEO_SIZE = IPHONE_SCREEN;
 
+/**
+ * App Store screenshots: the required 6.9" iPhone size is 1320x2868 px, i.e. an iPhone 16 Pro Max
+ * (440x956 CSS px) at 3x.
+ */
+export const APP_STORE_SCREEN = { width: 440, height: 956 };
+export const APP_STORE_SCALE = 3;
+export const SCREENSHOTS_DIR = path.join(process.cwd(), "demo-output", "screenshots");
+
 export function rawClipPath(clipName: string): string {
 	return path.join(RAW_DIR, `${clipName}.webm`);
 }
