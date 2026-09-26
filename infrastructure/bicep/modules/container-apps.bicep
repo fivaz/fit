@@ -56,6 +56,21 @@ param webAppUrl string = ''
 @description('Price ID of the one-time credit-pack Price, created in the Stripe Dashboard (test mode)')
 param stripeCreditPackPriceId string = ''
 
+@description('Google OAuth web client ID (public identifier)')
+param googleClientId string = ''
+
+@description('Sign in with Apple Services ID (public identifier)')
+param appleClientId string = ''
+
+@description('Apple Developer Team ID (public identifier)')
+param appleTeamId string = ''
+
+@description('Key ID of the Sign in with Apple key (public identifier)')
+param appleKeyId string = ''
+
+@description('iOS bundle ID, the audience of native Sign in with Apple ID tokens')
+param appleAppBundleId string = ''
+
 @description('Image tag to deploy (CI passes the immutable sha-<short> tag built in the same run; \'latest\' is only refreshed by default-branch builds)')
 param imageTag string = 'latest'
 
@@ -170,6 +185,16 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/STRIPE-WEBHOOK-SECRET'
           identity: 'system'
         }
+        {
+          name: 'google-client-secret'
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/GOOGLE-CLIENT-SECRET'
+          identity: 'system'
+        }
+        {
+          name: 'apple-private-key'
+          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/APPLE-PRIVATE-KEY'
+          identity: 'system'
+        }
       ]
     }
     template: {
@@ -204,8 +229,36 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               secretRef: 'stripe-webhook-secret'
             }
             {
+              name: 'GOOGLE_CLIENT_SECRET'
+              secretRef: 'google-client-secret'
+            }
+            {
+              name: 'APPLE_PRIVATE_KEY'
+              secretRef: 'apple-private-key'
+            }
+            {
               name: 'STRIPE_CREDIT_PACK_PRICE_ID'
               value: stripeCreditPackPriceId
+            }
+            {
+              name: 'GOOGLE_CLIENT_ID'
+              value: googleClientId
+            }
+            {
+              name: 'APPLE_CLIENT_ID'
+              value: appleClientId
+            }
+            {
+              name: 'APPLE_TEAM_ID'
+              value: appleTeamId
+            }
+            {
+              name: 'APPLE_KEY_ID'
+              value: appleKeyId
+            }
+            {
+              name: 'APPLE_APP_BUNDLE_ID'
+              value: appleAppBundleId
             }
             {
               name: 'WEB_APP_URL'

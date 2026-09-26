@@ -127,9 +127,9 @@ resource openAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (ma
   }
 }
 
-resource googleClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
+resource googleClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
-  name: 'GOOGLE-CLIENT-ID'
+  name: 'GOOGLE-CLIENT-SECRET'
   properties: {
     value: 'placeholder-update-via-portal-or-cli'
     contentType: 'text/plain'
@@ -139,9 +139,9 @@ resource googleClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = i
   }
 }
 
-resource googleClientSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
+resource applePrivateKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (managePlaceholderSecrets) {
   parent: keyVault
-  name: 'GOOGLE-CLIENT-SECRET'
+  name: 'APPLE-PRIVATE-KEY'
   properties: {
     value: 'placeholder-update-via-portal-or-cli'
     contentType: 'text/plain'
