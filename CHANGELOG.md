@@ -1,3 +1,22 @@
+## [1.11.0](https://github.com/fivaz/fit/compare/v1.10.0...v1.11.0) (2026-09-26)
+
+### ✨ Features
+
+* **demo:** capture App Store screenshots at both 6.9" and 6.5" iPhone sizes ([abe34d9](https://github.com/fivaz/fit/commit/abe34d9c7b89db0662e26472e99f49d9f18f9904))
+* **web:** show stat cards with icons immediately and spin only the values while loading ([f4827da](https://github.com/fivaz/fit/commit/f4827dafa656569271e6d3c1742d99b15b30fd74))
+
+### 🐛 Bug Fixes
+
+* **web:** hide credit purchase terms in the iOS app to meet App Store rules ([67687f6](https://github.com/fivaz/fit/commit/67687f68153e339e68d9cb560984918797aa5c11))
+
+### 🧹 Chores
+
+* **web:** remove the pricing section from the about page ([4377d7a](https://github.com/fivaz/fit/commit/4377d7ac0796cae781512c2ff5b7676ea9fb2473))
+
+### 📝 Documentation
+
+* list Apple and Google as sign-in providers in the privacy policy and QA checklist ([8f16a51](https://github.com/fivaz/fit/commit/8f16a515a46b3f057fe8f798015c5896af9f8566))
+
 ## [1.10.0](https://github.com/fivaz/fit/compare/v1.9.0...v1.10.0) (2026-09-26)
 
 ### ✨ Features
