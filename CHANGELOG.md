@@ -1,3 +1,23 @@
+## [1.10.0](https://github.com/fivaz/fit/compare/v1.9.0...v1.10.0) (2026-09-26)
+
+### ✨ Features
+
+* **web:** replace Stripe checkout with an unavailable notice in the iOS app ([4253ed9](https://github.com/fivaz/fit/commit/4253ed9e81e177cb11adc4fdb4e31a9b1db10007))
+
+### 🐛 Bug Fixes
+
+* **web:** keep the offline cache intact and show it while the API starts ([d3e8918](https://github.com/fivaz/fit/commit/d3e8918dde49be08b0438a780d02d5499114ea7d))
+* **web:** show the release version from the root package.json instead of a stale copy ([21728e2](https://github.com/fivaz/fit/commit/21728e2b466d486ec8d8afa80c85250e3b2cf68a))
+
+### 🚀 Performance Improvements
+
+* **api:** ship a compiled bundle and warm the database during boot ([4270cf4](https://github.com/fivaz/fit/commit/4270cf42bf399b57682fbfc5a8ece07f75410a4e))
+* **infra:** check API readiness sooner so cold starts get traffic faster ([1b7d312](https://github.com/fivaz/fit/commit/1b7d31276c053a500bc31397a4f1de13b1be1e65))
+
+### 🧹 Chores
+
+* **infra:** use the fit project name in deploy scripts and docs ([9b1d73c](https://github.com/fivaz/fit/commit/9b1d73c3d3b76c0b645093abae9da25f093dad16))
+
 ## [1.9.0](https://github.com/fivaz/fit/compare/v1.8.0...v1.9.0) (2026-09-26)
 
 ### ✨ Features
